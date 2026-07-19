@@ -126,7 +126,8 @@ function setRadioUiState() {
   radioBtn.classList.toggle("is-active", isRadioActive);
   radioBtn.classList.toggle("is-muted", !isRadioActive);
   if (radioIcon) {
-    radioIcon.src = radioEnabled ? radioPauseIconSource : radioPlayIconSource;
+    const isAnyAudioEnabled = radioEnabled || noiseEnabled;
+    radioIcon.src = isAnyAudioEnabled ? radioPauseIconSource : radioPlayIconSource;
   }
 }
 

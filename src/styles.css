@@ -96,6 +96,29 @@ a {
   justify-self: start;
 }
 
+.bag-group {
+  align-items: center;
+  display: flex;
+  gap: 19px;
+  justify-self: start;
+  white-space: nowrap;
+}
+
+.nav-link-bag {
+  flex-shrink: 0;
+}
+
+.bag-status {
+  color: var(--ui-overlay);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.bag-status.is-visible {
+  opacity: 1;
+}
+
 .audio-controls {
   align-items: flex-start;
   display: flex;
@@ -170,6 +193,15 @@ a {
 
 .meta-row-price {
   gap: 4px;
+}
+
+.price-toggle {
+  cursor: pointer;
+}
+
+.price-toggle:focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--ui-color) 55%, transparent);
+  outline-offset: 2px;
 }
 
 .meta-dot {
@@ -445,6 +477,10 @@ a {
   .control-btn,
   .nav-link {
     font-size: 16px;
+  }
+
+  .bag-status {
+    display: none;
   }
 
   .scroll-video-section {

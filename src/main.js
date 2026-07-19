@@ -22,6 +22,11 @@ const noiseBtn = document.querySelector("#noiseBtn");
 const radioPlayer = document.querySelector("#radioPlayer");
 const radioPlayIconSource = resolvePublicAssetPath("/media/radio-icon-play.png");
 const radioPauseIconSource = resolvePublicAssetPath("/media/radio-icon-pause.png");
+const priceToggle = document.querySelector("#priceToggle");
+const priceToggleIcon = document.querySelector("#priceToggleIcon");
+const bagStatusText = document.querySelector("#bagStatusText");
+const pricePlusIconSource = resolvePublicAssetPath("/media/price-plus.svg");
+const priceCheckIconSource = resolvePublicAssetPath("/media/price-check.svg");
 
 const scrollVideoSection = document.querySelector("#scrollVideoSection");
 const sectionVideoDesktop = document.querySelector("#sectionVideo");
@@ -46,6 +51,7 @@ const radioTracks = ["/audio/track-1.mp3", "/audio/track-2.mp3", "/audio/track-3
 let currentTrackIndex = 0;
 let radioEnabled = false;
 let activeAudioControl = "radio";
+let bagSelected = false;
 let lastScrollY = window.scrollY;
 
 let noiseEnabled = false;
@@ -135,6 +141,18 @@ function updateNoiseUiState() {
   const isNoiseActive = activeAudioControl === "noise";
   noiseBtn.classList.toggle("is-active", isNoiseActive);
   noiseBtn.classList.toggle("is-muted", !isNoiseActive);
+}
+
+function setBagUiState() {
+  if (priceToggleIcon) {
+    priceToggleIcon.src = bagSelected ? priceCheckIconSource : pricePlusIconSource;
+  }
+  if (bagStatusText) {
+    bagStatusText.classList.toggle("is-visible", bagSelected);
+  }
+  if (priceToggle) {
+    priceToggle.setAttribute("aria-pressed", String(bagSelected));
+  }
 }
 
 function updateHeroIndicator(index, total) {
@@ -552,6 +570,22 @@ noiseBtn.addEventListener("click", () => {
   toggleNoisePlayback();
 });
 
+function toggleBagState() {
+  playButtonTick();
+  bagSelected = !bagSelected;
+  setBagUiState();
+}
+
+priceToggle?.addEventListener("click", () => {
+  toggleBagState();
+});
+
+priceToggle?.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  event.preventDefault();
+  toggleBagState();
+});
+
 window.addEventListener("pointerdown", primeScrollVideos, { once: true });
 window.addEventListener("touchstart", primeScrollVideos, { once: true, passive: true });
 window.addEventListener("wheel", primeScrollVideos, { once: true, passive: true });
@@ -559,6 +593,7 @@ window.addEventListener("keydown", primeScrollVideos, { once: true });
 
 setRadioUiState();
 updateNoiseUiState();
+setBagUiState();
 hydrateMugControls();
 
 function raf(time) {

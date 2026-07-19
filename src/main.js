@@ -26,7 +26,7 @@ const priceToggle = document.querySelector("#priceToggle");
 const priceToggleIcon = document.querySelector("#priceToggleIcon");
 const bagStatusText = document.querySelector("#bagStatusText");
 const pricePlusIconSource = resolvePublicAssetPath("/media/price-plus.svg");
-const priceCheckIconSource = resolvePublicAssetPath("/media/price-check-white.png");
+const priceCheckIconSource = resolvePublicAssetPath("/media/price-check-crisp.png");
 
 const scrollVideoSection = document.querySelector("#scrollVideoSection");
 const sectionVideoDesktop = document.querySelector("#sectionVideo");
@@ -577,6 +577,11 @@ function toggleBagState() {
 }
 
 priceToggle?.addEventListener("click", () => {
+  toggleBagState();
+});
+
+priceToggleIcon?.addEventListener("click", (event) => {
+  event.stopPropagation();
   toggleBagState();
 });
 

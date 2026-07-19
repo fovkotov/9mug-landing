@@ -185,6 +185,7 @@ a {
 }
 
 .price-plus-icon {
+  cursor: pointer;
   display: block;
   height: 12px;
   object-fit: contain;

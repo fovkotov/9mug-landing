@@ -112,6 +112,12 @@ a {
   margin-bottom: 5px;
 }
 
+.price-plus-icon {
+  display: block;
+  height: 14px;
+  width: 12px;
+}
+
 .meta-dot {
   border-radius: 50%;
   display: inline-block;

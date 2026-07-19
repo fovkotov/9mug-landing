@@ -45,6 +45,7 @@ const radioTracks = ["/audio/track-1.mp3", "/audio/track-2.mp3", "/audio/track-3
 );
 let currentTrackIndex = 0;
 let radioEnabled = false;
+let activeAudioControl = "radio";
 let lastScrollY = window.scrollY;
 
 let noiseEnabled = false;
@@ -121,16 +122,18 @@ function playTrack(index) {
 }
 
 function setRadioUiState() {
-  radioBtn.classList.toggle("is-active", radioEnabled);
-  radioBtn.classList.toggle("is-muted", !radioEnabled);
+  const isRadioActive = activeAudioControl === "radio";
+  radioBtn.classList.toggle("is-active", isRadioActive);
+  radioBtn.classList.toggle("is-muted", !isRadioActive);
   if (radioIcon) {
     radioIcon.src = radioEnabled ? radioPauseIconSource : radioPlayIconSource;
   }
 }
 
 function updateNoiseUiState() {
-  noiseBtn.classList.toggle("is-active", noiseEnabled);
-  noiseBtn.classList.toggle("is-muted", !noiseEnabled);
+  const isNoiseActive = activeAudioControl === "noise";
+  noiseBtn.classList.toggle("is-active", isNoiseActive);
+  noiseBtn.classList.toggle("is-muted", !isNoiseActive);
 }
 
 function updateHeroIndicator(index, total) {
@@ -490,6 +493,13 @@ radioPlayer.addEventListener("ended", async () => {
 
 async function toggleRadioPlayback() {
   playButtonTick();
+  activeAudioControl = "radio";
+
+  // Radio and noise are mutually exclusive.
+  if (noiseEnabled) {
+    disableBrownNoise();
+  }
+
   radioEnabled = !radioEnabled;
 
   if (radioEnabled) {
@@ -515,11 +525,21 @@ radioIcon?.addEventListener("click", () => {
 
 noiseBtn.addEventListener("click", () => {
   playButtonTick();
+  activeAudioControl = "noise";
+
+  // Radio and noise are mutually exclusive.
+  if (radioEnabled) {
+    radioEnabled = false;
+    radioPlayer.pause();
+  }
+
   if (!noiseEnabled) {
     enableBrownNoise();
   } else {
     disableBrownNoise();
   }
+
+  setRadioUiState();
 });
 
 window.addEventListener("pointerdown", primeScrollVideos, { once: true });

@@ -47,6 +47,10 @@ let noiseGain = null;
 let brownNoiseLastOut = 0;
 let currentHeroSlideIndex = 0;
 let scrollVideosPrimed = false;
+let heroCursorEnabled = false;
+let heroCursorVisible = false;
+let heroCursorDirection = "next";
+let heroCursor = null;
 
 const scrollVideos = [scrollVideoDesktop, scrollVideoMobile].filter(Boolean);
 
@@ -155,6 +159,133 @@ function setHeroSlide(index) {
   updateHeroIndicator(boundedIndex, heroSlides.length);
 }
 
+function getWrappedHeroSlideIndex(index) {
+  if (!heroSlides.length) return 0;
+  return ((index % heroSlides.length) + heroSlides.length) % heroSlides.length;
+}
+
+function getHeroCursorModeEnabled() {
+  const supportsFinePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  return Boolean(heroPanel) && heroSlides.length > 1 && !isMobileViewport() && supportsFinePointer;
+}
+
+function setHeroCursorDirection(direction) {
+  if (!heroCursor) return;
+  heroCursorDirection = direction;
+  heroCursor.dataset.direction = direction;
+}
+
+function setHeroCursorVisibility(visible) {
+  if (!heroPanel || !heroCursor) return;
+  heroCursorVisible = visible;
+  heroPanel.classList.toggle("has-hero-cursor", visible && heroCursorEnabled);
+}
+
+function updateHeroCursorPosition(clientX, clientY) {
+  if (!heroPanel || !heroCursor) return;
+  const rect = heroPanel.getBoundingClientRect();
+  const relativeX = clamp(clientX - rect.left, 0, rect.width);
+  const relativeY = clamp(clientY - rect.top, 0, rect.height);
+
+  heroCursor.style.setProperty("--cursor-x", `${relativeX}px`);
+  heroCursor.style.setProperty("--cursor-y", `${relativeY}px`);
+
+  const nextDirection = relativeX < rect.width / 2 ? "prev" : "next";
+  if (nextDirection !== heroCursorDirection) {
+    setHeroCursorDirection(nextDirection);
+  }
+}
+
+function updateHeroCursorDefaultPosition() {
+  if (!heroPanel || !heroCursor) return;
+  const rect = heroPanel.getBoundingClientRect();
+  const startX = rect.width * 0.78;
+  const startY = rect.height * 0.5;
+  heroCursor.style.setProperty("--cursor-x", `${startX}px`);
+  heroCursor.style.setProperty("--cursor-y", `${startY}px`);
+}
+
+function handleHeroPointerEnter(event) {
+  if (!heroCursorEnabled) return;
+  updateHeroCursorPosition(event.clientX, event.clientY);
+  setHeroCursorVisibility(true);
+}
+
+function handleHeroPointerMove(event) {
+  if (!heroCursorEnabled) return;
+  updateHeroCursorPosition(event.clientX, event.clientY);
+  if (!heroCursorVisible) {
+    setHeroCursorVisibility(true);
+  }
+}
+
+function handleHeroPointerLeave() {
+  if (!heroCursorEnabled) return;
+  setHeroCursorVisibility(false);
+}
+
+function handleHeroPanelClick(event) {
+  if (!heroCursorEnabled || !heroSlides.length) return;
+
+  const rect = heroPanel.getBoundingClientRect();
+  const relativeX = clamp(event.clientX - rect.left, 0, rect.width);
+  const direction = relativeX < rect.width / 2 ? "prev" : "next";
+  const offset = direction === "prev" ? -1 : 1;
+  const targetSlide = getWrappedHeroSlideIndex(currentHeroSlideIndex + offset);
+
+  if (targetSlide === currentHeroSlideIndex) return;
+
+  playButtonTick();
+  setHeroSlide(targetSlide);
+}
+
+function setHeroCursorMode() {
+  if (!heroPanel) return;
+  const shouldEnable = getHeroCursorModeEnabled();
+  heroCursorEnabled = shouldEnable;
+  heroPanel.classList.toggle("is-hero-cursor-enabled", shouldEnable);
+
+  if (!shouldEnable) {
+    setHeroCursorVisibility(false);
+    return;
+  }
+
+  setHeroCursorDirection("next");
+  updateHeroCursorDefaultPosition();
+}
+
+function setupHeroCursor() {
+  if (!heroPanel || heroCursor) return;
+
+  heroCursor = document.createElement("span");
+  heroCursor.className = "hero-cursor";
+  heroCursor.setAttribute("aria-hidden", "true");
+
+  const heroCursorImage = document.createElement("img");
+  heroCursorImage.alt = "";
+
+  const previewSource = mugSwitchButtons[0]?.querySelector("img")?.getAttribute("src") ?? "";
+  const resolvedPreviewSource = resolvePublicAssetPath(previewSource);
+
+  if (resolvedPreviewSource) {
+    heroCursorImage.src = resolvedPreviewSource;
+    heroCursor.append(heroCursorImage);
+  } else {
+    heroCursor.classList.add("is-fallback");
+  }
+
+  heroPanel.append(heroCursor);
+
+  heroPanel.addEventListener("pointerenter", handleHeroPointerEnter);
+  heroPanel.addEventListener("pointermove", handleHeroPointerMove);
+  heroPanel.addEventListener("pointerleave", handleHeroPointerLeave);
+  heroPanel.addEventListener("click", handleHeroPanelClick);
+  window.addEventListener("resize", setHeroCursorMode);
+  window.addEventListener("orientationchange", setHeroCursorMode);
+
+  setHeroCursorMode();
+}
+
 function hydrateMugControls() {
   if (!mugSwitcher) return;
 
@@ -186,6 +317,7 @@ function hydrateMugControls() {
   }
 
   setHeroSlide(currentHeroSlideIndex);
+  setupHeroCursor();
 }
 
 function syncScrollVideoFrame() {

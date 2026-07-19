@@ -248,6 +248,65 @@ a {
   z-index: 4;
 }
 
+.panel-hero.is-hero-cursor-enabled {
+  cursor: none;
+}
+
+.panel-hero.is-hero-cursor-enabled .mug-switcher {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.hero-cursor {
+  --cursor-x: 0px;
+  --cursor-y: 0px;
+  color: var(--ui-color);
+  left: var(--cursor-x);
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  top: var(--cursor-y);
+  transform: translate(-50%, -50%);
+  transition: opacity 0.12s ease, transform 0.16s ease;
+  z-index: 6;
+}
+
+.panel-hero.has-hero-cursor .hero-cursor {
+  opacity: 1;
+}
+
+.hero-cursor img {
+  display: block;
+  height: 44px;
+  object-fit: contain;
+  transform: scaleX(-1);
+  transition: transform 0.16s ease;
+  width: 44px;
+}
+
+.hero-cursor[data-direction="prev"] img {
+  transform: scaleX(1);
+}
+
+.hero-cursor.is-fallback {
+  border: 1px solid color-mix(in srgb, var(--ui-color) 65%, transparent);
+  border-radius: 50%;
+  height: 44px;
+  width: 44px;
+}
+
+.hero-cursor.is-fallback::before {
+  content: "→";
+  display: block;
+  font-size: 28px;
+  line-height: 44px;
+  text-align: center;
+}
+
+.hero-cursor.is-fallback[data-direction="prev"]::before {
+  content: "←";
+}
+
 .mug-switcher-btn {
   align-items: center;
   background: transparent;

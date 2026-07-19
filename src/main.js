@@ -46,8 +46,30 @@ let noiseNode = null;
 let noiseGain = null;
 let brownNoiseLastOut = 0;
 let currentHeroSlideIndex = 0;
+let scrollVideosPrimed = false;
 
 const scrollVideos = [scrollVideoDesktop, scrollVideoMobile].filter(Boolean);
+
+function prepareScrollVideos() {
+  for (const video of scrollVideos) {
+    const rawSrc = video.getAttribute("src") ?? "";
+    const resolvedSrc = resolvePublicAssetPath(rawSrc);
+    if (resolvedSrc && video.getAttribute("src") !== resolvedSrc) {
+      video.setAttribute("src", resolvedSrc);
+    }
+
+    video.preload = "auto";
+    video.muted = true;
+    video.playsInline = true;
+    video.load();
+    video.pause();
+    video.currentTime = 0;
+    video.addEventListener("loadedmetadata", syncScrollVideoFrame);
+  }
+}
+
+prepareScrollVideos();
+
 for (const video of scrollVideos) {
   video.pause();
   video.currentTime = 0;
@@ -169,7 +191,8 @@ function hydrateMugControls() {
 function syncScrollVideoFrame() {
   if (!scrollVideoSection) return;
   const activeVideo = getActiveScrollVideo();
-  if (!activeVideo || !activeVideo.duration) return;
+  if (!activeVideo) return;
+  if (!Number.isFinite(activeVideo.duration) || activeVideo.duration <= 0) return;
 
   const rect = scrollVideoSection.getBoundingClientRect();
   const scrollRange = scrollVideoSection.offsetHeight - window.innerHeight;
@@ -266,7 +289,10 @@ function disableBrownNoise() {
   updateNoiseUiState();
 }
 
-function unlockVideoSeeking() {
+function primeScrollVideos() {
+  if (scrollVideosPrimed) return;
+  scrollVideosPrimed = true;
+
   for (const video of scrollVideos) {
     video
       .play()
@@ -320,7 +346,10 @@ noiseBtn.addEventListener("click", () => {
   }
 });
 
-window.addEventListener("pointerdown", unlockVideoSeeking, { once: true });
+window.addEventListener("pointerdown", primeScrollVideos, { once: true });
+window.addEventListener("touchstart", primeScrollVideos, { once: true, passive: true });
+window.addEventListener("wheel", primeScrollVideos, { once: true, passive: true });
+window.addEventListener("keydown", primeScrollVideos, { once: true });
 
 setRadioUiState();
 updateNoiseUiState();

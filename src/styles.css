@@ -1,6 +1,8 @@
 :root {
   --ui-color: rgba(0, 0, 0, 0.8);
   --ui-muted: rgba(0, 0, 0, 0.45);
+  --ui-overlay: rgba(255, 255, 255, 0.8);
+  --ui-overlay-muted: rgba(255, 255, 255, 0.32);
   --bg-base: #efe8e6;
   --font-ui: "Wremena", "Wremena Regular", "Times New Roman", serif;
   --layout-columns: 8;
@@ -37,7 +39,7 @@ a {
 
 .top-nav,
 .meta-left {
-  color: var(--ui-color);
+  color: var(--ui-overlay);
   transition: color 0.2s ease;
   z-index: 20;
 }
@@ -53,6 +55,7 @@ a {
   position: fixed;
   top: 0;
   width: 100%;
+  mix-blend-mode: difference;
 }
 
 .top-nav * {
@@ -71,10 +74,12 @@ a {
 .nav-right {
   align-items: center;
   column-gap: var(--layout-gutter);
-  display: grid;
-  grid-column: 7 / span 2;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  grid-column: 6 / -1;
+  justify-content: flex-end;
+  justify-self: end;
   min-width: 0;
+  width: 100%;
 }
 
 .nav-link,
@@ -100,12 +105,12 @@ a {
 .nav-status {
   align-items: center;
   display: flex;
-  gap: 8px;
-  justify-self: start;
+  gap: 9px;
+  justify-content: flex-end;
 }
 
 .audio-icon {
-  background: color-mix(in srgb, var(--ui-color) 100%, transparent);
+  background: currentColor;
   display: block;
   height: 14px;
   mask-image: url("/media/radio-icon.png");
@@ -135,11 +140,11 @@ a {
 }
 
 .control-btn.is-muted {
-  color: var(--ui-muted);
+  color: var(--ui-overlay-muted);
 }
 
 .control-btn.is-active {
-  color: var(--ui-color);
+  color: var(--ui-overlay);
 }
 
 .horse-icon {
@@ -151,6 +156,7 @@ a {
 
 .meta-left {
   left: var(--layout-margin);
+  mix-blend-mode: difference;
   position: fixed;
   top: 42vh;
 }
@@ -164,8 +170,13 @@ a {
 
 .price-plus-icon {
   display: block;
-  height: 14px;
+  height: 12px;
+  object-fit: contain;
   width: 12px;
+}
+
+.meta-row-price {
+  gap: 4px;
 }
 
 .meta-dot {

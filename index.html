@@ -14,7 +14,7 @@
 
       <div class="nav-right">
         <div class="audio-controls" aria-label="Audio controls">
-          <span class="audio-icon" aria-hidden="true"></span>
+          <img class="audio-icon" src="/media/radio-icon-restored.png" alt="" aria-hidden="true" />
           <div class="audio-toggle-group">
             <button id="radioBtn" class="control-btn" type="button">Radio</button>
             <button id="noiseBtn" class="control-btn is-muted" type="button">Noise</button>
@@ -22,7 +22,7 @@
         </div>
         <div class="nav-status">
           <span class="nav-online">9 online</span>
-          <img class="horse-icon" src="/media/horse.png" alt="" />
+          <img class="horse-icon" src="/media/online-icon-figma.png" alt="" />
         </div>
       </div>
     </header>
@@ -59,8 +59,8 @@
             class="mug-switcher-btn"
             type="button"
             data-slide-index="1"
-            data-desktop-src="/media/section-2-desktop.png"
-            data-mobile-src="/media/section-2-mobile.png"
+            data-desktop-src="/media/hero-switch-2.png"
+            data-mobile-src="/media/hero-switch-2.png"
             aria-label="Mug design 2"
             aria-pressed="false"
           >
@@ -73,9 +73,21 @@
         </div>
       </section>
 
-      <section class="panel contrast-target" data-contrast-type="media">
-        <img class="panel-media desktop-only" src="/media/section-2-desktop.png" alt="" />
-        <img class="panel-media mobile-only" src="/media/section-2-mobile.png" alt="" />
+      <section class="panel contrast-target" data-contrast-type="video">
+        <video
+          id="sectionVideo"
+          class="panel-video desktop-only"
+          muted
+          playsinline
+          preload="auto"
+        ></video>
+        <video
+          id="sectionVideoMobile"
+          class="panel-video mobile-only"
+          muted
+          playsinline
+          preload="auto"
+        ></video>
       </section>
 
       <section id="scrollVideoSection" class="scroll-video-section contrast-target" data-contrast-type="video">

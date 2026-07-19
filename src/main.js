@@ -5,6 +5,8 @@ import "./styles.css";
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const isMobileViewport = () => window.matchMedia("(max-width: 900px)").matches;
 const baseUrl = import.meta.env.BASE_URL ?? "/";
+const sectionVideoSource = new URL("../assets/veo-3.mp4", import.meta.url).href;
+const syncScrollVideoToPageScroll = true;
 
 function resolvePublicAssetPath(path) {
   if (!path) return "";
@@ -19,6 +21,8 @@ const noiseBtn = document.querySelector("#noiseBtn");
 const radioPlayer = document.querySelector("#radioPlayer");
 
 const scrollVideoSection = document.querySelector("#scrollVideoSection");
+const sectionVideoDesktop = document.querySelector("#sectionVideo");
+const sectionVideoMobile = document.querySelector("#sectionVideoMobile");
 const scrollVideoDesktop = document.querySelector("#scrollVideo");
 const scrollVideoMobile = document.querySelector("#scrollVideoMobile");
 const heroPanel = document.querySelector(".panel-hero");
@@ -51,8 +55,25 @@ let heroCursorEnabled = false;
 let heroCursorVisible = false;
 let heroCursorDirection = "next";
 let heroCursor = null;
+const heroCursorArrowSource = resolvePublicAssetPath("/media/hero-cursor-custom.png");
 
+const sectionVideos = [sectionVideoDesktop, sectionVideoMobile].filter(Boolean);
 const scrollVideos = [scrollVideoDesktop, scrollVideoMobile].filter(Boolean);
+
+function prepareSectionVideos() {
+  for (const video of sectionVideos) {
+    video.setAttribute("src", sectionVideoSource);
+    video.preload = "auto";
+    video.muted = true;
+    video.loop = true;
+    video.autoplay = true;
+    video.playsInline = true;
+    video.load();
+    video.play().catch(() => {
+      // ignored - some browsers may still require a gesture.
+    });
+  }
+}
 
 function prepareScrollVideos() {
   for (const video of scrollVideos) {
@@ -72,12 +93,8 @@ function prepareScrollVideos() {
   }
 }
 
+prepareSectionVideos();
 prepareScrollVideos();
-
-for (const video of scrollVideos) {
-  video.pause();
-  video.currentTime = 0;
-}
 
 const heroSlides = mugSwitchButtons.map((button, index) => ({
   index,
@@ -264,11 +281,16 @@ function setupHeroCursor() {
   const heroCursorImage = document.createElement("img");
   heroCursorImage.alt = "";
 
-  const previewSource = mugSwitchButtons[0]?.querySelector("img")?.getAttribute("src") ?? "";
-  const resolvedPreviewSource = resolvePublicAssetPath(previewSource);
-
-  if (resolvedPreviewSource) {
-    heroCursorImage.src = resolvedPreviewSource;
+  if (heroCursorArrowSource) {
+    heroCursorImage.addEventListener(
+      "error",
+      () => {
+        heroCursorImage.remove();
+        heroCursor?.classList.add("is-fallback");
+      },
+      { once: true }
+    );
+    heroCursorImage.src = heroCursorArrowSource;
     heroCursor.append(heroCursorImage);
   } else {
     heroCursor.classList.add("is-fallback");
@@ -321,6 +343,7 @@ function hydrateMugControls() {
 }
 
 function syncScrollVideoFrame() {
+  if (!syncScrollVideoToPageScroll) return;
   if (!scrollVideoSection) return;
   const activeVideo = getActiveScrollVideo();
   if (!activeVideo) return;
@@ -342,6 +365,7 @@ function syncScrollVideoFrame() {
 }
 
 function maintainInfiniteScrollVideoSection() {
+  if (!syncScrollVideoToPageScroll) return;
   if (!scrollVideoSection) return;
 
   const currentScrollY = window.scrollY;
@@ -424,6 +448,12 @@ function disableBrownNoise() {
 function primeScrollVideos() {
   if (scrollVideosPrimed) return;
   scrollVideosPrimed = true;
+
+  for (const video of sectionVideos) {
+    video.play().catch(() => {
+      // ignored - browser may still block without direct gesture.
+    });
+  }
 
   for (const video of scrollVideos) {
     video

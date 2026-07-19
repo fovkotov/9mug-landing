@@ -72,8 +72,8 @@ a {
 }
 
 .nav-right {
-  align-items: center;
-  column-gap: var(--layout-gutter);
+  align-items: flex-start;
+  column-gap: 119px;
   display: flex;
   grid-column: 6 / -1;
   justify-content: flex-end;
@@ -97,35 +97,27 @@ a {
 }
 
 .audio-controls {
-  align-items: center;
+  align-items: flex-start;
   display: flex;
   gap: 17px;
 }
 
 .nav-status {
-  align-items: center;
+  align-items: flex-start;
   display: flex;
   gap: 9px;
   justify-content: flex-end;
 }
 
 .audio-icon {
-  background: currentColor;
   display: block;
   height: 14px;
-  mask-image: url("/media/radio-icon.png");
-  mask-position: center;
-  mask-repeat: no-repeat;
-  mask-size: contain;
-  -webkit-mask-image: url("/media/radio-icon.png");
-  -webkit-mask-position: center;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-size: contain;
+  object-fit: contain;
   width: 16px;
 }
 
 .audio-toggle-group {
-  align-items: center;
+  align-items: flex-start;
   display: flex;
   gap: 5px;
 }
@@ -150,8 +142,8 @@ a {
 .horse-icon {
   display: block;
   height: 32px;
-  object-fit: contain;
-  width: 29px;
+  object-fit: cover;
+  width: 29.065px;
 }
 
 .meta-left {
@@ -277,15 +269,15 @@ a {
 
 .hero-cursor img {
   display: block;
-  height: 44px;
+  height: 88px;
   object-fit: contain;
-  transform: scaleX(-1);
+  transform: scaleX(1);
   transition: transform 0.16s ease;
-  width: 44px;
+  width: 88px;
 }
 
 .hero-cursor[data-direction="prev"] img {
-  transform: scaleX(1);
+  transform: scaleX(-1);
 }
 
 .hero-cursor.is-fallback {
@@ -371,6 +363,33 @@ a {
   width: var(--indicator-right-line);
 }
 
+.panel-specs {
+  background: var(--bg-base);
+}
+
+.spec-grid {
+  display: grid;
+  gap: min(8vw, 120px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  left: 50%;
+  max-width: 760px;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100vw - 140px);
+}
+
+.spec-grid p {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.docs-link {
+  bottom: 17px;
+  left: 26%;
+  position: absolute;
+}
+
 @media (max-width: 900px) {
   :root {
     --layout-columns: 4;
@@ -441,6 +460,21 @@ a {
     width: 40px;
   }
 
+  .spec-grid {
+    gap: 28px;
+    grid-template-columns: 1fr;
+    left: 16px;
+    max-width: none;
+    top: auto;
+    transform: none;
+    width: calc(100vw - 32px);
+    bottom: 58px;
+  }
+
+  .docs-link {
+    bottom: 20px;
+    left: 16px;
+  }
 }
 
 @media (max-width: 600px) {

@@ -30,16 +30,6 @@ body {
   overflow-x: hidden;
 }
 
-body.ui-light {
-  --ui-color: rgba(255, 255, 255, 0.95);
-  --ui-muted: rgba(255, 255, 255, 0.66);
-}
-
-body.ui-dark {
-  --ui-color: rgba(0, 0, 0, 0.8);
-  --ui-muted: rgba(0, 0, 0, 0.45);
-}
-
 a {
   color: inherit;
   text-decoration: none;

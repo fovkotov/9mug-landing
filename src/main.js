@@ -4,6 +4,15 @@ import "./styles.css";
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const isMobileViewport = () => window.matchMedia("(max-width: 900px)").matches;
+const baseUrl = import.meta.env.BASE_URL ?? "/";
+
+function resolvePublicAssetPath(path) {
+  if (!path) return "";
+  if (/^(?:[a-z]+:)?\/\//i.test(path) || path.startsWith("data:")) return path;
+  if (!path.startsWith("/")) return path;
+  const normalizedBase = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+  return `${normalizedBase}${path}`;
+}
 
 const radioBtn = document.querySelector("#radioBtn");
 const noiseBtn = document.querySelector("#noiseBtn");
@@ -24,7 +33,9 @@ const lenis = new Lenis({
   lerp: 0.09
 });
 
-const radioTracks = ["/audio/track-1.mp3", "/audio/track-2.mp3", "/audio/track-3.mp3"];
+const radioTracks = ["/audio/track-1.mp3", "/audio/track-2.mp3", "/audio/track-3.mp3"].map(
+  resolvePublicAssetPath
+);
 let currentTrackIndex = 0;
 let radioEnabled = false;
 let lastScrollY = window.scrollY;
@@ -44,8 +55,12 @@ for (const video of scrollVideos) {
 
 const heroSlides = mugSwitchButtons.map((button, index) => ({
   index,
-  desktopSrc: button.dataset.desktopSrc ?? heroDesktopImage?.getAttribute("src") ?? "",
-  mobileSrc: button.dataset.mobileSrc ?? heroMobileImage?.getAttribute("src") ?? "",
+  desktopSrc: resolvePublicAssetPath(
+    button.dataset.desktopSrc ?? heroDesktopImage?.getAttribute("src") ?? ""
+  ),
+  mobileSrc: resolvePublicAssetPath(
+    button.dataset.mobileSrc ?? heroMobileImage?.getAttribute("src") ?? ""
+  ),
   button
 }));
 

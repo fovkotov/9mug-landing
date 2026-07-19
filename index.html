@@ -41,26 +41,32 @@
 
     <main id="smoothRoot">
       <section class="panel panel-hero contrast-target" data-contrast-type="media">
-        <video
-          id="heroDesktopImage"
-          class="panel-video desktop-only"
-          src="./assets/veo-3.mp4"
-          muted
-          autoplay
-          loop
-          playsinline
-          preload="auto"
-        ></video>
-        <video
-          id="heroMobileImage"
-          class="panel-video mobile-only"
-          src="./assets/veo-3.mp4"
-          muted
-          autoplay
-          loop
-          playsinline
-          preload="auto"
-        ></video>
+        <img id="heroDesktopImage" class="panel-media desktop-only" src="/media/hero-desktop.png" alt="" />
+        <img id="heroMobileImage" class="panel-media mobile-only" src="/media/hero-mobile.png" alt="" />
+        <div class="mug-switcher" id="mugSwitcher" aria-label="Switch mug design">
+          <button
+            class="mug-switcher-btn is-active"
+            type="button"
+            data-slide-index="0"
+            data-desktop-src="/media/hero-desktop.png"
+            data-mobile-src="/media/hero-mobile.png"
+            aria-label="Mug design 1"
+            aria-pressed="true"
+          >
+            <img src="/media/mug/33-1.png" alt="" />
+          </button>
+          <button
+            class="mug-switcher-btn"
+            type="button"
+            data-slide-index="1"
+            data-desktop-src="/media/section-2-desktop.png"
+            data-mobile-src="/media/section-2-mobile.png"
+            aria-label="Mug design 2"
+            aria-pressed="false"
+          >
+            <img src="/media/mug/33-2.png" alt="" />
+          </button>
+        </div>
         <div class="scroll-indicator" aria-hidden="true">
           <span class="line left"></span>
           <span class="line right"></span>
@@ -93,14 +99,6 @@
         </div>
       </section>
 
-      <section class="panel panel-specs contrast-target" data-contrast-type="color" data-contrast-color="#efe8e6">
-        <div class="spec-grid">
-          <p>Material: ceramics<br />The box<br />Cup size: 9 x 11 cm</p>
-          <p>3d print</p>
-          <p>Graphics</p>
-        </div>
-        <a href="#" class="docs-link">Docs</a>
-      </section>
     </main>
 
     <audio id="radioPlayer" preload="metadata"></audio>

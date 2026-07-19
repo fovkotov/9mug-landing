@@ -36,6 +36,7 @@ const sampleCtx = sampleCanvas.getContext("2d", { willReadFrequently: true });
 const radioTracks = ["/audio/track-1.mp3", "/audio/track-2.mp3", "/audio/track-3.mp3"];
 let currentTrackIndex = 0;
 let radioEnabled = false;
+let lastScrollY = window.scrollY;
 
 let noiseEnabled = false;
 let audioContext = null;
@@ -309,6 +310,7 @@ function updateUiContrast() {
 }
 
 function syncScrollVideoFrame() {
+  if (!scrollVideoSection) return;
   const activeVideo = getActiveScrollVideo();
   if (!activeVideo || !activeVideo.duration) return;
 
@@ -317,12 +319,52 @@ function syncScrollVideoFrame() {
   if (scrollRange <= 0) return;
 
   const scrolled = clamp(-rect.top, 0, scrollRange);
-  const progress = scrolled / scrollRange;
+  const cycleDistance = Math.max(window.innerHeight * 1.2, 1);
+  const loopedScrolled = scrolled % cycleDistance;
+  const progress = loopedScrolled / cycleDistance;
   const targetTime = activeVideo.duration * progress;
 
   if (Math.abs(activeVideo.currentTime - targetTime) > 0.033) {
     activeVideo.currentTime = targetTime;
   }
+}
+
+function maintainInfiniteScrollVideoSection() {
+  if (!scrollVideoSection) return;
+
+  const currentScrollY = window.scrollY;
+  const isScrollingDown = currentScrollY > lastScrollY + 0.5;
+  if (!isScrollingDown) {
+    lastScrollY = currentScrollY;
+    return;
+  }
+
+  const viewportHeight = window.innerHeight;
+  const cycleDistance = Math.max(viewportHeight * 1.2, 1);
+  const sectionTop = scrollVideoSection.offsetTop;
+  const sectionBottom = sectionTop + scrollVideoSection.offsetHeight;
+  const maxSectionScrollY = sectionBottom - viewportHeight;
+
+  if (currentScrollY < sectionTop || currentScrollY > maxSectionScrollY) {
+    lastScrollY = currentScrollY;
+    return;
+  }
+
+  const wrapThreshold = maxSectionScrollY - cycleDistance * 0.5;
+  if (currentScrollY < wrapThreshold) {
+    lastScrollY = currentScrollY;
+    return;
+  }
+
+  const wrappedScrollY = currentScrollY - cycleDistance;
+  const minLoopScrollY = sectionTop + cycleDistance * 0.25;
+  if (wrappedScrollY < minLoopScrollY) {
+    lastScrollY = currentScrollY;
+    return;
+  }
+
+  lenis.scrollTo(wrappedScrollY, { immediate: true });
+  lastScrollY = wrappedScrollY;
 }
 
 function ensureNoiseGraph() {
@@ -431,6 +473,7 @@ hydrateMugControls();
 
 function raf(time) {
   lenis.raf(time);
+  maintainInfiniteScrollVideoSection();
   syncScrollVideoFrame();
   updateUiContrast();
   requestAnimationFrame(raf);

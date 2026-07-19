@@ -22,6 +22,8 @@ body {
   background: var(--bg-base);
   color: var(--ui-color);
   font-family: var(--font-ui);
+  font-feature-settings: "lnum" 1, "pnum" 1;
+  font-variant-numeric: lining-nums proportional-nums;
   font-size: 17px;
   letter-spacing: 0.34px;
   line-height: 1;
@@ -90,7 +92,6 @@ a {
 .nav-online {
   color: inherit;
   font-family: var(--font-ui);
-  font-feature-settings: "lnum" 1, "pnum" 1;
   font-size: 17px;
   line-height: normal;
   letter-spacing: 0.34px;
@@ -310,33 +311,6 @@ a {
   width: var(--indicator-right-line);
 }
 
-.panel-specs {
-  background: var(--bg-base);
-}
-
-.spec-grid {
-  display: grid;
-  gap: min(8vw, 120px);
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  left: 50%;
-  max-width: 760px;
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: calc(100vw - 140px);
-}
-
-.spec-grid p {
-  margin: 0;
-  white-space: nowrap;
-}
-
-.docs-link {
-  bottom: 17px;
-  left: 26%;
-  position: absolute;
-}
-
 @media (max-width: 900px) {
   :root {
     --layout-columns: 4;
@@ -407,21 +381,6 @@ a {
     width: 40px;
   }
 
-  .spec-grid {
-    gap: 28px;
-    grid-template-columns: 1fr;
-    left: 16px;
-    max-width: none;
-    top: auto;
-    transform: none;
-    width: calc(100vw - 32px);
-    bottom: 58px;
-  }
-
-  .docs-link {
-    bottom: 20px;
-    left: 16px;
-  }
 }
 
 @media (max-width: 600px) {

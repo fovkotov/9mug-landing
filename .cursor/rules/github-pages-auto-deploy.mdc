@@ -1,0 +1,14 @@
+---
+description: Auto-deploy updates to GitHub Pages after each edit
+alwaysApply: true
+---
+
+# GitHub Pages Auto Deploy
+
+- After any assistant code/content edit in this project, prepare a fresh GitHub Pages deploy.
+- Workflow:
+  1. Run `npm run build` and make sure build succeeds.
+  2. Commit relevant changes with a clear message.
+  3. Push to `origin main` so `.github/workflows/deploy.yml` publishes the update.
+- If push/deploy is blocked by auth, branch protection, or CI failure, report the blocker and next action immediately.
+- Skip auto-push only when the user explicitly says not to push for this task.

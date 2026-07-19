@@ -2,6 +2,10 @@
   --ui-color: rgba(0, 0, 0, 0.8);
   --ui-muted: rgba(0, 0, 0, 0.45);
   --bg-base: #efe8e6;
+  --font-ui: "Wremena", "Wremena Regular", "Times New Roman", serif;
+  --layout-columns: 8;
+  --layout-margin: 16px;
+  --layout-gutter: 16px;
 }
 
 * {
@@ -17,7 +21,7 @@ body {
 body {
   background: var(--bg-base);
   color: var(--ui-color);
-  font-family: "Times New Roman", serif;
+  font-family: var(--font-ui);
   font-size: 17px;
   letter-spacing: 0.34px;
   line-height: 1;
@@ -48,10 +52,11 @@ a {
 
 .top-nav {
   align-items: center;
-  display: flex;
-  justify-content: space-between;
+  column-gap: var(--layout-gutter);
+  display: grid;
+  grid-template-columns: repeat(var(--layout-columns), minmax(0, 1fr));
   left: 0;
-  padding: 16px 16px 0;
+  padding: 16px var(--layout-margin) 0;
   pointer-events: none;
   position: fixed;
   top: 0;
@@ -62,26 +67,80 @@ a {
   pointer-events: auto;
 }
 
-.nav-left,
+.nav-left {
+  align-items: center;
+  column-gap: var(--layout-gutter);
+  display: grid;
+  grid-column: 3 / span 2;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: 0;
+}
+
 .nav-right {
   align-items: center;
-  display: flex;
-  gap: 26px;
+  column-gap: var(--layout-gutter);
+  display: grid;
+  grid-column: 7 / span 2;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: 0;
 }
 
 .nav-link,
 .control-btn,
 .nav-online {
   color: inherit;
+  font-family: var(--font-ui);
+  font-feature-settings: "lnum" 1, "pnum" 1;
   font-size: 17px;
+  line-height: normal;
   letter-spacing: 0.34px;
+}
+
+.nav-link {
+  justify-self: start;
+}
+
+.audio-controls {
+  align-items: center;
+  display: flex;
+  gap: 17px;
+}
+
+.nav-status {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-self: start;
+}
+
+.audio-icon {
+  background: color-mix(in srgb, var(--ui-color) 100%, transparent);
+  display: block;
+  height: 14px;
+  mask-image: url("/media/radio-icon.png");
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  -webkit-mask-image: url("/media/radio-icon.png");
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  width: 16px;
+}
+
+.audio-toggle-group {
+  align-items: center;
+  display: flex;
+  gap: 5px;
 }
 
 .control-btn {
   background: transparent;
   border: 0;
   cursor: pointer;
+  line-height: normal;
   padding: 0;
+  transition: color 0.2s ease;
 }
 
 .control-btn.is-muted {
@@ -100,7 +159,7 @@ a {
 }
 
 .meta-left {
-  left: 15px;
+  left: var(--layout-margin);
   position: fixed;
   top: 42vh;
 }
@@ -170,6 +229,62 @@ a {
   top: 0;
 }
 
+.panel-hero {
+  --indicator-max-line: 40px;
+  --indicator-min-line: 12px;
+  --indicator-left-line: var(--indicator-min-line);
+  --indicator-right-line: var(--indicator-max-line);
+}
+
+.mug-switcher {
+  bottom: 42px;
+  display: flex;
+  gap: 12px;
+  left: 50%;
+  position: absolute;
+  transform: translateX(-50%);
+  z-index: 4;
+}
+
+.mug-switcher-btn {
+  align-items: center;
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--ui-color) 45%, transparent);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  height: 44px;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+  width: 44px;
+}
+
+.mug-switcher-btn.is-active {
+  border-color: color-mix(in srgb, var(--ui-color) 90%, transparent);
+  transform: scale(1.04);
+}
+
+.mug-switcher-btn img {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.mug-switcher-btn.is-fallback {
+  border-style: dashed;
+}
+
+.mug-switcher-dot {
+  background: color-mix(in srgb, var(--ui-color) 80%, transparent);
+  border-radius: 50%;
+  display: block;
+  height: 8px;
+  width: 8px;
+}
+
 .scroll-indicator {
   align-items: center;
   bottom: 16px;
@@ -187,12 +302,12 @@ a {
   height: 1px;
 }
 
-.scroll-indicator .line.long {
-  width: 40px;
+.scroll-indicator .line.left {
+  width: var(--indicator-left-line);
 }
 
-.scroll-indicator .line.short {
-  width: 12px;
+.scroll-indicator .line.right {
+  width: var(--indicator-right-line);
 }
 
 .panel-specs {
@@ -223,6 +338,10 @@ a {
 }
 
 @media (max-width: 900px) {
+  :root {
+    --layout-columns: 4;
+  }
+
   .desktop-only {
     display: none;
   }
@@ -238,11 +357,29 @@ a {
   }
 
   .top-nav {
-    padding: 16px;
+    padding: 16px var(--layout-margin) 0;
+  }
+
+  .nav-left {
+    grid-column: 1 / span 2;
   }
 
   .nav-right {
-    gap: 14px;
+    display: flex;
+    grid-column: 3 / span 2;
+    justify-self: end;
+  }
+
+  .nav-status {
+    display: none;
+  }
+
+  .audio-controls {
+    gap: 12px;
+  }
+
+  .audio-toggle-group {
+    gap: 4px;
   }
 
   .horse-icon,
@@ -260,6 +397,16 @@ a {
     height: 360vh;
   }
 
+  .mug-switcher {
+    bottom: 40px;
+    gap: 10px;
+  }
+
+  .mug-switcher-btn {
+    height: 40px;
+    width: 40px;
+  }
+
   .spec-grid {
     gap: 28px;
     grid-template-columns: 1fr;
@@ -274,5 +421,12 @@ a {
   .docs-link {
     bottom: 20px;
     left: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  :root {
+    --layout-margin: 12px;
+    --layout-gutter: 12px;
   }
 }

@@ -13,10 +13,17 @@
       </div>
 
       <div class="nav-right">
-        <button id="radioBtn" class="control-btn" type="button">Radio</button>
-        <button id="noiseBtn" class="control-btn is-muted" type="button">Noise</button>
-        <span class="nav-online">9 online</span>
-        <img class="horse-icon" src="/media/horse.png" alt="" />
+        <div class="audio-controls" aria-label="Audio controls">
+          <span class="audio-icon" aria-hidden="true"></span>
+          <div class="audio-toggle-group">
+            <button id="radioBtn" class="control-btn" type="button">Radio</button>
+            <button id="noiseBtn" class="control-btn is-muted" type="button">Noise</button>
+          </div>
+        </div>
+        <div class="nav-status">
+          <span class="nav-online">9 online</span>
+          <img class="horse-icon" src="/media/horse.png" alt="" />
+        </div>
       </div>
     </header>
 
@@ -33,12 +40,30 @@
     </aside>
 
     <main id="smoothRoot">
-      <section class="panel contrast-target" data-contrast-type="media">
-        <img class="panel-media desktop-only" src="/media/hero-desktop.png" alt="" />
-        <img class="panel-media mobile-only" src="/media/hero-mobile.png" alt="" />
+      <section class="panel panel-hero contrast-target" data-contrast-type="media">
+        <video
+          id="heroDesktopImage"
+          class="panel-video desktop-only"
+          src="./assets/veo-3.mp4"
+          muted
+          autoplay
+          loop
+          playsinline
+          preload="auto"
+        ></video>
+        <video
+          id="heroMobileImage"
+          class="panel-video mobile-only"
+          src="./assets/veo-3.mp4"
+          muted
+          autoplay
+          loop
+          playsinline
+          preload="auto"
+        ></video>
         <div class="scroll-indicator" aria-hidden="true">
-          <span class="line long"></span>
-          <span class="line short"></span>
+          <span class="line left"></span>
+          <span class="line right"></span>
         </div>
       </section>
 

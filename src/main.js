@@ -489,7 +489,6 @@ hydrateMugControls();
 
 function raf(time) {
   lenis.raf(time);
-  maintainInfiniteScrollVideoSection();
   syncScrollVideoFrame();
   requestAnimationFrame(raf);
 }

@@ -26,7 +26,7 @@ const priceToggle = document.querySelector("#priceToggle");
 const priceToggleIcon = document.querySelector("#priceToggleIcon");
 const bagStatusText = document.querySelector("#bagStatusText");
 const pricePlusIconSource = resolvePublicAssetPath("/media/price-plus.svg");
-const priceCheckIconSource = resolvePublicAssetPath("/media/price-check.svg");
+const priceCheckIconSource = resolvePublicAssetPath("/media/price-check-white.png");
 
 const scrollVideoSection = document.querySelector("#scrollVideoSection");
 const sectionVideoDesktop = document.querySelector("#sectionVideo");

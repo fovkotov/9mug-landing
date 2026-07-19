@@ -110,6 +110,7 @@ a {
 }
 
 .audio-icon {
+  cursor: pointer;
   display: block;
   height: 14px;
   object-fit: contain;

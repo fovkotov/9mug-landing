@@ -17,8 +17,11 @@ function resolvePublicAssetPath(path) {
 }
 
 const radioBtn = document.querySelector("#radioBtn");
+const radioIcon = document.querySelector("#radioIcon");
 const noiseBtn = document.querySelector("#noiseBtn");
 const radioPlayer = document.querySelector("#radioPlayer");
+const radioPlayIconSource = resolvePublicAssetPath("/media/radio-icon-play.png");
+const radioPauseIconSource = resolvePublicAssetPath("/media/radio-icon-pause.png");
 
 const scrollVideoSection = document.querySelector("#scrollVideoSection");
 const sectionVideoDesktop = document.querySelector("#sectionVideo");
@@ -120,6 +123,9 @@ function playTrack(index) {
 function setRadioUiState() {
   radioBtn.classList.toggle("is-active", radioEnabled);
   radioBtn.classList.toggle("is-muted", !radioEnabled);
+  if (radioIcon) {
+    radioIcon.src = radioEnabled ? radioPauseIconSource : radioPlayIconSource;
+  }
 }
 
 function updateNoiseUiState() {
@@ -482,7 +488,7 @@ radioPlayer.addEventListener("ended", async () => {
   }
 });
 
-radioBtn.addEventListener("click", async () => {
+async function toggleRadioPlayback() {
   playButtonTick();
   radioEnabled = !radioEnabled;
 
@@ -497,6 +503,14 @@ radioBtn.addEventListener("click", async () => {
   }
 
   setRadioUiState();
+}
+
+radioBtn.addEventListener("click", () => {
+  toggleRadioPlayback();
+});
+
+radioIcon?.addEventListener("click", () => {
+  toggleRadioPlayback();
 });
 
 noiseBtn.addEventListener("click", () => {

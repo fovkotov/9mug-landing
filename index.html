@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>9MUG</title>
+  </head>
+  <body>
+    <header id="topNav" class="top-nav is-dark">
+      <div class="nav-left">
+        <a href="#" class="nav-link">9pra</a>
+        <a href="#" class="nav-link">bag</a>
+      </div>
+
+      <div class="nav-right">
+        <button id="radioBtn" class="control-btn" type="button">Radio</button>
+        <button id="noiseBtn" class="control-btn is-muted" type="button">Noise</button>
+        <span class="nav-online">9 online</span>
+        <img class="horse-icon" src="/media/horse.png" alt="" />
+      </div>
+    </header>
+
+    <aside class="meta-left">
+      <div class="meta-row">
+        <span>9MUG</span>
+        <span class="meta-dot is-hollow"></span>
+        <span class="meta-dot is-filled"></span>
+      </div>
+      <div class="meta-row">
+        <span>$300</span>
+      </div>
+    </aside>
+
+    <main id="smoothRoot">
+      <section class="panel contrast-target" data-contrast-type="media">
+        <img class="panel-media desktop-only" src="/media/hero-desktop.png" alt="" />
+        <img class="panel-media mobile-only" src="/media/hero-mobile.png" alt="" />
+        <div class="scroll-indicator" aria-hidden="true">
+          <span class="line long"></span>
+          <span class="line short"></span>
+        </div>
+      </section>
+
+      <section class="panel contrast-target" data-contrast-type="media">
+        <img class="panel-media desktop-only" src="/media/section-2-desktop.png" alt="" />
+        <img class="panel-media mobile-only" src="/media/section-2-mobile.png" alt="" />
+      </section>
+
+      <section id="scrollVideoSection" class="scroll-video-section contrast-target" data-contrast-type="video">
+        <div class="scroll-video-sticky">
+          <video
+            id="scrollVideo"
+            class="panel-video desktop-only"
+            src="/media/scroll-video.mp4"
+            muted
+            playsinline
+            preload="auto"
+          ></video>
+          <video
+            id="scrollVideoMobile"
+            class="panel-video mobile-only"
+            src="/media/scroll-video.mp4"
+            muted
+            playsinline
+            preload="auto"
+          ></video>
+        </div>
+      </section>
+
+      <section class="panel panel-specs contrast-target" data-contrast-type="color" data-contrast-color="#efe8e6">
+        <div class="spec-grid">
+          <p>Material: ceramics<br />The box<br />Cup size: 9 x 11 cm</p>
+          <p>3d print</p>
+          <p>Graphics</p>
+        </div>
+        <a href="#" class="docs-link">Docs</a>
+      </section>
+    </main>
+
+    <audio id="radioPlayer" preload="metadata"></audio>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

@@ -514,17 +514,10 @@ async function toggleRadioPlayback() {
   }
 
   setRadioUiState();
+  updateNoiseUiState();
 }
 
-radioBtn.addEventListener("click", () => {
-  toggleRadioPlayback();
-});
-
-radioIcon?.addEventListener("click", () => {
-  toggleRadioPlayback();
-});
-
-noiseBtn.addEventListener("click", () => {
+function toggleNoisePlayback() {
   playButtonTick();
   activeAudioControl = "noise";
 
@@ -541,6 +534,22 @@ noiseBtn.addEventListener("click", () => {
   }
 
   setRadioUiState();
+}
+
+radioBtn.addEventListener("click", () => {
+  toggleRadioPlayback();
+});
+
+radioIcon?.addEventListener("click", () => {
+  if (activeAudioControl === "noise") {
+    toggleNoisePlayback();
+    return;
+  }
+  toggleRadioPlayback();
+});
+
+noiseBtn.addEventListener("click", () => {
+  toggleNoisePlayback();
 });
 
 window.addEventListener("pointerdown", primeScrollVideos, { once: true });

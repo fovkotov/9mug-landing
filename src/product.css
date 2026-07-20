@@ -574,12 +574,15 @@ a {
 .scratch-cursor {
   --cursor-x: 0px;
   --cursor-y: 0px;
+  /* Hotspot: tip on the right border of the cursor image */
+  --cursor-hotspot-x: 98%;
+  --cursor-hotspot-y: 0%;
   left: var(--cursor-x);
   opacity: 0;
   pointer-events: none;
   position: absolute;
   top: var(--cursor-y);
-  transform: translate(-50%, -6%);
+  transform: translate(calc(-1 * var(--cursor-hotspot-x)), calc(-1 * var(--cursor-hotspot-y)));
   transition: opacity 0.12s ease;
   z-index: 6;
 }
@@ -590,7 +593,7 @@ a {
 
 .scratch-cursor img {
   display: block;
-  height: 88px;
+  height: 176px;
   object-fit: contain;
   width: auto;
 }
@@ -748,7 +751,7 @@ a {
   }
 
   .scratch-cursor img {
-    height: 72px;
+    height: 144px;
   }
 
   .spec-grid {

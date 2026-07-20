@@ -517,8 +517,8 @@ function setupScratchPanel() {
     return set[density] || set["1x"];
   }
 
-  function getBrushRadius() {
-    const base = isMobileViewport() ? 28 : 34;
+  function getStrokeWidth() {
+    const base = isMobileViewport() ? 3.5 : 4.5;
     return base * dpr;
   }
 
@@ -603,27 +603,27 @@ function setupScratchPanel() {
   function scratchAt(point) {
     if (!point || !coverReady) return;
 
-    const radius = getBrushRadius();
+    const strokeWidth = getStrokeWidth();
     ctx.save();
     ctx.globalCompositeOperation = "destination-out";
+    ctx.strokeStyle = "#000";
     ctx.fillStyle = "#000";
-    ctx.beginPath();
-    ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.lineWidth = strokeWidth;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
 
     if (lastPoint) {
-      const dx = point.x - lastPoint.x;
-      const dy = point.y - lastPoint.y;
-      const distance = Math.hypot(dx, dy);
-      const steps = Math.max(1, Math.ceil(distance / (radius * 0.35)));
-      for (let i = 1; i <= steps; i += 1) {
-        const t = i / steps;
-        const x = lastPoint.x + dx * t;
-        const y = lastPoint.y + dy * t;
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      ctx.beginPath();
+      ctx.moveTo(lastPoint.x, lastPoint.y);
+      ctx.lineTo(point.x, point.y);
+      ctx.stroke();
+    } else {
+      // Blade tip contact: short vertical line starting at the cursor's right-edge tip
+      const tipLength = Math.max(strokeWidth * 2.5, 8 * dpr);
+      ctx.beginPath();
+      ctx.moveTo(point.x, point.y);
+      ctx.lineTo(point.x, point.y + tipLength);
+      ctx.stroke();
     }
 
     ctx.restore();

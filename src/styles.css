@@ -177,7 +177,8 @@ a {
   left: var(--layout-margin);
   mix-blend-mode: difference;
   position: fixed;
-  top: 374px;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 20;
 }
 

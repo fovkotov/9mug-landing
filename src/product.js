@@ -37,7 +37,6 @@ const heroPanel = document.querySelector(".panel-hero");
 const heroDesktopImage = document.querySelector("#heroDesktopImage");
 const heroMobileImage = document.querySelector("#heroMobileImage");
 const heroDragSlider = document.querySelector("#heroDragSlider");
-const heroDragThumb = document.querySelector("#heroDragThumb");
 const metaSwitchFixed = document.querySelector(".meta-switch-fixed");
 const metaSwitcher = document.querySelector("#metaSwitcher");
 const metaSwitchFirst = document.querySelector("#metaSwitchFirst");
@@ -179,8 +178,9 @@ function updateHeroIndicator(index, total) {
   const maxLine = parseFloat(styles.getPropertyValue("--indicator-max-line")) || 40;
   const hasMultipleSlides = total > 1;
   const progress = hasMultipleSlides ? index / (total - 1) : 0;
-  const left = minLine + (maxLine - minLine) * progress;
-  const right = maxLine - (maxLine - minLine) * progress;
+  // First slide: long left / short right (matches desktop + Figma).
+  const left = maxLine - (maxLine - minLine) * progress;
+  const right = minLine + (maxLine - minLine) * progress;
 
   heroPanel.style.setProperty("--indicator-left-line", `${left}px`);
   heroPanel.style.setProperty("--indicator-right-line", `${right}px`);
@@ -242,9 +242,16 @@ function getWrappedHeroSlideIndex(index) {
 }
 
 function setHeroDragSliderProgress(progress) {
-  if (!heroDragSlider) return;
+  if (!heroPanel) return;
   const boundedProgress = clamp(progress, 0, 1);
-  heroDragSlider.style.setProperty("--slider-progress", boundedProgress.toFixed(4));
+  const styles = getComputedStyle(heroPanel);
+  const minLine = parseFloat(styles.getPropertyValue("--indicator-min-line")) || 12;
+  const maxLine = parseFloat(styles.getPropertyValue("--indicator-max-line")) || 40;
+  const left = maxLine - (maxLine - minLine) * boundedProgress;
+  const right = minLine + (maxLine - minLine) * boundedProgress;
+
+  heroPanel.style.setProperty("--indicator-left-line", `${left}px`);
+  heroPanel.style.setProperty("--indicator-right-line", `${right}px`);
 }
 
 function syncHeroDragSliderFromIndex() {
@@ -278,7 +285,7 @@ function applyHeroSliderProgress(progress, { snapToStep = false } = {}) {
 }
 
 function setupHeroDragSlider() {
-  if (!heroDragSlider || !heroDragThumb || heroSlides.length < 2) return;
+  if (!heroDragSlider || heroSlides.length < 2) return;
 
   const handlePointerMove = (event) => {
     if (!isHeroSliderDragging) return;

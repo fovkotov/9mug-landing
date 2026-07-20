@@ -384,19 +384,14 @@ a {
 .panel-hero {
   --indicator-max-line: 40px;
   --indicator-min-line: 12px;
-  --indicator-left-line: var(--indicator-min-line);
-  --indicator-right-line: var(--indicator-max-line);
+  --indicator-left-line: var(--indicator-max-line);
+  --indicator-right-line: var(--indicator-min-line);
 }
 
 .hero-drag-slider {
-  --slider-progress: 0;
-  bottom: 42px;
+  cursor: grab;
   height: 24px;
-  left: 50%;
-  position: absolute;
   touch-action: none;
-  transform: translateX(-50%);
-  width: 154px;
   z-index: 4;
 }
 
@@ -405,40 +400,15 @@ a {
   outline-offset: 4px;
 }
 
-.hero-drag-slider-track {
-  background: color-mix(in srgb, var(--ui-color) 30%, transparent);
-  height: 1px;
-  left: 0;
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+.hero-drag-slider.is-dragging {
+  cursor: grabbing;
 }
 
-.hero-drag-slider-track::before {
-  background: color-mix(in srgb, var(--ui-color) 80%, transparent);
-  content: "";
-  height: 1px;
-  left: 0;
-  position: absolute;
-  top: 0;
-  width: calc(var(--slider-progress) * 100%);
+.hero-drag-slider .line {
+  transition: width 0.12s ease;
 }
 
-.hero-drag-slider-thumb {
-  background: var(--bg-base);
-  border: 1px solid color-mix(in srgb, var(--ui-color) 60%, transparent);
-  border-radius: 50%;
-  height: 14px;
-  left: calc(var(--slider-progress) * (100% - 14px));
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  transition: left 0.12s ease;
-  width: 14px;
-}
-
-.hero-drag-slider.is-dragging .hero-drag-slider-thumb {
+.hero-drag-slider.is-dragging .line {
   transition: none;
 }
 
@@ -549,10 +519,11 @@ a {
   left: 50%;
   position: absolute;
   transform: translateX(-50%);
+  width: 60px;
 }
 
 .scroll-indicator .line {
-  background: color-mix(in srgb, var(--ui-color) 75%, transparent);
+  background: rgba(0, 0, 0, 0.8);
   display: block;
   height: 1px;
 }
@@ -735,8 +706,7 @@ a {
   }
 
   .hero-drag-slider {
-    bottom: 40px;
-    width: 140px;
+    bottom: 16px;
   }
 
   .scratch-cursor img {

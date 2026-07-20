@@ -178,10 +178,12 @@ a {
 }
 
 .meta-bar {
+  color: #fff;
   display: flex;
   flex-direction: column;
   gap: 5px;
   left: var(--layout-margin);
+  mix-blend-mode: difference;
   position: fixed;
   top: 42vh;
   z-index: 30;
@@ -194,17 +196,10 @@ a {
   width: fit-content;
 }
 
-.meta-blend {
-  color: #fff;
-  mix-blend-mode: difference;
-}
-
 .meta-bar-price {
   align-items: center;
-  color: #fff;
   display: flex;
   gap: 4px;
-  mix-blend-mode: difference;
   width: fit-content;
 }
 
@@ -238,14 +233,12 @@ a {
 }
 
 .meta-title-text {
-  color: #fff;
   display: block;
   font-family: var(--font-ui);
   font-feature-settings: "lnum" 1, "pnum" 1;
   font-size: 17px;
   letter-spacing: 0.34px;
   line-height: normal;
-  mix-blend-mode: difference;
   white-space: nowrap;
 }
 
@@ -265,13 +258,13 @@ a {
   height: 14px;
   justify-content: center;
   padding: 0;
-  position: relative;
   width: 14px;
 }
 
+/* Source is white: under parent difference it reads as the solid dark swatch. */
 .meta-switch-fill {
-  background: #000;
-  border: 0.875px solid rgba(0, 0, 0, 0.12);
+  background: #fff;
+  border: 0.875px solid rgba(255, 255, 255, 0.12);
   border-radius: 105px;
   display: block;
   height: 14px;
@@ -279,24 +272,22 @@ a {
 }
 
 .meta-switch-first-fill {
+  align-items: center;
   background: #fff;
   border: 0.875px solid rgba(255, 255, 255, 0.12);
   border-radius: 105px;
-  display: block;
+  display: flex;
   height: 14px;
-  mix-blend-mode: difference;
+  justify-content: center;
   width: 14px;
 }
 
+/* Source is black: under parent difference it becomes the light center. */
 .meta-switch-first-dot {
   background: #000;
   border-radius: 50%;
   display: block;
   height: 5.25px;
-  left: 50%;
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
   width: 5.25px;
 }
 

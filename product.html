@@ -40,8 +40,9 @@
         <span class="meta-title-text">9MUG</span>
         <div class="meta-switcher" id="metaSwitcher" aria-label="Switch mug design">
           <button id="metaSwitchFirst" class="meta-switch-btn is-active" type="button" aria-label="Mug design 1" aria-pressed="true">
-            <span class="meta-switch-first-fill" aria-hidden="true"></span>
-            <span class="meta-switch-first-dot" aria-hidden="true"></span>
+            <span class="meta-switch-first-fill" aria-hidden="true">
+              <span class="meta-switch-first-dot"></span>
+            </span>
           </button>
           <button id="metaSwitchSecond" class="meta-switch-btn" type="button" aria-label="Mug design 2" aria-pressed="false">
             <span class="meta-switch-fill"></span>
@@ -66,21 +67,31 @@
     </div>
 
     <main id="smoothRoot">
-      <section class="panel panel-hero contrast-target" data-contrast-type="media">
-        <img id="heroDesktopImage" class="panel-media desktop-only" src="/media/hero-desktop.png" alt="" />
-        <img id="heroMobileImage" class="panel-media mobile-only" src="/media/hero-mobile.png" alt="" />
-        <div
-          id="heroDragSlider"
-          class="hero-drag-slider scroll-indicator"
-          role="slider"
-          aria-label="Switch mug design"
-          aria-valuemin="1"
-          aria-valuemax="4"
-          aria-valuenow="1"
-          tabindex="0"
-        >
-          <span class="line left" aria-hidden="true"></span>
-          <span class="line right" aria-hidden="true"></span>
+      <section class="panel panel-hero contrast-target" data-contrast-type="media" data-hero-mode="directional">
+        <!-- Active: directional ProductViewer (mug_frames look-around) -->
+        <div id="productViewerRoot" class="product-viewer-root" aria-label="9MUG product view"></div>
+
+        <!--
+          Legacy slide hero — exact previous first-screen interaction.
+          Restore via src/hero/hero-mode.js → HERO_INTERACTION_MODE = "legacy-slides"
+          (also see src/hero/legacy-hero.fragment.html).
+        -->
+        <div id="legacyHeroRoot" class="legacy-hero-root" hidden>
+          <img id="heroDesktopImage" class="panel-media desktop-only" src="/media/hero-desktop.png" alt="" />
+          <img id="heroMobileImage" class="panel-media mobile-only" src="/media/hero-mobile.png" alt="" />
+          <div
+            id="heroDragSlider"
+            class="hero-drag-slider scroll-indicator"
+            role="slider"
+            aria-label="Switch mug design"
+            aria-valuemin="1"
+            aria-valuemax="4"
+            aria-valuenow="1"
+            tabindex="0"
+          >
+            <span class="line left" aria-hidden="true"></span>
+            <span class="line right" aria-hidden="true"></span>
+          </div>
         </div>
       </section>
 

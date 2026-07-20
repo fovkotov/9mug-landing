@@ -181,7 +181,6 @@ a {
   flex-direction: column;
   gap: 5px;
   left: var(--layout-margin);
-  mix-blend-mode: difference;
   position: fixed;
   top: 42vh;
   z-index: 30;
@@ -232,6 +231,7 @@ a {
 
 .meta-difference-text {
   color: #fff;
+  mix-blend-mode: difference;
 }
 
 .meta-title-text {
@@ -247,6 +247,7 @@ a {
   align-items: center;
   display: flex;
   gap: 3.5px;
+  isolation: isolate;
   mix-blend-mode: normal;
 }
 
@@ -711,7 +712,6 @@ a {
     height: 49px;
     justify-content: space-between;
     left: 0;
-    mix-blend-mode: normal;
     padding: 16px;
     right: 0;
     top: auto;
@@ -722,6 +722,7 @@ a {
   .meta-bar .meta-title-text,
   .meta-bar-price {
     color: var(--ui-color);
+    mix-blend-mode: normal;
   }
 
   .meta-bar-left {

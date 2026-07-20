@@ -184,6 +184,47 @@ a {
   margin-bottom: 5px;
 }
 
+.meta-switcher {
+  align-items: center;
+  display: flex;
+  gap: 3.5px;
+}
+
+.meta-switch-btn {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 105px;
+  cursor: pointer;
+  display: flex;
+  height: 14px;
+  justify-content: center;
+  padding: 0;
+  transition: filter 0.2s ease;
+  width: 14px;
+}
+
+.meta-switch-btn.is-active {
+  filter: brightness(1.05);
+}
+
+.meta-switch-icon {
+  display: block;
+  height: 14px;
+  transform: scale(1.14);
+  transform-origin: center;
+  width: 14px;
+}
+
+.meta-switch-fill {
+  background: var(--ui-color);
+  border: 0.875px solid color-mix(in srgb, var(--ui-color) 12%, transparent);
+  border-radius: 105px;
+  display: block;
+  height: 14px;
+  width: 14px;
+}
+
 .price-plus-icon {
   cursor: pointer;
   display: block;
@@ -249,6 +290,7 @@ a {
   display: flex;
   flex-direction: column;
   gap: 0;
+  position: relative;
 }
 
 .image-grid-row {
@@ -269,6 +311,30 @@ a {
   height: auto;
   object-fit: cover;
   width: 100%;
+}
+
+.image-grid-text {
+  color: var(--ui-overlay);
+  font-family: var(--font-ui);
+  font-feature-settings: "lnum" 1, "pnum" 1;
+  font-size: 17px;
+  letter-spacing: 0.34px;
+  line-height: normal;
+  margin: 0;
+  mix-blend-mode: difference;
+  pointer-events: none;
+  position: absolute;
+  white-space: nowrap;
+  z-index: 2;
+  bottom: 16px;
+}
+
+.image-grid-text-details {
+  left: 16px;
+}
+
+.image-grid-text-support {
+  left: 26%;
 }
 
 .scroll-video-section {

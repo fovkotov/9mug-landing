@@ -34,8 +34,14 @@
     <aside class="meta-left">
       <div class="meta-row">
         <span>9MUG</span>
-        <span class="meta-dot is-hollow"></span>
-        <span class="meta-dot is-filled"></span>
+        <div class="meta-switcher" id="metaSwitcher" aria-label="Switch mug design">
+          <button id="metaSwitchFirst" class="meta-switch-btn is-active" type="button" aria-label="Mug design 1" aria-pressed="true">
+            <img class="meta-switch-icon" src="/media/meta-switch-left.png" alt="" />
+          </button>
+          <button id="metaSwitchSecond" class="meta-switch-btn" type="button" aria-label="Mug design 2" aria-pressed="false">
+            <span class="meta-switch-fill"></span>
+          </button>
+        </div>
       </div>
       <div id="priceToggle" class="meta-row meta-row-price price-toggle" role="button" tabindex="0" aria-pressed="false">
         <img id="priceToggleIcon" class="price-plus-icon" src="/media/price-plus.svg" alt="" />
@@ -128,6 +134,8 @@
           <img class="image-grid-item" src="/media/grid-bottom-left.jpg" alt="" loading="lazy" decoding="async" />
           <img class="image-grid-item" src="/media/grid-bottom-right.jpg" alt="" loading="lazy" decoding="async" />
         </div>
+        <p class="image-grid-text image-grid-text-details">Details</p>
+        <p class="image-grid-text image-grid-text-support">Support</p>
       </section>
 
       <section id="scrollVideoSection" class="scroll-video-section contrast-target" data-contrast-type="video">

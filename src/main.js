@@ -37,6 +37,9 @@ const heroPanel = document.querySelector(".panel-hero");
 const heroDesktopImage = document.querySelector("#heroDesktopImage");
 const heroMobileImage = document.querySelector("#heroMobileImage");
 const mugSwitcher = document.querySelector("#mugSwitcher");
+const metaSwitcher = document.querySelector("#metaSwitcher");
+const metaSwitchFirst = document.querySelector("#metaSwitchFirst");
+const metaSwitchSecond = document.querySelector("#metaSwitchSecond");
 const mugSwitchButtons = [...document.querySelectorAll(".mug-switcher-btn")];
 
 const lenis = new Lenis({
@@ -169,6 +172,18 @@ function updateHeroIndicator(index, total) {
   heroPanel.style.setProperty("--indicator-right-line", `${right}px`);
 }
 
+function setMetaSwitcherState(index) {
+  if (!metaSwitcher || !metaSwitchFirst || !metaSwitchSecond) return;
+
+  const isFirstActive = index === 0;
+  const isSecondActive = !isFirstActive;
+
+  metaSwitchFirst.classList.toggle("is-active", isFirstActive);
+  metaSwitchSecond.classList.toggle("is-active", isSecondActive);
+  metaSwitchFirst.setAttribute("aria-pressed", String(isFirstActive));
+  metaSwitchSecond.setAttribute("aria-pressed", String(isSecondActive));
+}
+
 function setImageSourceWithFallback(target, source, fallback) {
   if (!target) return;
   const nextSource = source || fallback;
@@ -202,6 +217,7 @@ function setHeroSlide(index) {
   }
 
   updateHeroIndicator(boundedIndex, heroSlides.length);
+  setMetaSwitcherState(boundedIndex);
 }
 
 function getWrappedHeroSlideIndex(index) {
@@ -368,6 +384,22 @@ function hydrateMugControls() {
 
   setHeroSlide(currentHeroSlideIndex);
   setupHeroCursor();
+}
+
+function setupMetaSwitcher() {
+  if (!metaSwitcher || !metaSwitchFirst || !metaSwitchSecond || heroSlides.length < 2) return;
+
+  metaSwitchFirst.addEventListener("click", () => {
+    if (currentHeroSlideIndex === 0) return;
+    playButtonTick();
+    setHeroSlide(0);
+  });
+
+  metaSwitchSecond.addEventListener("click", () => {
+    if (currentHeroSlideIndex === 1) return;
+    playButtonTick();
+    setHeroSlide(1);
+  });
 }
 
 function syncScrollVideoFrame() {
@@ -600,6 +632,7 @@ setRadioUiState();
 updateNoiseUiState();
 setBagUiState();
 hydrateMugControls();
+setupMetaSwitcher();
 
 function raf(time) {
   lenis.raf(time);

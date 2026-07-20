@@ -248,12 +248,12 @@ a {
   background: var(--bg-base);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
 }
 
 .image-grid-row {
   display: grid;
-  gap: 2px;
+  gap: 0;
 }
 
 .image-grid-row-two {

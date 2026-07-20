@@ -36,12 +36,22 @@
     </header>
 
     <aside class="meta-bar" aria-label="Product actions">
-      <div class="meta-bar-left">
-        <span class="meta-title-text">9MUG</span>
+      <div class="meta-title-row">
+        <span class="meta-title-text meta-blend">9MUG</span>
+        <div class="meta-switcher" id="metaSwitcher" aria-label="Switch mug design">
+          <button id="metaSwitchFirst" class="meta-switch-btn is-active" type="button" aria-label="Mug design 1" aria-pressed="true">
+            <span class="meta-switch-first-fill" aria-hidden="true">
+              <span class="meta-switch-first-dot"></span>
+            </span>
+          </button>
+          <button id="metaSwitchSecond" class="meta-switch-btn" type="button" aria-label="Mug design 2" aria-pressed="false">
+            <span class="meta-switch-fill"></span>
+          </button>
+        </div>
       </div>
       <div
         id="priceToggle"
-        class="meta-bar-price price-toggle"
+        class="meta-bar-price price-toggle meta-blend"
         role="button"
         tabindex="0"
         aria-pressed="false"
@@ -50,19 +60,6 @@
         <span>$300</span>
       </div>
     </aside>
-
-    <div class="meta-switch-fixed">
-      <div class="meta-switcher" id="metaSwitcher" aria-label="Switch mug design">
-        <button id="metaSwitchFirst" class="meta-switch-btn is-active" type="button" aria-label="Mug design 1" aria-pressed="true">
-          <span class="meta-switch-first-fill" aria-hidden="true">
-            <span class="meta-switch-first-dot"></span>
-          </span>
-        </button>
-        <button id="metaSwitchSecond" class="meta-switch-btn" type="button" aria-label="Mug design 2" aria-pressed="false">
-          <span class="meta-switch-fill"></span>
-        </button>
-      </div>
-    </div>
 
     <div class="bottom-links" aria-label="Additional links">
       <a href="#" class="bottom-link bottom-link-details">Details</a>

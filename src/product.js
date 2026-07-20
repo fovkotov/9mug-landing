@@ -517,9 +517,13 @@ function setupScratchPanel() {
     return set[density] || set["1x"];
   }
 
-  function getStrokeWidth() {
-    const base = isMobileViewport() ? 3.5 : 4.5;
-    return base * dpr;
+  function getBladeSize() {
+    // Vertical wipe: tall line from the tip down the right edge of the cursor.
+    const cursorHeight = isMobileViewport() ? 144 : 176;
+    return {
+      width: (isMobileViewport() ? 14 : 18) * dpr,
+      height: cursorHeight * 0.92 * dpr
+    };
   }
 
   function setScratchCursorVisibility(visible) {
@@ -603,27 +607,24 @@ function setupScratchPanel() {
   function scratchAt(point) {
     if (!point || !coverReady) return;
 
-    const strokeWidth = getStrokeWidth();
+    const { width: bladeWidth, height: bladeHeight } = getBladeSize();
     ctx.save();
     ctx.globalCompositeOperation = "destination-out";
-    ctx.strokeStyle = "#000";
     ctx.fillStyle = "#000";
-    ctx.lineWidth = strokeWidth;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
 
     if (lastPoint) {
+      // Sweep a vertical blade strip between positions so motion stays a line, not a dot trail.
       ctx.beginPath();
       ctx.moveTo(lastPoint.x, lastPoint.y);
       ctx.lineTo(point.x, point.y);
-      ctx.stroke();
+      ctx.lineTo(point.x + bladeWidth, point.y);
+      ctx.lineTo(point.x + bladeWidth, point.y + bladeHeight);
+      ctx.lineTo(lastPoint.x + bladeWidth, lastPoint.y + bladeHeight);
+      ctx.lineTo(lastPoint.x, lastPoint.y + bladeHeight);
+      ctx.closePath();
+      ctx.fill();
     } else {
-      // Blade tip contact: short vertical line starting at the cursor's right-edge tip
-      const tipLength = Math.max(strokeWidth * 2.5, 8 * dpr);
-      ctx.beginPath();
-      ctx.moveTo(point.x, point.y);
-      ctx.lineTo(point.x, point.y + tipLength);
-      ctx.stroke();
+      ctx.fillRect(point.x, point.y, bladeWidth, bladeHeight);
     }
 
     ctx.restore();

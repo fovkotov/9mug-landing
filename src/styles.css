@@ -233,10 +233,22 @@ a {
   width: 100%;
 }
 
+.home-video-dim {
+  background: rgba(0, 0, 0, 0.24);
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 1;
+}
+
 .hero-panel-link {
   inset: 0;
   position: absolute;
   z-index: 2;
+}
+
+.home-meta {
+  display: none;
 }
 
 .home-media,
@@ -345,6 +357,84 @@ a {
 
   .mobile-panel-title.is-light {
     color: var(--ui-overlay);
+  }
+
+  .home-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    left: 16px;
+    pointer-events: none;
+    position: fixed;
+    top: 42vh;
+    z-index: 30;
+  }
+
+  .home-meta a {
+    pointer-events: auto;
+  }
+
+  .home-meta-title-row {
+    align-items: center;
+    display: flex;
+    gap: 4px;
+    width: fit-content;
+  }
+
+  .home-meta-title,
+  .home-meta-price {
+    color: #fff;
+    font-family: var(--font-ui);
+    font-feature-settings: "lnum" 1, "pnum" 1;
+    font-size: 17px;
+    letter-spacing: 0.34px;
+    line-height: normal;
+    mix-blend-mode: difference;
+    white-space: nowrap;
+  }
+
+  .home-meta-price {
+    align-items: center;
+    display: flex;
+    gap: 4px;
+    width: fit-content;
+  }
+
+  .home-meta-plus {
+    display: block;
+    height: 12px;
+    object-fit: contain;
+    width: 12px;
+  }
+
+  .home-meta-switcher {
+    align-items: center;
+    display: flex;
+    gap: 3.5px;
+  }
+
+  .home-meta-switch {
+    background: #000;
+    border: 0.875px solid rgba(0, 0, 0, 0.12);
+    border-radius: 105px;
+    display: block;
+    height: 14px;
+    width: 14px;
+  }
+
+  .home-meta-switch-first {
+    align-items: center;
+    background: #fff;
+    display: flex;
+    justify-content: center;
+  }
+
+  .home-meta-switch-dot {
+    background: #000;
+    border-radius: 50%;
+    display: block;
+    height: 5.25px;
+    width: 5.25px;
   }
 }
 

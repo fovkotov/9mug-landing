@@ -84,7 +84,7 @@ export function createProductViewer(root, options = {}) {
   }
 
   const images = normalizeImages(options.images);
-  const transitionDuration = clamp(options.transitionDuration ?? 200, 150, 250);
+  const transitionDuration = Math.max(0, options.transitionDuration ?? 0);
   const deadZoneRadius = options.deadZoneRadius ?? 0.14;
   const horizontalSensitivity = options.horizontalSensitivity ?? 1;
   const verticalSensitivity = options.verticalSensitivity ?? 1;
@@ -100,7 +100,9 @@ export function createProductViewer(root, options = {}) {
   const layerNodes = new Map();
 
   root.classList.add("product-viewer");
-  root.style.setProperty("--product-viewer-duration", `${transitionDuration}ms`);
+  if (transitionDuration > 0) {
+    root.style.setProperty("--product-viewer-duration", `${transitionDuration}ms`);
+  }
   root.setAttribute("data-ready", "false");
 
   const stage = document.createElement("div");

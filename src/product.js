@@ -154,7 +154,7 @@ function setupDirectionalProductHero() {
 
   createProductViewer(productViewerRoot, {
     images,
-    transitionDuration: 200,
+    transitionDuration: 0,
     deadZoneRadius: 0.14,
     horizontalSensitivity: 1.05,
     verticalSensitivity: 0.95

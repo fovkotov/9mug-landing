@@ -1,5 +1,4 @@
 .product-viewer {
-  --product-viewer-duration: 200ms;
   background: #eceae6;
   height: 100%;
   inset: 0;
@@ -23,7 +22,6 @@
   object-position: center;
   pointer-events: none;
   position: absolute;
-  transition: opacity var(--product-viewer-duration) ease;
   user-select: none;
   width: 100%;
   will-change: opacity;

@@ -34,14 +34,14 @@
       </div>
     </header>
 
-    <aside class="meta-left desktop-only">
-      <div class="meta-item">9MUG</div>
-      <div class="meta-item is-muted">Texture Pack</div>
-      <div class="meta-item is-muted">Cutting Mat</div>
+    <aside class="meta-left desktop-only" aria-label="Section menu">
+      <a class="meta-item is-active" href="#section-mug" data-section-link>9MUG</a>
+      <a class="meta-item" href="#section-texture" data-section-link>Texture Pack</a>
+      <a class="meta-item" href="#section-mat" data-section-link>Cutting Mat</a>
     </aside>
 
     <main class="home-main">
-      <section class="home-panel home-panel-hero">
+      <section id="section-mug" class="home-panel home-panel-hero">
         <a class="hero-panel-link" href="./product.html" aria-label="Open product page"></a>
         <picture class="home-media">
           <source media="(max-width: 900px)" srcset="/media/home/hero-mobile.png" />
@@ -50,7 +50,7 @@
         <p class="mobile-panel-title">9MUG</p>
       </section>
 
-      <section class="home-panel home-panel-frame">
+      <section id="section-texture" class="home-panel home-panel-frame">
         <picture class="home-media">
           <source media="(max-width: 900px)" srcset="/media/home/frame-mobile.png" />
           <img src="/media/home/frame-desktop.png" alt="" />
@@ -58,7 +58,7 @@
         <p class="mobile-panel-title">Texture Pack</p>
       </section>
 
-      <section class="home-panel home-panel-mat">
+      <section id="section-mat" class="home-panel home-panel-mat">
         <picture class="home-media">
           <source media="(max-width: 900px)" srcset="/media/home/mat-mobile.png" />
           <img src="/media/home/mat-desktop.png" alt="" />

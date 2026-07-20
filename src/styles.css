@@ -172,6 +172,8 @@ a {
 
 .meta-left {
   color: #fff;
+  display: flex;
+  flex-direction: column;
   left: var(--layout-margin);
   mix-blend-mode: difference;
   position: fixed;
@@ -180,11 +182,17 @@ a {
 }
 
 .meta-item {
+  color: inherit;
+  cursor: pointer;
+  display: block;
   margin: 0 0 1px;
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
 }
 
-.meta-item.is-muted {
-  color: var(--ui-overlay-muted);
+.meta-item.is-active {
+  opacity: 1;
 }
 
 .home-main {

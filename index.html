@@ -36,7 +36,9 @@
         <span>9MUG</span>
         <div class="meta-switcher" id="metaSwitcher" aria-label="Switch mug design">
           <button id="metaSwitchFirst" class="meta-switch-btn is-active" type="button" aria-label="Mug design 1" aria-pressed="true">
-            <img class="meta-switch-icon" src="/media/meta-switch-left.png" alt="" />
+            <span class="meta-switch-first-fill" aria-hidden="true">
+              <span class="meta-switch-first-dot"></span>
+            </span>
           </button>
           <button id="metaSwitchSecond" class="meta-switch-btn" type="button" aria-label="Mug design 2" aria-pressed="false">
             <span class="meta-switch-fill"></span>
@@ -48,6 +50,11 @@
         <span>$300</span>
       </div>
     </aside>
+
+    <div class="bottom-links" aria-label="Additional links">
+      <a href="#" class="bottom-link bottom-link-details">Details</a>
+      <a href="#" class="bottom-link bottom-link-support">Support</a>
+    </div>
 
     <main id="smoothRoot">
       <section class="panel panel-hero contrast-target" data-contrast-type="media">
@@ -134,8 +141,6 @@
           <img class="image-grid-item" src="/media/grid-bottom-left.jpg" alt="" loading="lazy" decoding="async" />
           <img class="image-grid-item" src="/media/grid-bottom-right.jpg" alt="" loading="lazy" decoding="async" />
         </div>
-        <p class="image-grid-text image-grid-text-details">Details</p>
-        <p class="image-grid-text image-grid-text-support">Support</p>
       </section>
 
       <section id="scrollVideoSection" class="scroll-video-section contrast-target" data-contrast-type="video">

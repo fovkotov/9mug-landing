@@ -20,10 +20,23 @@
   inset: 0;
   object-fit: cover;
   object-position: center;
+  opacity: 1;
   pointer-events: none;
   position: absolute;
   user-select: none;
   width: 100%;
-  will-change: opacity;
+  z-index: 1;
 }
 
+.product-viewer__frame.is-active {
+  z-index: 2;
+}
+
+.product-viewer:not(.is-ready) .product-viewer__frame:not(.is-active) {
+  /* Keep inactive frames out of view until decoded, without opacity decode bugs */
+  visibility: hidden;
+}
+
+.product-viewer.is-ready .product-viewer__frame {
+  visibility: visible;
+}

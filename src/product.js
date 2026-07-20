@@ -4,7 +4,11 @@ import "./product.css";
 import "./components/ProductViewer.css";
 import { HERO_INTERACTION_MODE } from "./hero/hero-mode.js";
 import { setupLegacySlidesHero } from "./hero/legacy-slides-hero.js";
-import { createMugFrameImages, createProductViewer } from "./components/ProductViewer.js";
+import {
+  createMugFrameImages,
+  createProductViewer,
+  preloadMugFrameImages
+} from "./components/ProductViewer.js";
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const isMobileViewport = () => window.matchMedia("(max-width: 900px)").matches;
@@ -18,6 +22,10 @@ function resolvePublicAssetPath(path) {
   const normalizedBase = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
   return `${normalizedBase}${path}`;
 }
+
+// Kick off mug-frame download + decode immediately on product page entry.
+const mugFrameImages = createMugFrameImages(resolvePublicAssetPath, "/media/mug_frames");
+const mugFramesWarmup = preloadMugFrameImages(mugFrameImages);
 
 const radioBtn = document.querySelector("#radioBtn");
 const radioIcon = document.querySelector("#radioIcon");
@@ -150,15 +158,16 @@ function setupDirectionalProductHero() {
   heroPanel.dataset.heroMode = "directional";
   heroPanel.classList.add("is-directional-hero");
 
-  const images = createMugFrameImages(resolvePublicAssetPath, "/media/mug_frames");
-
   createProductViewer(productViewerRoot, {
-    images,
+    images: mugFrameImages,
     transitionDuration: 0,
     deadZoneRadius: 0.14,
     horizontalSensitivity: 1.05,
     verticalSensitivity: 0.95
   });
+
+  // Ensure the page-entry warmup stays referenced / in flight.
+  void mugFramesWarmup;
 }
 
 function setupProductHero() {

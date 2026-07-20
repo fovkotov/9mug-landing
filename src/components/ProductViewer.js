@@ -6,7 +6,7 @@
  *   horizontalSensitivity, verticalSensitivity
  *
  * Interaction updates run through requestAnimationFrame and only mutate
- * image opacity — no React state / layout thrash during pointer move.
+ * z-index — frames stay fully painted to avoid decode flashes.
  */
 
 const DIRECTION_KEYS = [
@@ -46,26 +46,73 @@ function supportsFinePointer() {
   return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 }
 
-function preloadImage(src) {
-  return new Promise((resolve) => {
-    if (!src) {
-      resolve(null);
-      return;
-    }
-    const image = new Image();
-    image.decoding = "async";
-    image.onload = () => resolve(image);
-    image.onerror = () => resolve(null);
-    image.src = src;
-  });
-}
-
 function normalizeImages(images = {}) {
   const normalized = {};
   for (const key of DIRECTION_KEYS) {
     if (images[key]) normalized[key] = images[key];
   }
   return normalized;
+}
+
+function injectPreloadLink(src) {
+  if (!src || !document.head) return;
+  if (document.head.querySelector(`link[data-mug-frame-preload="true"][href="${src}"]`)) {
+    return;
+  }
+  const link = document.createElement("link");
+  link.rel = "preload";
+  link.as = "image";
+  link.href = src;
+  link.dataset.mugFramePreload = "true";
+  document.head.append(link);
+}
+
+async function decodeImageSource(src) {
+  if (!src) return null;
+  const image = new Image();
+  image.decoding = "async";
+  image.src = src;
+  try {
+    await image.decode();
+  } catch {
+    if (!image.complete) {
+      await new Promise((resolve) => {
+        image.onload = resolve;
+        image.onerror = resolve;
+      });
+    }
+  }
+  return image;
+}
+
+/**
+ * Start fetching + decoding every frame as early as possible (page entry).
+ * Safe to call before mounting ProductViewer.
+ */
+export function preloadMugFrameImages(images = {}) {
+  const normalized = normalizeImages(images);
+  const sources = DIRECTION_KEYS.map((key) => normalized[key]).filter(Boolean);
+
+  for (const src of sources) {
+    injectPreloadLink(src);
+  }
+
+  return Promise.all(sources.map(decodeImageSource));
+}
+
+async function waitForFramePainted(img) {
+  if (!img) return;
+  if (!img.complete || img.naturalWidth === 0) {
+    await new Promise((resolve) => {
+      img.addEventListener("load", resolve, { once: true });
+      img.addEventListener("error", resolve, { once: true });
+    });
+  }
+  try {
+    await img.decode();
+  } catch {
+    // Ignore decode failures; load event already settled.
+  }
 }
 
 /**
@@ -84,7 +131,6 @@ export function createProductViewer(root, options = {}) {
   }
 
   const images = normalizeImages(options.images);
-  const transitionDuration = Math.max(0, options.transitionDuration ?? 0);
   const deadZoneRadius = options.deadZoneRadius ?? 0.14;
   const horizontalSensitivity = options.horizontalSensitivity ?? 1;
   const verticalSensitivity = options.verticalSensitivity ?? 1;
@@ -100,9 +146,6 @@ export function createProductViewer(root, options = {}) {
   const layerNodes = new Map();
 
   root.classList.add("product-viewer");
-  if (transitionDuration > 0) {
-    root.style.setProperty("--product-viewer-duration", `${transitionDuration}ms`);
-  }
   root.setAttribute("data-ready", "false");
 
   const stage = document.createElement("div");
@@ -113,24 +156,29 @@ export function createProductViewer(root, options = {}) {
     const src = images[key];
     if (!src) continue;
 
+    injectPreloadLink(src);
+
     const img = document.createElement("img");
     img.className = "product-viewer__frame";
     img.alt = "";
     img.draggable = false;
-    img.decoding = "async";
+    img.decoding = "sync";
+    img.loading = "eager";
+    img.fetchPriority = key === "center" ? "high" : "high";
     img.src = src;
     img.dataset.direction = key;
-    img.style.opacity = key === "center" ? "1" : "0";
+    img.classList.toggle("is-active", key === "center");
     stage.append(img);
     layerNodes.set(key, img);
   }
 
   function setActiveDirection(nextKey) {
     if (!layerNodes.has(nextKey) || nextKey === activeKey) return;
+
     const previous = layerNodes.get(activeKey);
     const next = layerNodes.get(nextKey);
-    if (previous) previous.style.opacity = "0";
-    if (next) next.style.opacity = "1";
+    previous?.classList.remove("is-active");
+    next?.classList.add("is-active");
     activeKey = nextKey;
     root.dataset.direction = nextKey;
   }
@@ -145,7 +193,6 @@ export function createProductViewer(root, options = {}) {
     for (const key of DIRECTION_KEYS) {
       if (key === "center" || !layerNodes.has(key)) continue;
       const vector = DIRECTION_VECTORS[key];
-      // Prefer direction alignment, then distance to the direction tip.
       const dx = nx - vector.x;
       const dy = ny - vector.y;
       const score = dx * dx + dy * dy;
@@ -216,9 +263,17 @@ export function createProductViewer(root, options = {}) {
   }
 
   async function preload() {
-    const sources = DIRECTION_KEYS.map((key) => images[key]).filter(Boolean);
-    await Promise.all(sources.map(preloadImage));
+    // Warm HTTP cache first, then decode every mounted frame before interaction.
+    await preloadMugFrameImages(images);
     if (destroyed) return;
+
+    await Promise.all([...layerNodes.values()].map(waitForFramePainted));
+    if (destroyed) return;
+
+    // Force a paint pass so every layer is composited before first switch.
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    if (destroyed) return;
+
     ready = true;
     root.setAttribute("data-ready", "true");
     root.classList.add("is-ready");

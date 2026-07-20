@@ -172,11 +172,19 @@ a {
 }
 
 .meta-left {
-  color: var(--ui-overlay);
+  color: #fff;
   left: var(--layout-margin);
-  mix-blend-mode: normal;
+  mix-blend-mode: difference;
   position: fixed;
   top: 42vh;
+}
+
+.meta-switch-fixed {
+  left: calc(var(--layout-margin) + 85px);
+  mix-blend-mode: normal;
+  position: fixed;
+  top: calc(42vh + 1px);
+  z-index: 21;
 }
 
 .bottom-links {
@@ -215,10 +223,8 @@ a {
   margin-bottom: 5px;
 }
 
-.meta-row > span,
-.meta-row-price {
-  color: var(--ui-overlay);
-  mix-blend-mode: difference;
+.meta-difference-text {
+  color: #fff;
 }
 
 .meta-switcher {
@@ -585,6 +591,7 @@ a {
   .horse-icon,
   .nav-online,
   .meta-left,
+  .meta-switch-fixed,
   .bottom-links {
     display: none;
   }

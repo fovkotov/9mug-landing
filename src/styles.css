@@ -2,6 +2,7 @@
   --ui-color: rgba(0, 0, 0, 0.8);
   --ui-muted: rgba(0, 0, 0, 0.48);
   --ui-overlay: rgba(255, 255, 255, 0.8);
+  --ui-overlay-muted: rgba(255, 255, 255, 0.32);
   --bg-base: #efe8e6;
   --font-ui: "Wremena", "Wremena Regular", "Times New Roman", serif;
   --layout-columns: 8;
@@ -50,6 +51,7 @@ a {
 .nav-online,
 .meta-item,
 .mobile-panel-title {
+  color: inherit;
   font-family: var(--font-ui);
   font-feature-settings: "lnum" 1, "pnum" 1;
   font-size: 17px;
@@ -59,11 +61,12 @@ a {
 
 .top-nav {
   align-items: center;
-  color: var(--ui-color);
+  color: var(--ui-overlay);
   column-gap: var(--layout-gutter);
   display: grid;
   grid-template-columns: repeat(var(--layout-columns), minmax(0, 1fr));
   left: 0;
+  mix-blend-mode: difference;
   padding: 16px var(--layout-margin) 0;
   pointer-events: none;
   position: fixed;
@@ -140,18 +143,18 @@ a {
 .control-btn {
   background: transparent;
   border: 0;
-  color: var(--ui-color);
+  color: inherit;
   cursor: pointer;
   padding: 0;
   transition: color 0.2s ease;
 }
 
 .control-btn.is-muted {
-  color: var(--ui-muted);
+  color: var(--ui-overlay-muted);
 }
 
 .control-btn.is-active {
-  color: var(--ui-color);
+  color: var(--ui-overlay);
 }
 
 .nav-status {
@@ -168,8 +171,9 @@ a {
 }
 
 .meta-left {
-  color: var(--ui-color);
+  color: #fff;
   left: var(--layout-margin);
+  mix-blend-mode: difference;
   position: fixed;
   top: 374px;
   z-index: 20;
@@ -180,7 +184,7 @@ a {
 }
 
 .meta-item.is-muted {
-  color: var(--ui-muted);
+  color: var(--ui-overlay-muted);
 }
 
 .home-main {

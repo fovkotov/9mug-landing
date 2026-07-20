@@ -182,6 +182,7 @@ a {
   flex-direction: column;
   left: var(--layout-margin);
   mix-blend-mode: difference;
+  pointer-events: none;
   position: fixed;
   top: 50%;
   transform: translateY(-50%);
@@ -194,12 +195,18 @@ a {
   display: block;
   margin: 0 0 1px;
   opacity: 0.4;
+  pointer-events: auto;
   transition: opacity 0.2s ease;
   white-space: nowrap;
 }
 
 .meta-item.is-active {
   opacity: 1;
+}
+
+.page-home .meta-item {
+  cursor: default;
+  pointer-events: none;
 }
 
 .home-main {

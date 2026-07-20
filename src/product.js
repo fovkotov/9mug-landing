@@ -26,6 +26,7 @@ const priceToggle = document.querySelector("#priceToggle");
 const priceToggleIcon = document.querySelector("#priceToggleIcon");
 const bagStatusText = document.querySelector("#bagStatusText");
 const pricePlusIconSource = resolvePublicAssetPath("/media/price-plus.svg");
+const pricePlusDarkIconSource = resolvePublicAssetPath("/media/price-plus-dark.svg");
 const priceCheckIconSource = resolvePublicAssetPath("/media/price-check-crisp.png");
 
 const scrollVideoSection = document.querySelector("#scrollVideoSection");
@@ -37,11 +38,9 @@ const heroPanel = document.querySelector(".panel-hero");
 const heroDesktopImage = document.querySelector("#heroDesktopImage");
 const heroMobileImage = document.querySelector("#heroMobileImage");
 const heroDragSlider = document.querySelector("#heroDragSlider");
-const metaSwitchFixed = document.querySelector(".meta-switch-fixed");
 const metaSwitcher = document.querySelector("#metaSwitcher");
 const metaSwitchFirst = document.querySelector("#metaSwitchFirst");
 const metaSwitchSecond = document.querySelector("#metaSwitchSecond");
-const metaTitleText = document.querySelector(".meta-title-text");
 const mugSwitchButtons = [...document.querySelectorAll(".mug-switcher-btn")];
 
 const lenis = new Lenis({
@@ -161,7 +160,8 @@ function updateNoiseUiState() {
 
 function setBagUiState() {
   if (priceToggleIcon) {
-    priceToggleIcon.src = bagSelected ? priceCheckIconSource : pricePlusIconSource;
+    const plusSource = isMobileViewport() ? pricePlusDarkIconSource : pricePlusIconSource;
+    priceToggleIcon.src = bagSelected ? priceCheckIconSource : plusSource;
   }
   if (bagStatusText) {
     bagStatusText.classList.toggle("is-visible", bagSelected);
@@ -702,21 +702,6 @@ function setupMetaSwitcher() {
   });
 }
 
-function syncMetaSwitcherPosition() {
-  if (!metaSwitchFixed || !metaTitleText) return;
-
-  const switchGap = 6;
-  const switchSize = 14;
-  const switchYOffset = -2;
-  const titleRect = metaTitleText.getBoundingClientRect();
-  const left = titleRect.right + switchGap;
-  const top =
-    titleRect.top + Math.max((titleRect.height - switchSize) / 2, 0) + switchYOffset;
-
-  metaSwitchFixed.style.left = `${left}px`;
-  metaSwitchFixed.style.top = `${top}px`;
-}
-
 function syncScrollVideoFrame() {
   if (!syncScrollVideoToPageScroll) return;
   if (!scrollVideoSection) return;
@@ -949,10 +934,6 @@ setBagUiState();
 setupHeroControls();
 setupScratchPanel();
 setupMetaSwitcher();
-syncMetaSwitcherPosition();
-window.addEventListener("resize", syncMetaSwitcherPosition);
-window.addEventListener("orientationchange", syncMetaSwitcherPosition);
-document.fonts?.ready?.then(syncMetaSwitcherPosition).catch(() => {});
 
 function raf(time) {
   lenis.raf(time);

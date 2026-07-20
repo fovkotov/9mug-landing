@@ -38,7 +38,7 @@ a {
 }
 
 .top-nav,
-.meta-left,
+.meta-bar,
 .bottom-links {
   color: var(--ui-overlay);
   transition: color 0.2s ease;
@@ -175,20 +175,30 @@ a {
   width: 29.065px;
 }
 
-.meta-left {
+.meta-bar {
   color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
   left: var(--layout-margin);
   mix-blend-mode: difference;
   position: fixed;
   top: 42vh;
+  z-index: 30;
 }
 
-.meta-switch-fixed {
-  left: calc(var(--layout-margin) + 85px);
-  mix-blend-mode: normal;
-  position: fixed;
-  top: calc(42vh + 1px);
-  z-index: 21;
+.meta-bar-left {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  width: 88px;
+}
+
+.meta-bar-price {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+  width: fit-content;
 }
 
 .bottom-links {
@@ -220,15 +230,17 @@ a {
   left: 26%;
 }
 
-.meta-row {
-  align-items: center;
-  display: flex;
-  gap: 6px;
-  margin-bottom: 5px;
-}
-
 .meta-difference-text {
   color: #fff;
+}
+
+.meta-title-text {
+  font-family: var(--font-ui);
+  font-feature-settings: "lnum" 1, "pnum" 1;
+  font-size: 17px;
+  letter-spacing: 0.34px;
+  line-height: normal;
+  white-space: nowrap;
 }
 
 .meta-switcher {
@@ -285,10 +297,6 @@ a {
   height: 12px;
   object-fit: contain;
   width: 12px;
-}
-
-.meta-row-price {
-  gap: 4px;
 }
 
 .price-toggle {
@@ -686,10 +694,40 @@ a {
 
   .horse-icon,
   .nav-online,
-  .meta-left,
-  .meta-switch-fixed,
   .bottom-links {
     display: none;
+  }
+
+  .meta-bar {
+    align-items: center;
+    background: transparent;
+    bottom: 0;
+    color: var(--ui-color);
+    flex-direction: row;
+    gap: 0;
+    height: 49px;
+    justify-content: space-between;
+    left: 0;
+    mix-blend-mode: normal;
+    padding: 16px;
+    right: 0;
+    top: auto;
+    width: 100%;
+  }
+
+  .meta-bar .meta-difference-text,
+  .meta-bar .meta-title-text,
+  .meta-bar-price {
+    color: var(--ui-color);
+  }
+
+  .meta-bar-left {
+    flex-shrink: 0;
+    width: 88px;
+  }
+
+  .meta-bar-price {
+    flex-shrink: 0;
   }
 
   .control-btn,
@@ -706,7 +744,7 @@ a {
   }
 
   .hero-drag-slider {
-    bottom: 16px;
+    bottom: 65px;
   }
 
   .scratch-cursor img {

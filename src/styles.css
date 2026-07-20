@@ -172,7 +172,7 @@ a {
 }
 
 .meta-left {
-  color: var(--ui-color);
+  color: var(--ui-overlay);
   left: var(--layout-margin);
   mix-blend-mode: normal;
   position: fixed;
@@ -215,10 +215,17 @@ a {
   margin-bottom: 5px;
 }
 
+.meta-row > span,
+.meta-row-price {
+  color: var(--ui-overlay);
+  mix-blend-mode: difference;
+}
+
 .meta-switcher {
   align-items: center;
   display: flex;
   gap: 3.5px;
+  mix-blend-mode: normal;
 }
 
 .meta-switch-btn {

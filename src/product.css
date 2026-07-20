@@ -565,6 +565,57 @@ a {
   width: var(--indicator-right-line);
 }
 
+.panel-scratch {
+  background: var(--bg-base);
+  cursor: none;
+  touch-action: none;
+  user-select: none;
+}
+
+.scratch-reveal {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+  position: absolute;
+  width: 100%;
+}
+
+.scratch-canvas {
+  display: block;
+  height: 100%;
+  inset: 0;
+  position: absolute;
+  touch-action: none;
+  width: 100%;
+  z-index: 2;
+}
+
+.scratch-cursor {
+  --cursor-x: 0px;
+  --cursor-y: 0px;
+  left: var(--cursor-x);
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  top: var(--cursor-y);
+  transform: translate(-50%, -6%);
+  transition: opacity 0.12s ease;
+  z-index: 6;
+}
+
+.panel-scratch.has-scratch-cursor .scratch-cursor {
+  opacity: 1;
+}
+
+.scratch-cursor img {
+  display: block;
+  height: 88px;
+  object-fit: contain;
+  width: auto;
+}
+
 .panel-specs {
   background: var(--bg-base);
 }
@@ -688,6 +739,10 @@ a {
     width: 140px;
   }
 
+  .scratch-cursor img {
+    height: 72px;
+  }
+
   .spec-grid {
     gap: 28px;
     grid-template-columns: 1fr;
@@ -707,7 +762,7 @@ a {
 
 @media (max-width: 600px) {
   :root {
-    --layout-margin: 12px;
+    --layout-margin: 16px;
     --layout-gutter: 12px;
   }
 }

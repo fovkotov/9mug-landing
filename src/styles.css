@@ -238,19 +238,24 @@ a {
   .top-nav {
     align-items: center;
     display: flex;
+    height: 49px;
     justify-content: space-between;
-    padding-top: max(16px, env(safe-area-inset-top));
+    padding: max(16px, env(safe-area-inset-top)) 16px 16px;
   }
 
   .nav-left {
+    align-items: center;
     display: flex;
-    grid-column: auto;
+    flex: 1 1 auto;
+    grid-column: unset;
     justify-content: space-between;
+    min-width: 0;
     width: 100%;
   }
 
   .bag-group {
     gap: 0;
+    justify-self: end;
   }
 
   .bag-status {
@@ -263,10 +268,13 @@ a {
 
   .nav-mobile-center {
     display: block;
+    height: 8px;
     left: 50%;
-    position: fixed;
-    top: calc(max(16px, env(safe-area-inset-top)) + 4px);
+    pointer-events: none;
+    position: absolute;
+    top: calc(max(16px, env(safe-area-inset-top)) + 4.5px);
     transform: translateX(-50%);
+    width: 46px;
     z-index: 21;
   }
 

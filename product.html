@@ -17,7 +17,7 @@
       </div>
 
       <div class="nav-mobile-center" aria-hidden="true">
-        <img src="/media/menu-mobile.png" alt="" />
+        <img src="/media/menu-mobile.svg" alt="" />
       </div>
 
       <div class="nav-right">
@@ -80,6 +80,27 @@
           <span class="hero-drag-slider-track" aria-hidden="true"></span>
           <span id="heroDragThumb" class="hero-drag-slider-thumb" aria-hidden="true"></span>
         </div>
+      </section>
+
+      <section
+        id="scratchSection"
+        class="panel panel-scratch contrast-target"
+        data-contrast-type="media"
+        aria-label="Scratch to reveal"
+      >
+        <img
+          class="scratch-reveal desktop-only"
+          src="/media/scratch/reveal-desktop.png"
+          alt=""
+          draggable="false"
+        />
+        <img
+          class="scratch-reveal mobile-only"
+          src="/media/scratch/reveal-mobile.png"
+          alt=""
+          draggable="false"
+        />
+        <canvas id="scratchCanvas" class="scratch-canvas" aria-hidden="true"></canvas>
       </section>
 
       <section class="panel contrast-target" data-contrast-type="video">

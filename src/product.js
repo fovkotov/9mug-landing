@@ -150,6 +150,53 @@ function setBagUiState() {
   }
 }
 
+function setupMugFrameMap() {
+  const mapRoot = document.querySelector("#mugFrameMap");
+  const mapSection = document.querySelector("#mugFrameMapSection");
+  if (!mapRoot || !mapSection) return;
+
+  if (HERO_INTERACTION_MODE === "legacy-slides") {
+    mapSection.hidden = true;
+    return;
+  }
+
+  const labelMap = {
+    center: "center",
+    left: "left",
+    farLeft: "far_left",
+    right: "right",
+    farRight: "far_right",
+    up: "up",
+    down: "down",
+    upLeft: "up_left",
+    upRight: "up_right",
+    downLeft: "down_left",
+    downRight: "down_right"
+  };
+
+  mapRoot.replaceChildren();
+
+  for (const [key, src] of Object.entries(mugFrameImages)) {
+    const cell = document.createElement("figure");
+    cell.className = "mug-frame-map__cell";
+    cell.dataset.key = key;
+
+    const image = document.createElement("img");
+    image.className = "mug-frame-map__image";
+    image.src = src;
+    image.alt = labelMap[key] || key;
+    image.loading = "eager";
+    image.decoding = "async";
+
+    const caption = document.createElement("figcaption");
+    caption.className = "mug-frame-map__label";
+    caption.textContent = labelMap[key] || key;
+
+    cell.append(image, caption);
+    mapRoot.append(cell);
+  }
+}
+
 function setupDirectionalProductHero() {
   if (!heroPanel || !productViewerRoot) return;
 
@@ -165,6 +212,8 @@ function setupDirectionalProductHero() {
     horizontalSensitivity: 1.05,
     verticalSensitivity: 0.95
   });
+
+  setupMugFrameMap();
 
   // Ensure the page-entry warmup stays referenced / in flight.
   void mugFramesWarmup;

@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>9PRA</title>
+  </head>
+  <body>
+    <header id="topNav" class="top-nav">
+      <div class="nav-left">
+        <a href="./index.html" class="nav-link">9pra</a>
+        <div class="bag-group">
+          <a href="#" class="nav-link nav-link-bag">bag</a>
+          <span id="bagStatusText" class="bag-status" aria-live="polite">(1) $300</span>
+        </div>
+      </div>
+
+      <div class="nav-mobile-center" aria-hidden="true">
+        <img src="/media/menu-mobile.png" alt="" />
+      </div>
+
+      <div class="nav-right">
+        <div class="audio-controls" aria-label="Audio controls">
+          <img id="radioIcon" class="audio-icon" src="/media/radio-icon-play.png" alt="" />
+          <div class="audio-toggle-group">
+            <button id="radioBtn" class="control-btn" type="button">Radio</button>
+            <button id="noiseBtn" class="control-btn is-muted" type="button">Noise</button>
+          </div>
+        </div>
+        <div class="nav-status">
+          <span class="nav-online">9 online</span>
+          <img class="horse-icon" src="/media/online-icon-figma.png" alt="" />
+        </div>
+      </div>
+    </header>
+
+    <aside class="meta-left">
+      <div class="meta-row">
+        <span class="meta-difference-text meta-title-text">9MUG</span>
+      </div>
+      <div id="priceToggle" class="meta-row meta-row-price price-toggle meta-difference-text" role="button" tabindex="0" aria-pressed="false">
+        <img id="priceToggleIcon" class="price-plus-icon" src="/media/price-plus.svg" alt="" />
+        <span>$300</span>
+      </div>
+    </aside>
+
+    <div class="meta-switch-fixed">
+      <div class="meta-switcher" id="metaSwitcher" aria-label="Switch mug design">
+        <button id="metaSwitchFirst" class="meta-switch-btn is-active" type="button" aria-label="Mug design 1" aria-pressed="true">
+          <span class="meta-switch-first-fill" aria-hidden="true">
+            <span class="meta-switch-first-dot"></span>
+          </span>
+        </button>
+        <button id="metaSwitchSecond" class="meta-switch-btn" type="button" aria-label="Mug design 2" aria-pressed="false">
+          <span class="meta-switch-fill"></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="bottom-links" aria-label="Additional links">
+      <a href="#" class="bottom-link bottom-link-details">Details</a>
+      <a href="#" class="bottom-link bottom-link-support">Support</a>
+    </div>
+
+    <main id="smoothRoot">
+      <section class="panel panel-hero contrast-target" data-contrast-type="media">
+        <img id="heroDesktopImage" class="panel-media desktop-only" src="/media/hero-desktop.png" alt="" />
+        <img id="heroMobileImage" class="panel-media mobile-only" src="/media/hero-mobile.png" alt="" />
+        <div
+          id="heroDragSlider"
+          class="hero-drag-slider"
+          role="slider"
+          aria-label="Switch mug design"
+          aria-valuemin="1"
+          aria-valuemax="4"
+          aria-valuenow="1"
+          tabindex="0"
+        >
+          <span class="hero-drag-slider-track" aria-hidden="true"></span>
+          <span id="heroDragThumb" class="hero-drag-slider-thumb" aria-hidden="true"></span>
+        </div>
+      </section>
+
+      <section class="panel contrast-target" data-contrast-type="video">
+        <video
+          id="sectionVideo"
+          class="panel-video desktop-only"
+          muted
+          playsinline
+          preload="auto"
+        ></video>
+        <video
+          id="sectionVideoMobile"
+          class="panel-video mobile-only"
+          muted
+          playsinline
+          preload="auto"
+        ></video>
+      </section>
+
+      <section class="image-grid-section contrast-target" data-contrast-type="media">
+        <div class="image-grid-row image-grid-row-two">
+          <img class="image-grid-item" src="/media/grid-top-left.jpg" alt="" loading="lazy" decoding="async" />
+          <img class="image-grid-item" src="/media/grid-top-right.jpg" alt="" loading="lazy" decoding="async" />
+        </div>
+        <div class="image-grid-row image-grid-row-full">
+          <img class="image-grid-item" src="/media/grid-middle.jpg" alt="" loading="lazy" decoding="async" />
+        </div>
+        <div class="image-grid-row image-grid-row-two">
+          <img class="image-grid-item" src="/media/grid-bottom-left.jpg" alt="" loading="lazy" decoding="async" />
+          <img class="image-grid-item" src="/media/grid-bottom-right.jpg" alt="" loading="lazy" decoding="async" />
+        </div>
+      </section>
+
+      <section id="scrollVideoSection" class="scroll-video-section contrast-target" data-contrast-type="video">
+        <div class="scroll-video-sticky">
+          <video
+            id="scrollVideo"
+            class="panel-video desktop-only"
+            src="/media/scroll-video.mp4"
+            muted
+            playsinline
+            preload="auto"
+          ></video>
+          <video
+            id="scrollVideoMobile"
+            class="panel-video mobile-only"
+            src="/media/scroll-video.mp4"
+            muted
+            playsinline
+            preload="auto"
+          ></video>
+        </div>
+      </section>
+
+    </main>
+
+    <audio id="radioPlayer" preload="metadata"></audio>
+
+    <script type="module" src="/src/product.js"></script>
+  </body>
+</html>

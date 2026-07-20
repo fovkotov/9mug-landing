@@ -7,13 +7,16 @@
     <title>9PRA</title>
   </head>
   <body>
-    <header id="topNav" class="top-nav">
+    <header class="top-nav">
       <div class="nav-left">
-        <a href="#" class="nav-link">9pra</a>
+        <a href="./index.html" class="nav-link">9pra</a>
         <div class="bag-group">
           <a href="#" class="nav-link nav-link-bag">bag</a>
-          <span id="bagStatusText" class="bag-status" aria-live="polite">(1) $300</span>
         </div>
+      </div>
+
+      <div class="nav-mobile-center">
+        <img src="/media/home/radio-indicator-mobile.svg" alt="" />
       </div>
 
       <div class="nav-right">
@@ -25,148 +28,43 @@
           </div>
         </div>
         <div class="nav-status">
-          <span class="nav-online">9 online</span>
-          <img class="horse-icon" src="/media/online-icon-figma.png" alt="" />
+          <span class="nav-online">8 online</span>
+          <img class="horse-icon" src="/media/home/online-icon.png" alt="" />
         </div>
       </div>
     </header>
 
-    <aside class="meta-left">
-      <div class="meta-row">
-        <span class="meta-difference-text meta-title-text">9MUG</span>
-      </div>
-      <div id="priceToggle" class="meta-row meta-row-price price-toggle meta-difference-text" role="button" tabindex="0" aria-pressed="false">
-        <img id="priceToggleIcon" class="price-plus-icon" src="/media/price-plus.svg" alt="" />
-        <span>$300</span>
-      </div>
+    <aside class="meta-left desktop-only">
+      <div class="meta-item">9MUG</div>
+      <div class="meta-item is-muted">Texture Pack</div>
+      <div class="meta-item is-muted">Cutting Mat</div>
     </aside>
 
-    <div class="meta-switch-fixed">
-      <div class="meta-switcher" id="metaSwitcher" aria-label="Switch mug design">
-        <button id="metaSwitchFirst" class="meta-switch-btn is-active" type="button" aria-label="Mug design 1" aria-pressed="true">
-          <span class="meta-switch-first-fill" aria-hidden="true">
-            <span class="meta-switch-first-dot"></span>
-          </span>
-        </button>
-        <button id="metaSwitchSecond" class="meta-switch-btn" type="button" aria-label="Mug design 2" aria-pressed="false">
-          <span class="meta-switch-fill"></span>
-        </button>
-      </div>
-    </div>
-
-    <div class="bottom-links" aria-label="Additional links">
-      <a href="#" class="bottom-link bottom-link-details">Details</a>
-      <a href="#" class="bottom-link bottom-link-support">Support</a>
-    </div>
-
-    <main id="smoothRoot">
-      <section class="panel panel-hero contrast-target" data-contrast-type="media">
-        <img id="heroDesktopImage" class="panel-media desktop-only" src="/media/hero-desktop.png" alt="" />
-        <img id="heroMobileImage" class="panel-media mobile-only" src="/media/hero-mobile.png" alt="" />
-        <div class="mug-switcher" id="mugSwitcher" aria-label="Switch mug design">
-          <button
-            class="mug-switcher-btn is-active"
-            type="button"
-            data-slide-index="0"
-            data-desktop-src="/media/hero-desktop.png"
-            data-mobile-src="/media/hero-mobile.png"
-            aria-label="Mug design 1"
-            aria-pressed="true"
-          >
-            <img src="/media/mug/33-1.png" alt="" />
-          </button>
-          <button
-            class="mug-switcher-btn"
-            type="button"
-            data-slide-index="1"
-            data-desktop-src="/media/hero-switch-2.png"
-            data-mobile-src="/media/hero-switch-2.png"
-            aria-label="Mug design 2"
-            aria-pressed="false"
-          >
-            <img src="/media/mug/33-2.png" alt="" />
-          </button>
-          <button
-            class="mug-switcher-btn"
-            type="button"
-            data-slide-index="2"
-            data-desktop-src="/media/hero-switch-4.png"
-            data-mobile-src="/media/hero-switch-4.png"
-            aria-label="Mug design 3"
-            aria-pressed="false"
-          >
-            <img src="/media/hero-switch-4.png" alt="" />
-          </button>
-          <button
-            class="mug-switcher-btn"
-            type="button"
-            data-slide-index="3"
-            data-desktop-src="/media/hero-switch-5.png"
-            data-mobile-src="/media/hero-switch-5.png"
-            aria-label="Mug design 4"
-            aria-pressed="false"
-          >
-            <img src="/media/hero-switch-5.png" alt="" />
-          </button>
-        </div>
-        <div class="scroll-indicator" aria-hidden="true">
-          <span class="line left"></span>
-          <span class="line right"></span>
-        </div>
+    <main class="home-main">
+      <section class="home-panel home-panel-hero">
+        <a class="hero-panel-link" href="./product.html" aria-label="Open product page"></a>
+        <picture class="home-media">
+          <source media="(max-width: 900px)" srcset="/media/home/hero-mobile.png" />
+          <img src="/media/home/hero-desktop.png" alt="" />
+        </picture>
+        <p class="mobile-panel-title">9MUG</p>
       </section>
 
-      <section class="panel contrast-target" data-contrast-type="video">
-        <video
-          id="sectionVideo"
-          class="panel-video desktop-only"
-          muted
-          playsinline
-          preload="auto"
-        ></video>
-        <video
-          id="sectionVideoMobile"
-          class="panel-video mobile-only"
-          muted
-          playsinline
-          preload="auto"
-        ></video>
+      <section class="home-panel home-panel-frame">
+        <picture class="home-media">
+          <source media="(max-width: 900px)" srcset="/media/home/frame-mobile.png" />
+          <img src="/media/home/frame-desktop.png" alt="" />
+        </picture>
+        <p class="mobile-panel-title">Texture Pack</p>
       </section>
 
-      <section class="image-grid-section contrast-target" data-contrast-type="media">
-        <div class="image-grid-row image-grid-row-two">
-          <img class="image-grid-item" src="/media/grid-top-left.jpg" alt="" loading="lazy" decoding="async" />
-          <img class="image-grid-item" src="/media/grid-top-right.jpg" alt="" loading="lazy" decoding="async" />
-        </div>
-        <div class="image-grid-row image-grid-row-full">
-          <img class="image-grid-item" src="/media/grid-middle.jpg" alt="" loading="lazy" decoding="async" />
-        </div>
-        <div class="image-grid-row image-grid-row-two">
-          <img class="image-grid-item" src="/media/grid-bottom-left.jpg" alt="" loading="lazy" decoding="async" />
-          <img class="image-grid-item" src="/media/grid-bottom-right.jpg" alt="" loading="lazy" decoding="async" />
-        </div>
+      <section class="home-panel home-panel-mat">
+        <picture class="home-media">
+          <source media="(max-width: 900px)" srcset="/media/home/mat-mobile.png" />
+          <img src="/media/home/mat-desktop.png" alt="" />
+        </picture>
+        <p class="mobile-panel-title is-light">Cutting Mat</p>
       </section>
-
-      <section id="scrollVideoSection" class="scroll-video-section contrast-target" data-contrast-type="video">
-        <div class="scroll-video-sticky">
-          <video
-            id="scrollVideo"
-            class="panel-video desktop-only"
-            src="/media/scroll-video.mp4"
-            muted
-            playsinline
-            preload="auto"
-          ></video>
-          <video
-            id="scrollVideoMobile"
-            class="panel-video mobile-only"
-            src="/media/scroll-video.mp4"
-            muted
-            playsinline
-            preload="auto"
-          ></video>
-        </div>
-      </section>
-
     </main>
 
     <audio id="radioPlayer" preload="metadata"></audio>

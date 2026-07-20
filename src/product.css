@@ -40,7 +40,7 @@ a {
 .top-nav,
 .meta-bar,
 .bottom-links {
-  color: var(--ui-overlay);
+  color: #fff;
   transition: color 0.2s ease;
   z-index: 20;
 }
@@ -51,12 +51,12 @@ a {
   display: grid;
   grid-template-columns: repeat(var(--layout-columns), minmax(0, 1fr));
   left: 0;
+  mix-blend-mode: difference;
   padding: 16px var(--layout-margin) 0;
   pointer-events: none;
   position: fixed;
   top: 0;
   width: 100%;
-  mix-blend-mode: difference;
 }
 
 .top-nav * {
@@ -114,7 +114,7 @@ a {
 }
 
 .bag-status {
-  color: var(--ui-overlay);
+  color: #fff;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
@@ -195,8 +195,10 @@ a {
 
 .meta-bar-price {
   align-items: center;
+  color: #fff;
   display: flex;
   gap: 4px;
+  mix-blend-mode: difference;
   width: fit-content;
 }
 
@@ -235,11 +237,13 @@ a {
 }
 
 .meta-title-text {
+  color: #fff;
   font-family: var(--font-ui);
   font-feature-settings: "lnum" 1, "pnum" 1;
   font-size: 17px;
   letter-spacing: 0.34px;
   line-height: normal;
+  mix-blend-mode: difference;
   white-space: nowrap;
 }
 
@@ -249,6 +253,8 @@ a {
   gap: 3.5px;
   isolation: isolate;
   mix-blend-mode: normal;
+  position: relative;
+  z-index: 1;
 }
 
 .meta-switch-btn {
@@ -400,6 +406,7 @@ a {
 .hero-drag-slider {
   cursor: grab;
   height: 24px;
+  mix-blend-mode: difference;
   touch-action: none;
   z-index: 4;
 }
@@ -532,7 +539,7 @@ a {
 }
 
 .scroll-indicator .line {
-  background: rgba(0, 0, 0, 0.8);
+  background: #fff;
   display: block;
   height: 1px;
 }
@@ -647,11 +654,11 @@ a {
 
   .top-nav {
     align-items: center;
-    color: var(--ui-color);
+    color: #fff;
     display: flex;
     height: 49px;
     justify-content: space-between;
-    mix-blend-mode: normal;
+    mix-blend-mode: difference;
     padding: 16px;
   }
 
@@ -716,7 +723,7 @@ a {
     align-items: center;
     background: transparent;
     bottom: 0;
-    color: var(--ui-color);
+    color: #fff;
     flex-direction: row;
     gap: 0;
     height: 49px;
@@ -728,10 +735,14 @@ a {
     width: 100%;
   }
 
-  .meta-bar .meta-difference-text,
-  .meta-bar .meta-title-text,
+  .meta-title-text,
   .meta-bar-price {
-    color: var(--ui-color);
+    color: #fff;
+    mix-blend-mode: difference;
+  }
+
+  .meta-switcher {
+    isolation: isolate;
     mix-blend-mode: normal;
   }
 

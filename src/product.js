@@ -26,7 +26,6 @@ const priceToggle = document.querySelector("#priceToggle");
 const priceToggleIcon = document.querySelector("#priceToggleIcon");
 const bagStatusText = document.querySelector("#bagStatusText");
 const pricePlusIconSource = resolvePublicAssetPath("/media/price-plus.svg");
-const pricePlusDarkIconSource = resolvePublicAssetPath("/media/price-plus-dark.svg");
 const priceCheckIconSource = resolvePublicAssetPath("/media/price-check-crisp.png");
 
 const scrollVideoSection = document.querySelector("#scrollVideoSection");
@@ -168,8 +167,7 @@ function updateNoiseUiState() {
 
 function setBagUiState() {
   if (priceToggleIcon) {
-    const plusSource = isMobileViewport() ? pricePlusDarkIconSource : pricePlusIconSource;
-    priceToggleIcon.src = bagSelected ? priceCheckIconSource : plusSource;
+    priceToggleIcon.src = bagSelected ? priceCheckIconSource : pricePlusIconSource;
   }
   if (bagStatusText) {
     bagStatusText.classList.toggle("is-visible", bagSelected);

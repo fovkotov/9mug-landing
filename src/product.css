@@ -575,8 +575,8 @@ a {
 .scratch-cursor {
   --cursor-x: 0px;
   --cursor-y: 0px;
-  /* Hotspot: tip on the right border of the cursor image */
-  --cursor-hotspot-x: 98%;
+  /* Hotspot: tool tip on the right edge of the cursor image */
+  --cursor-hotspot-x: 94%;
   --cursor-hotspot-y: 0%;
   left: var(--cursor-x);
   opacity: 0;

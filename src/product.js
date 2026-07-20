@@ -518,11 +518,12 @@ function setupScratchPanel() {
   }
 
   function getBladeSize() {
-    // Vertical wipe: tall line from the tip down the right edge of the cursor.
+    // Match reference guide: thin vertical line from tip, ~full cursor height.
     const cursorHeight = isMobileViewport() ? 144 : 176;
+    const cursorWidth = cursorHeight * (134 / 352);
     return {
-      width: (isMobileViewport() ? 14 : 18) * dpr,
-      height: cursorHeight * 0.92 * dpr
+      width: Math.max(2 * dpr, cursorWidth * 0.034 * dpr),
+      height: cursorHeight * 0.93 * dpr
     };
   }
 

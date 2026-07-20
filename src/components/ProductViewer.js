@@ -38,6 +38,34 @@ const DIRECTION_VECTORS = {
   downRight: { x: 0.68, y: 0.68 }
 };
 
+const ZONE_LABELS = {
+  center: "center",
+  left: "left",
+  farLeft: "far_left",
+  right: "right",
+  farRight: "far_right",
+  up: "up",
+  down: "down",
+  upLeft: "up_left",
+  upRight: "up_right",
+  downLeft: "down_left",
+  downRight: "down_right"
+};
+
+const ZONE_COLORS = {
+  center: [255, 255, 255],
+  left: [80, 160, 255],
+  farLeft: [40, 100, 220],
+  right: [255, 150, 80],
+  farRight: [230, 90, 40],
+  up: [120, 220, 140],
+  down: [220, 120, 200],
+  upLeft: [90, 200, 200],
+  upRight: [200, 200, 90],
+  downLeft: [180, 120, 255],
+  downRight: [255, 120, 160]
+};
+
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
@@ -122,7 +150,8 @@ async function waitForFramePainted(img) {
  *   transitionDuration?: number,
  *   deadZoneRadius?: number,
  *   horizontalSensitivity?: number,
- *   verticalSensitivity?: number
+ *   verticalSensitivity?: number,
+ *   showZones?: boolean
  * }} options
  */
 export function createProductViewer(root, options = {}) {
@@ -134,6 +163,7 @@ export function createProductViewer(root, options = {}) {
   const deadZoneRadius = options.deadZoneRadius ?? 0.14;
   const horizontalSensitivity = options.horizontalSensitivity ?? 1;
   const verticalSensitivity = options.verticalSensitivity ?? 1;
+  const showZones = Boolean(options.showZones);
 
   let destroyed = false;
   let ready = false;
@@ -142,10 +172,16 @@ export function createProductViewer(root, options = {}) {
   let latestPointer = null;
   let rafId = 0;
   let needsUpdate = false;
+  let zoneCanvas = null;
+  let zoneCtx = null;
+  let zoneLabelLayer = null;
+  let zoneResizeObserver = null;
 
   const layerNodes = new Map();
+  const availableKeys = DIRECTION_KEYS.filter((key) => Boolean(images[key]));
 
   root.classList.add("product-viewer");
+  root.classList.toggle("has-zones", showZones);
   root.setAttribute("data-ready", "false");
 
   const stage = document.createElement("div");
@@ -164,23 +200,12 @@ export function createProductViewer(root, options = {}) {
     img.draggable = false;
     img.decoding = "sync";
     img.loading = "eager";
-    img.fetchPriority = key === "center" ? "high" : "high";
+    img.fetchPriority = "high";
     img.src = src;
     img.dataset.direction = key;
     img.classList.toggle("is-active", key === "center");
     stage.append(img);
     layerNodes.set(key, img);
-  }
-
-  function setActiveDirection(nextKey) {
-    if (!layerNodes.has(nextKey) || nextKey === activeKey) return;
-
-    const previous = layerNodes.get(activeKey);
-    const next = layerNodes.get(nextKey);
-    previous?.classList.remove("is-active");
-    next?.classList.add("is-active");
-    activeKey = nextKey;
-    root.dataset.direction = nextKey;
   }
 
   function pickDirection(nx, ny) {
@@ -190,8 +215,8 @@ export function createProductViewer(root, options = {}) {
     let bestKey = "center";
     let bestScore = Number.POSITIVE_INFINITY;
 
-    for (const key of DIRECTION_KEYS) {
-      if (key === "center" || !layerNodes.has(key)) continue;
+    for (const key of availableKeys) {
+      if (key === "center") continue;
       const vector = DIRECTION_VECTORS[key];
       const dx = nx - vector.x;
       const dy = ny - vector.y;
@@ -205,21 +230,133 @@ export function createProductViewer(root, options = {}) {
     return bestKey;
   }
 
+  function computeNormalizedFromLocal(localX, localY, width, height) {
+    const maxX = Math.max(width / 2, 1);
+    const maxY = Math.max(height / 2, 1);
+    return {
+      x: clamp((localX / maxX) * horizontalSensitivity, -1.75, 1.75),
+      y: clamp((localY / maxY) * verticalSensitivity, -1.2, 1.2)
+    };
+  }
+
   function computeNormalizedPointer(clientX, clientY) {
     const rect = root.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) {
       return { x: 0, y: 0 };
     }
 
-    const localX = clientX - rect.left - rect.width / 2;
-    const localY = clientY - rect.top - rect.height / 2;
-    const maxX = Math.max(rect.width / 2, 1);
-    const maxY = Math.max(rect.height / 2, 1);
+    return computeNormalizedFromLocal(
+      clientX - rect.left - rect.width / 2,
+      clientY - rect.top - rect.height / 2,
+      rect.width,
+      rect.height
+    );
+  }
 
-    return {
-      x: clamp((localX / maxX) * horizontalSensitivity, -1.75, 1.75),
-      y: clamp((localY / maxY) * verticalSensitivity, -1.2, 1.2)
-    };
+  function setActiveDirection(nextKey) {
+    if (!layerNodes.has(nextKey) || nextKey === activeKey) return;
+
+    const previous = layerNodes.get(activeKey);
+    const next = layerNodes.get(nextKey);
+    previous?.classList.remove("is-active");
+    next?.classList.add("is-active");
+    activeKey = nextKey;
+    root.dataset.direction = nextKey;
+
+    if (showZones && zoneLabelLayer) {
+      for (const label of zoneLabelLayer.querySelectorAll(".product-viewer__zone-label")) {
+        label.classList.toggle("is-active", label.dataset.key === nextKey);
+      }
+    }
+  }
+
+  function paintZoneOverlay() {
+    if (!showZones || !zoneCanvas || !zoneCtx || destroyed) return;
+
+    const width = root.clientWidth;
+    const height = root.clientHeight;
+    if (width <= 0 || height <= 0) return;
+
+    const sample = 4;
+    const cols = Math.max(1, Math.ceil(width / sample));
+    const rows = Math.max(1, Math.ceil(height / sample));
+
+    zoneCanvas.width = cols;
+    zoneCanvas.height = rows;
+    zoneCanvas.style.width = `${width}px`;
+    zoneCanvas.style.height = `${height}px`;
+
+    const imageData = zoneCtx.createImageData(cols, rows);
+    const data = imageData.data;
+    const centroids = Object.fromEntries(availableKeys.map((key) => [key, { x: 0, y: 0, n: 0 }]));
+
+    for (let row = 0; row < rows; row += 1) {
+      for (let col = 0; col < cols; col += 1) {
+        const px = (col + 0.5) * sample;
+        const py = (row + 0.5) * sample;
+        const { x: nx, y: ny } = computeNormalizedFromLocal(
+          px - width / 2,
+          py - height / 2,
+          width,
+          height
+        );
+        const key = pickDirection(nx, ny);
+        const color = ZONE_COLORS[key] || [200, 200, 200];
+        const index = (row * cols + col) * 4;
+        data[index] = color[0];
+        data[index + 1] = color[1];
+        data[index + 2] = color[2];
+        data[index + 3] = key === "center" ? 48 : 72;
+
+        const bucket = centroids[key];
+        if (bucket) {
+          bucket.x += px;
+          bucket.y += py;
+          bucket.n += 1;
+        }
+      }
+    }
+
+    zoneCtx.putImageData(imageData, 0, 0);
+
+    if (!zoneLabelLayer) return;
+    zoneLabelLayer.replaceChildren();
+
+    for (const key of availableKeys) {
+      const bucket = centroids[key];
+      if (!bucket || bucket.n === 0) continue;
+
+      const label = document.createElement("span");
+      label.className = "product-viewer__zone-label";
+      label.dataset.key = key;
+      label.textContent = ZONE_LABELS[key] || key;
+      label.style.left = `${(bucket.x / bucket.n / width) * 100}%`;
+      label.style.top = `${(bucket.y / bucket.n / height) * 100}%`;
+      label.classList.toggle("is-active", key === activeKey);
+      zoneLabelLayer.append(label);
+    }
+  }
+
+  function setupZoneOverlay() {
+    if (!showZones) return;
+
+    zoneCanvas = document.createElement("canvas");
+    zoneCanvas.className = "product-viewer__zones";
+    zoneCanvas.setAttribute("aria-hidden", "true");
+    zoneCtx = zoneCanvas.getContext("2d", { alpha: true });
+
+    zoneLabelLayer = document.createElement("div");
+    zoneLabelLayer.className = "product-viewer__zone-labels";
+    zoneLabelLayer.setAttribute("aria-hidden", "true");
+
+    root.append(zoneCanvas, zoneLabelLayer);
+    paintZoneOverlay();
+
+    zoneResizeObserver = new ResizeObserver(() => {
+      paintZoneOverlay();
+    });
+    zoneResizeObserver.observe(root);
+    window.addEventListener("orientationchange", paintZoneOverlay);
   }
 
   function flushPointerUpdate() {
@@ -263,22 +400,23 @@ export function createProductViewer(root, options = {}) {
   }
 
   async function preload() {
-    // Warm HTTP cache first, then decode every mounted frame before interaction.
     await preloadMugFrameImages(images);
     if (destroyed) return;
 
     await Promise.all([...layerNodes.values()].map(waitForFramePainted));
     if (destroyed) return;
 
-    // Force a paint pass so every layer is composited before first switch.
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     if (destroyed) return;
 
     ready = true;
     root.setAttribute("data-ready", "true");
     root.classList.add("is-ready");
+    paintZoneOverlay();
     scheduleUpdate();
   }
+
+  setupZoneOverlay();
 
   root.addEventListener("pointerenter", handlePointerEnter);
   root.addEventListener("pointermove", handlePointerMove);
@@ -295,6 +433,8 @@ export function createProductViewer(root, options = {}) {
       if (destroyed) return;
       destroyed = true;
       cancelAnimationFrame(rafId);
+      zoneResizeObserver?.disconnect();
+      window.removeEventListener("orientationchange", paintZoneOverlay);
       root.removeEventListener("pointerenter", handlePointerEnter);
       root.removeEventListener("pointermove", handlePointerMove);
       root.removeEventListener("pointerleave", handlePointerLeave);

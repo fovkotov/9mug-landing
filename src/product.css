@@ -646,20 +646,30 @@ a {
   }
 
   .top-nav {
+    align-items: center;
     color: var(--ui-color);
+    display: flex;
+    height: 49px;
+    justify-content: space-between;
     mix-blend-mode: normal;
-    padding: 16px var(--layout-margin);
+    padding: 16px;
   }
 
   .nav-left {
-    display: flex;
-    grid-column: auto;
-    justify-content: space-between;
-    width: 100%;
+    display: contents;
+  }
+
+  .nav-left > .nav-link {
+    flex: 0 0 auto;
   }
 
   .bag-group {
     gap: 0;
+    margin-left: auto;
+  }
+
+  .nav-link-bag {
+    margin-right: 0;
   }
 
   .nav-right {
@@ -672,7 +682,7 @@ a {
     left: 50%;
     pointer-events: none;
     position: absolute;
-    top: 20px;
+    top: 20.5px;
     transform: translateX(-50%);
     width: 46px;
     z-index: 21;

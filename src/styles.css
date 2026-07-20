@@ -256,18 +256,16 @@ a {
   }
 
   .nav-left {
-    align-items: center;
-    display: flex;
-    flex: 1 1 auto;
-    grid-column: unset;
-    justify-content: space-between;
-    min-width: 0;
-    width: 100%;
+    display: contents;
+  }
+
+  .nav-left > .nav-link {
+    flex: 0 0 auto;
   }
 
   .bag-group {
     gap: 0;
-    justify-self: end;
+    margin-left: auto;
   }
 
   .bag-status {

@@ -132,6 +132,8 @@ a {
 
 .nav-status {
   align-items: flex-start;
+  color: inherit;
+  cursor: pointer;
   display: flex;
   gap: 9px;
   justify-content: flex-end;

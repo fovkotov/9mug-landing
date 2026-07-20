@@ -5,7 +5,6 @@ import "./product.css";
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const isMobileViewport = () => window.matchMedia("(max-width: 900px)").matches;
 const baseUrl = import.meta.env.BASE_URL ?? "/";
-const sectionVideoSource = new URL("../assets/veo-3.mp4", import.meta.url).href;
 const syncScrollVideoToPageScroll = true;
 
 function resolvePublicAssetPath(path) {
@@ -29,8 +28,6 @@ const pricePlusIconSource = resolvePublicAssetPath("/media/price-plus.svg");
 const priceCheckIconSource = resolvePublicAssetPath("/media/price-check-crisp.png");
 
 const scrollVideoSection = document.querySelector("#scrollVideoSection");
-const sectionVideoDesktop = document.querySelector("#sectionVideo");
-const sectionVideoMobile = document.querySelector("#sectionVideoMobile");
 const scrollVideoDesktop = document.querySelector("#scrollVideo");
 const scrollVideoMobile = document.querySelector("#scrollVideoMobile");
 const heroPanel = document.querySelector(".panel-hero");
@@ -86,23 +83,7 @@ const scratchCoverSources = {
   }
 };
 
-const sectionVideos = [sectionVideoDesktop, sectionVideoMobile].filter(Boolean);
 const scrollVideos = [scrollVideoDesktop, scrollVideoMobile].filter(Boolean);
-
-function prepareSectionVideos() {
-  for (const video of sectionVideos) {
-    video.setAttribute("src", sectionVideoSource);
-    video.preload = "auto";
-    video.muted = true;
-    video.loop = true;
-    video.autoplay = true;
-    video.playsInline = true;
-    video.load();
-    video.play().catch(() => {
-      // ignored - some browsers may still require a gesture.
-    });
-  }
-}
 
 function prepareScrollVideos() {
   for (const video of scrollVideos) {
@@ -122,7 +103,6 @@ function prepareScrollVideos() {
   }
 }
 
-prepareSectionVideos();
 prepareScrollVideos();
 
 const heroSlideSources = [
@@ -840,12 +820,6 @@ function disableBrownNoise() {
 function primeScrollVideos() {
   if (scrollVideosPrimed) return;
   scrollVideosPrimed = true;
-
-  for (const video of sectionVideos) {
-    video.play().catch(() => {
-      // ignored - browser may still block without direct gesture.
-    });
-  }
 
   for (const video of scrollVideos) {
     video

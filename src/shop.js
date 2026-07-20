@@ -1,8 +1,19 @@
+import Lenis from "lenis";
 import { play } from "cuelume";
-import "./styles.css";
+import "./shop.css";
 
 const baseUrl = import.meta.env.BASE_URL ?? "/";
-const homeVideoSource = new URL("../assets/veo-3.mp4", import.meta.url).href;
+const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const lenis = prefersReducedMotion
+  ? null
+  : new Lenis({
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      syncTouch: true,
+      touchMultiplier: 1.1,
+      lerp: 0.09
+    });
 
 function resolvePublicAssetPath(path) {
   if (!path) return "";
@@ -16,22 +27,23 @@ const radioBtn = document.querySelector("#radioBtn");
 const noiseBtn = document.querySelector("#noiseBtn");
 const radioIcon = document.querySelector("#radioIcon");
 const radioPlayer = document.querySelector("#radioPlayer");
-const homeVideos = [
-  document.querySelector("#homeVideo"),
-  document.querySelector("#homeVideoMobile")
-].filter(Boolean);
+const priceToggle = document.querySelector("#priceToggle");
+const priceToggleIcon = document.querySelector("#priceToggleIcon");
+const bagStatusText = document.querySelector("#bagStatusText");
 
 const radioTracks = ["/audio/track-1.mp3", "/audio/track-2.mp3", "/audio/track-3.mp3"].map(
   resolvePublicAssetPath
 );
 const radioPlayIconSource = resolvePublicAssetPath("/media/radio-icon-play.png");
 const radioPauseIconSource = resolvePublicAssetPath("/media/radio-icon-pause.png");
+const pricePlusIconSource = resolvePublicAssetPath("/media/price-plus.svg");
+const priceCheckIconSource = resolvePublicAssetPath("/media/price-check-crisp.png");
 
 let currentTrackIndex = 0;
 let radioEnabled = false;
 let noiseEnabled = false;
 let activeAudioControl = "radio";
-let homeVideosPrimed = false;
+let bagSelected = false;
 
 let audioContext = null;
 let noiseNode = null;
@@ -61,6 +73,14 @@ function updateNoiseUiState() {
   const isNoiseActive = activeAudioControl === "noise";
   noiseBtn?.classList.toggle("is-active", isNoiseActive);
   noiseBtn?.classList.toggle("is-muted", !isNoiseActive);
+}
+
+function setBagUiState() {
+  if (priceToggleIcon) {
+    priceToggleIcon.src = bagSelected ? priceCheckIconSource : pricePlusIconSource;
+  }
+  bagStatusText?.classList.toggle("is-visible", bagSelected);
+  priceToggle?.setAttribute("aria-pressed", String(bagSelected));
 }
 
 function ensureNoiseGraph() {
@@ -158,30 +178,10 @@ function toggleNoisePlayback() {
   setRadioUiState();
 }
 
-function prepareHomeVideos() {
-  for (const video of homeVideos) {
-    video.setAttribute("src", homeVideoSource);
-    video.preload = "auto";
-    video.muted = true;
-    video.loop = true;
-    video.autoplay = true;
-    video.playsInline = true;
-    video.load();
-    video.play().catch(() => {
-      // ignored - some browsers may still require a gesture.
-    });
-  }
-}
-
-function primeHomeVideos() {
-  if (homeVideosPrimed) return;
-  homeVideosPrimed = true;
-
-  for (const video of homeVideos) {
-    video.play().catch(() => {
-      // ignored - browser may still block without direct gesture.
-    });
-  }
+function toggleBagState() {
+  playButtonTick();
+  bagSelected = !bagSelected;
+  setBagUiState();
 }
 
 if (radioPlayer) {
@@ -213,11 +213,103 @@ radioIcon?.addEventListener("click", () => {
   toggleRadioPlayback();
 });
 
-window.addEventListener("pointerdown", primeHomeVideos, { once: true });
-window.addEventListener("touchstart", primeHomeVideos, { once: true, passive: true });
-window.addEventListener("wheel", primeHomeVideos, { once: true, passive: true });
-window.addEventListener("keydown", primeHomeVideos, { once: true });
+priceToggle?.addEventListener("click", () => {
+  toggleBagState();
+});
 
-prepareHomeVideos();
+priceToggleIcon?.addEventListener("click", (event) => {
+  event.stopPropagation();
+  toggleBagState();
+});
+
+priceToggle?.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  event.preventDefault();
+  toggleBagState();
+});
+
 setRadioUiState();
 updateNoiseUiState();
+setBagUiState();
+
+const sectionLinks = [...document.querySelectorAll("[data-section-link]")];
+const homeSections = sectionLinks
+  .map((link) => {
+    const id = link.getAttribute("href")?.slice(1);
+    const section = id ? document.getElementById(id) : null;
+    return section ? { link, section } : null;
+  })
+  .filter(Boolean);
+
+const slowEaseInOut = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+
+function setActiveSectionLink(activeLink) {
+  for (const { link } of homeSections) {
+    link.classList.toggle("is-active", link === activeLink);
+  }
+}
+
+function getActiveSectionIndex() {
+  if (!homeSections.length) return 0;
+
+  const viewportCenter = window.innerHeight * 0.5;
+  let closestIndex = 0;
+  let closestDistance = Number.POSITIVE_INFINITY;
+
+  homeSections.forEach(({ section }, index) => {
+    const rect = section.getBoundingClientRect();
+    const sectionCenter = rect.top + rect.height / 2;
+    const distance = Math.abs(sectionCenter - viewportCenter);
+    if (distance < closestDistance) {
+      closestDistance = distance;
+      closestIndex = index;
+    }
+  });
+
+  return closestIndex;
+}
+
+function syncSectionIndicators() {
+  if (!homeSections.length) return;
+  const activeIndex = getActiveSectionIndex();
+  setActiveSectionLink(homeSections[activeIndex].link);
+}
+
+function scrollToSection(section) {
+  if (!section) return;
+
+  if (lenis) {
+    lenis.scrollTo(section, {
+      duration: 0.6,
+      easing: slowEaseInOut
+    });
+    return;
+  }
+
+  section.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
+}
+
+for (const { link, section } of homeSections) {
+  link.addEventListener("click", (event) => {
+    event.preventDefault();
+    setActiveSectionLink(link);
+    scrollToSection(section);
+  });
+}
+
+syncSectionIndicators();
+
+if (lenis) {
+  lenis.on("scroll", syncSectionIndicators);
+
+  const raf = (time) => {
+    lenis.raf(time);
+    requestAnimationFrame(raf);
+  };
+
+  requestAnimationFrame(raf);
+} else {
+  window.addEventListener("scroll", syncSectionIndicators, { passive: true });
+}
+
+window.addEventListener("resize", syncSectionIndicators);

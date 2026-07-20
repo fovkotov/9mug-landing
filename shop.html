@@ -6,7 +6,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>9PRA</title>
   </head>
-  <body class="page-home">
+  <body>
     <header class="top-nav">
       <div class="nav-left">
         <a href="./index.html" class="nav-link">9pra</a>
@@ -34,32 +34,41 @@
       </div>
     </header>
 
+    <aside class="meta-left desktop-only" aria-label="Section menu">
+      <a class="meta-item is-active" href="#section-mug" data-section-link>9MUG</a>
+      <a class="meta-item" href="#section-texture" data-section-link>Texture Pack</a>
+      <a class="meta-item" href="#section-mat" data-section-link>Cutting Mat</a>
+    </aside>
+
     <main class="home-main">
-      <section class="home-panel home-panel-video">
+      <section id="section-mug" class="home-panel home-panel-hero">
         <a class="hero-panel-link" href="./product.html" aria-label="Open product page"></a>
-        <video
-          id="homeVideo"
-          class="panel-video desktop-only"
-          muted
-          playsinline
-          loop
-          autoplay
-          preload="auto"
-        ></video>
-        <video
-          id="homeVideoMobile"
-          class="panel-video mobile-only"
-          muted
-          playsinline
-          loop
-          autoplay
-          preload="auto"
-        ></video>
+        <picture class="home-media">
+          <source media="(max-width: 900px)" srcset="/media/home/hero-mobile.png" />
+          <img src="/media/home/hero-desktop.png" alt="" />
+        </picture>
+        <p class="mobile-panel-title">9MUG</p>
+      </section>
+
+      <section id="section-texture" class="home-panel home-panel-frame">
+        <picture class="home-media">
+          <source media="(max-width: 900px)" srcset="/media/home/frame-mobile.png" />
+          <img src="/media/home/frame-desktop.png" alt="" />
+        </picture>
+        <p class="mobile-panel-title">Texture Pack</p>
+      </section>
+
+      <section id="section-mat" class="home-panel home-panel-mat">
+        <picture class="home-media">
+          <source media="(max-width: 900px)" srcset="/media/home/mat-mobile.png" />
+          <img src="/media/home/mat-desktop.png" alt="" />
+        </picture>
+        <p class="mobile-panel-title is-light">Cutting Mat</p>
       </section>
     </main>
 
     <audio id="radioPlayer" preload="metadata"></audio>
 
-    <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/src/shop.js"></script>
   </body>
 </html>

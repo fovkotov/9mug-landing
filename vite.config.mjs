@@ -10,6 +10,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: "index.html",
+        shop: "shop.html",
         product: "product.html"
       }
     }

@@ -76,8 +76,16 @@ const heroCursorArrowSource = resolvePublicAssetPath("/media/hero-cursor-custom.
 const scratchSection = document.querySelector("#scratchSection");
 const scratchCanvas = document.querySelector("#scratchCanvas");
 const scratchCursorSource = resolvePublicAssetPath("/media/scratch/cursor.png");
-const scratchCoverDesktopSource = resolvePublicAssetPath("/media/scratch/cover-desktop.png");
-const scratchCoverMobileSource = resolvePublicAssetPath("/media/scratch/cover-mobile.png");
+const scratchCoverSources = {
+  desktop: {
+    "1x": resolvePublicAssetPath("/media/scratch/cover-desktop-1x.webp"),
+    "2x": resolvePublicAssetPath("/media/scratch/cover-desktop.webp")
+  },
+  mobile: {
+    "1x": resolvePublicAssetPath("/media/scratch/cover-mobile-1x.webp"),
+    "2x": resolvePublicAssetPath("/media/scratch/cover-mobile.webp")
+  }
+};
 
 const sectionVideos = [sectionVideoDesktop, sectionVideoMobile].filter(Boolean);
 const scrollVideos = [scrollVideoDesktop, scrollVideoMobile].filter(Boolean);
@@ -504,7 +512,9 @@ function setupScratchPanel() {
     window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
   function getCoverSource() {
-    return isMobileViewport() ? scratchCoverMobileSource : scratchCoverDesktopSource;
+    const density = (window.devicePixelRatio || 1) >= 1.5 ? "2x" : "1x";
+    const set = isMobileViewport() ? scratchCoverSources.mobile : scratchCoverSources.desktop;
+    return set[density] || set["1x"];
   }
 
   function getBrushRadius() {
@@ -621,6 +631,7 @@ function setupScratchPanel() {
   }
 
   function handlePointerEnter(event) {
+    armScratchAssets();
     isPointerInside = true;
     setupScratchCursor();
     updateScratchCursorPosition(event.clientX, event.clientY);
@@ -661,8 +672,16 @@ function setupScratchPanel() {
     }
   }
 
+  let assetsArmed = false;
+  const armScratchAssets = () => {
+    if (assetsArmed) return;
+    assetsArmed = true;
+    loadCoverImage();
+  };
+
   let resizeFrame = 0;
   function handleResize() {
+    if (!assetsArmed) return;
     cancelAnimationFrame(resizeFrame);
     resizeFrame = requestAnimationFrame(() => {
       if (activeCoverSource !== getCoverSource()) {
@@ -683,7 +702,20 @@ function setupScratchPanel() {
   window.addEventListener("orientationchange", handleResize);
 
   setupScratchCursor();
-  loadCoverImage();
+
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        armScratchAssets();
+        observer.disconnect();
+      },
+      { rootMargin: "240px 0px" }
+    );
+    observer.observe(scratchSection);
+  } else {
+    armScratchAssets();
+  }
 }
 
 function setupMetaSwitcher() {

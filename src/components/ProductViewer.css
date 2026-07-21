@@ -17,6 +17,57 @@
   cursor: grabbing;
 }
 
+.product-viewer__motion-gate {
+  align-items: center;
+  background: rgba(20, 20, 20, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  inset: 0;
+  justify-content: center;
+  padding: 24px;
+  position: absolute;
+  text-align: center;
+  z-index: 8;
+}
+
+.product-viewer__motion-gate[hidden] {
+  display: none !important;
+}
+
+.product-viewer__motion-gate-copy {
+  color: #fff;
+  font-family: "Wremena", "Times New Roman", serif;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+  margin: 0;
+  max-width: 16rem;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.35);
+}
+
+.product-viewer__motion-gate-btn {
+  appearance: none;
+  background: #fff;
+  border: 0;
+  border-radius: 0;
+  color: #111;
+  cursor: pointer;
+  font-family: "Wremena", "Times New Roman", serif;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  padding: 12px 16px;
+}
+
+.product-viewer__motion-gate-btn:disabled {
+  opacity: 0.7;
+}
+
+.product-viewer__motion-gate[data-state="denied"] .product-viewer__motion-gate-btn {
+  background: rgba(255, 255, 255, 0.88);
+}
+
 .product-viewer__stage {
   height: 100%;
   inset: 0;

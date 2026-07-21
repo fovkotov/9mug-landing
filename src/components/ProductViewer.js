@@ -68,8 +68,19 @@ function supportsFinePointer() {
   return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 }
 
-function isCoarsePointer() {
-  return window.matchMedia("(pointer: coarse)").matches || !supportsFinePointer();
+function isMobileInteraction() {
+  const coarse = window.matchMedia("(pointer: coarse)").matches;
+  const noHover = window.matchMedia("(hover: none)").matches;
+  const narrow = window.matchMedia("(max-width: 900px)").matches;
+  return coarse || noHover || narrow || !supportsFinePointer();
+}
+
+function needsOrientationPermission() {
+  return (
+    orientationApiAvailable() &&
+    typeof DeviceOrientationEvent !== "undefined" &&
+    typeof DeviceOrientationEvent.requestPermission === "function"
+  );
 }
 
 function normalizeImages(images = {}) {
@@ -180,8 +191,8 @@ export function createProductViewer(root, options = {}) {
   const maxGamma = options.maxGamma ?? MAX_GAMMA_DEG;
   const maxBeta = options.maxBeta ?? MAX_BETA_DEG;
 
-  const prefersMouse = supportsFinePointer();
-  const mobileInput = isCoarsePointer();
+  const prefersMouse = supportsFinePointer() && !isMobileInteraction();
+  const mobileInput = !prefersMouse;
 
   let destroyed = false;
   let ready = false;
@@ -190,6 +201,8 @@ export function createProductViewer(root, options = {}) {
   let zoneCtx = null;
   let zoneLabelLayer = null;
   let zoneResizeObserver = null;
+  let motionGate = null;
+  let motionGateButton = null;
 
   // Shared look target in the same normalized space as desktop mouse.
   let targetX = 0;
@@ -207,6 +220,7 @@ export function createProductViewer(root, options = {}) {
   let orientationActive = false;
   let orientationListening = false;
   let orientationPermission = "unknown";
+  let orientationRequesting = false;
   let neutralBeta = null;
   let neutralGamma = null;
   let latestBeta = null;
@@ -523,8 +537,9 @@ export function createProductViewer(root, options = {}) {
   }
 
   function handleDeviceOrientation(event) {
-    if (!orientationActive || !canInteract()) return;
-    if (event.beta == null || event.gamma == null) return;
+    if (!orientationActive || destroyed) return;
+    if (!pageVisible || !heroVisible) return;
+    if (typeof event.beta !== "number" || typeof event.gamma !== "number") return;
 
     latestBeta = event.beta;
     latestGamma = event.gamma;
@@ -535,67 +550,154 @@ export function createProductViewer(root, options = {}) {
   function startOrientationListening() {
     if (orientationListening || destroyed || !orientationActive) return;
     window.addEventListener("deviceorientation", handleDeviceOrientation, true);
+    // Some Android builds expose absolute orientation separately.
+    window.addEventListener("deviceorientationabsolute", handleDeviceOrientation, true);
     orientationListening = true;
     root.setAttribute("data-input", "orientation");
+    root.classList.add("has-orientation");
     ensureLoop();
   }
 
   function stopOrientationListening() {
     if (!orientationListening) return;
     window.removeEventListener("deviceorientation", handleDeviceOrientation, true);
+    window.removeEventListener("deviceorientationabsolute", handleDeviceOrientation, true);
     orientationListening = false;
+  }
+
+  function hideMotionGate() {
+    if (!motionGate) return;
+    motionGate.hidden = true;
+    root.classList.remove("has-motion-gate");
+  }
+
+  function showMotionGate(mode = "ask") {
+    if (!motionGate || !motionGateButton) return;
+    motionGate.hidden = false;
+    root.classList.add("has-motion-gate");
+    if (mode === "denied") {
+      motionGate.dataset.state = "denied";
+      motionGateButton.textContent = "Движение недоступно — листай пальцем";
+    } else if (mode === "loading") {
+      motionGate.dataset.state = "loading";
+      motionGateButton.textContent = "Запрос доступа…";
+      motionGateButton.disabled = true;
+    } else {
+      motionGate.dataset.state = "ask";
+      motionGateButton.disabled = false;
+      motionGateButton.textContent = needsOrientationPermission()
+        ? "Разрешить доступ к движению"
+        : "Включить движение";
+    }
   }
 
   async function requestOrientationPermission() {
     if (!orientationApiAvailable()) {
-      orientationPermission = "denied";
       return false;
     }
 
-    try {
-      if (typeof DeviceOrientationEvent.requestPermission === "function") {
-        const result = await DeviceOrientationEvent.requestPermission();
-        orientationPermission = result === "granted" ? "granted" : "denied";
-        return orientationPermission === "granted";
-      }
+    // Android / desktop browsers: no permission prompt API.
+    if (!needsOrientationPermission()) {
       orientationPermission = "granted";
       return true;
-    } catch {
-      orientationPermission = "denied";
+    }
+
+    try {
+      const requests = [DeviceOrientationEvent.requestPermission()];
+      if (
+        typeof DeviceMotionEvent !== "undefined" &&
+        typeof DeviceMotionEvent.requestPermission === "function"
+      ) {
+        requests.push(DeviceMotionEvent.requestPermission());
+      }
+
+      const results = await Promise.all(requests);
+      const granted = results.every((result) => result === "granted");
+      orientationPermission = granted ? "granted" : "denied";
+      return granted;
+    } catch (error) {
+      // Do not permanently lock out on transient gesture errors.
+      console.warn("Device orientation permission failed", error);
+      orientationPermission = "unknown";
       return false;
     }
   }
 
   async function enableOrientationMode() {
-    if (prefersMouse || orientationActive || destroyed) return;
+    if (prefersMouse || orientationActive || destroyed || orientationRequesting) return false;
+
+    orientationRequesting = true;
+    showMotionGate("loading");
+
     const granted = await requestOrientationPermission();
+    orientationRequesting = false;
+
     if (!granted) {
       touchEnabled = true;
       root.setAttribute("data-input", "touch");
-      return;
+      showMotionGate(orientationPermission === "denied" ? "denied" : "ask");
+      // Keep a short denied hint, then allow using the page.
+      if (orientationPermission === "denied") {
+        window.setTimeout(() => hideMotionGate(), 1800);
+      }
+      return false;
     }
 
     orientationActive = true;
-    touchEnabled = false;
+    // Keep touch as soft fallback if sensor stays silent.
+    touchEnabled = true;
     neutralBeta = null;
     neutralGamma = null;
+    latestBeta = null;
+    latestGamma = null;
     root.setAttribute("data-input", "orientation");
-    if (heroVisible && pageVisible) {
-      startOrientationListening();
-    }
+    hideMotionGate();
+    startOrientationListening();
+    ensureLoop();
+    return true;
   }
 
-  function handleOrientationGesture() {
-    if (prefersMouse || orientationActive || orientationPermission === "denied") return;
-    void enableOrientationMode();
+  function setupMotionGate() {
+    if (!mobileInput || !orientationApiAvailable()) {
+      if (mobileInput) {
+        root.setAttribute("data-input", "touch");
+      }
+      return;
+    }
+
+    motionGate = document.createElement("div");
+    motionGate.className = "product-viewer__motion-gate";
+    motionGate.dataset.state = "ask";
+
+    const copy = document.createElement("p");
+    copy.className = "product-viewer__motion-gate-copy";
+    copy.textContent = "Чтобы кружка реагировала на наклон телефона, нужен доступ к движению устройства.";
+
+    motionGateButton = document.createElement("button");
+    motionGateButton.type = "button";
+    motionGateButton.className = "product-viewer__motion-gate-btn";
+    motionGateButton.textContent = needsOrientationPermission()
+      ? "Разрешить доступ к движению"
+      : "Включить движение";
+
+    // Must stay inside a direct user gesture for iOS permission dialogs.
+    motionGateButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      void enableOrientationMode();
+    });
+
+    motionGate.append(copy, motionGateButton);
+    root.append(motionGate);
+    root.classList.add("has-motion-gate");
   }
 
   // —— Touch fallback ——
   function handleTouchPointerDown(event) {
-    handleOrientationGesture();
-
-    if (orientationActive || prefersMouse || !touchEnabled || !canInteract()) return;
+    if (prefersMouse || !touchEnabled || !canInteract()) return;
     if (event.pointerType === "mouse") return;
+    // Don't start a drag when tapping the permission button.
+    if (event.target?.closest?.(".product-viewer__motion-gate")) return;
 
     touchDragging = true;
     touchStartX = event.clientX;
@@ -608,7 +710,7 @@ export function createProductViewer(root, options = {}) {
   }
 
   function handleTouchPointerMove(event) {
-    if (!touchDragging || orientationActive || prefersMouse || !canInteract()) return;
+    if (!touchDragging || prefersMouse || !canInteract()) return;
 
     const rect = root.getBoundingClientRect();
     const dx = event.clientX - touchStartX;
@@ -625,7 +727,7 @@ export function createProductViewer(root, options = {}) {
     if (root.hasPointerCapture?.(event.pointerId)) {
       root.releasePointerCapture(event.pointerId);
     }
-    if (!orientationActive) {
+    if (!orientationActive || latestBeta == null) {
       setTarget(0, 0, TOUCH_RELEASE_LERP);
     }
   }
@@ -637,7 +739,7 @@ export function createProductViewer(root, options = {}) {
     if (shouldListen) startOrientationListening();
     else stopOrientationListening();
 
-    if (!shouldListen && !pointerInside && !touchDragging) {
+    if (!shouldListen && !pointerInside && !touchDragging && !orientationActive) {
       setTarget(0, 0, ORIENT_LERP);
     } else if (shouldListen) {
       ensureLoop();
@@ -650,14 +752,16 @@ export function createProductViewer(root, options = {}) {
   }
 
   function setupVisibility() {
+    const observeTarget = root.closest(".panel-hero") || root;
     intersectionObserver = new IntersectionObserver(
       (entries) => {
-        heroVisible = entries.some((entry) => entry.isIntersecting && entry.intersectionRatio > 0.15);
+        const entry = entries[0];
+        heroVisible = Boolean(entry?.isIntersecting);
         syncListeningState();
       },
-      { threshold: [0, 0.15, 0.5, 1] }
+      { threshold: [0, 0.05, 0.2] }
     );
-    intersectionObserver.observe(root);
+    intersectionObserver.observe(observeTarget);
     document.addEventListener("visibilitychange", handleVisibilityChange);
   }
 
@@ -677,13 +781,14 @@ export function createProductViewer(root, options = {}) {
     paintZoneOverlay();
 
     if (mobileInput) {
-      root.setAttribute("data-input", "touch");
+      root.setAttribute("data-input", orientationActive ? "orientation" : "touch");
     }
     ensureLoop();
   }
 
   setupZoneOverlay();
   setupVisibility();
+  setupMotionGate();
 
   if (prefersMouse) {
     root.addEventListener("pointerenter", handlePointerEnter);
@@ -694,8 +799,6 @@ export function createProductViewer(root, options = {}) {
     root.addEventListener("pointermove", handleTouchPointerMove, { passive: false });
     root.addEventListener("pointerup", handleTouchPointerUp);
     root.addEventListener("pointercancel", handleTouchPointerUp);
-    // iOS requires a user gesture; also catch taps on the hero before drag.
-    root.addEventListener("touchstart", handleOrientationGesture, { passive: true, once: false });
   }
 
   const preloadPromise = preload();
@@ -722,7 +825,6 @@ export function createProductViewer(root, options = {}) {
       root.removeEventListener("pointermove", handleTouchPointerMove);
       root.removeEventListener("pointerup", handleTouchPointerUp);
       root.removeEventListener("pointercancel", handleTouchPointerUp);
-      root.removeEventListener("touchstart", handleOrientationGesture);
       root.replaceChildren();
       layerNodes.clear();
     }

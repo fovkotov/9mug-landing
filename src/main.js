@@ -2,7 +2,6 @@ import { play } from "cuelume";
 import "./styles.css";
 
 const baseUrl = import.meta.env.BASE_URL ?? "/";
-const homeVideoSource = new URL("../assets/veo-3.mp4", import.meta.url).href;
 
 function resolvePublicAssetPath(path) {
   if (!path) return "";
@@ -11,6 +10,8 @@ function resolvePublicAssetPath(path) {
   const normalizedBase = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
   return `${normalizedBase}${path}`;
 }
+
+const homeVideoSource = resolvePublicAssetPath("/media/home/hero-video.mp4");
 
 const radioBtn = document.querySelector("#radioBtn");
 const noiseBtn = document.querySelector("#noiseBtn");
@@ -160,16 +161,26 @@ function toggleNoisePlayback() {
 
 function prepareHomeVideos() {
   for (const video of homeVideos) {
-    video.setAttribute("src", homeVideoSource);
-    video.preload = "auto";
+    if (!homeVideoSource) continue;
     video.muted = true;
+    video.defaultMuted = true;
+    video.setAttribute("muted", "");
+    video.setAttribute("playsinline", "");
+    video.playsInline = true;
     video.loop = true;
     video.autoplay = true;
-    video.playsInline = true;
+    video.preload = "auto";
+    if (video.getAttribute("src") !== homeVideoSource) {
+      video.setAttribute("src", homeVideoSource);
+    }
     video.load();
-    video.play().catch(() => {
-      // ignored - some browsers may still require a gesture.
-    });
+    const tryPlay = () => {
+      video.play().catch(() => {
+        // ignored - some browsers may still require a gesture.
+      });
+    };
+    if (video.readyState >= 2) tryPlay();
+    else video.addEventListener("canplay", tryPlay, { once: true });
   }
 }
 

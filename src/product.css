@@ -273,8 +273,8 @@ a {
 
 .meta-switch-first-fill {
   align-items: center;
-  background: #fff;
-  border: 0.875px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  border: 1px solid #fff;
   border-radius: 105px;
   display: flex;
   height: 14px;
@@ -282,13 +282,8 @@ a {
   width: 14px;
 }
 
-/* Source is black: under parent difference it becomes the light center. */
 .meta-switch-first-dot {
-  background: #000;
-  border-radius: 50%;
-  display: block;
-  height: 5.25px;
-  width: 5.25px;
+  display: none;
 }
 
 .price-plus-icon {

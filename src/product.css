@@ -263,12 +263,23 @@ a {
 
 /* Source is white: under parent difference it reads as the solid dark swatch. */
 .meta-switch-fill {
+  align-items: center;
   background: #fff;
   border: 0.875px solid rgba(255, 255, 255, 0.12);
   border-radius: 105px;
-  display: block;
+  display: flex;
   height: 14px;
+  justify-content: center;
   width: 14px;
+}
+
+.meta-switch-second-dot {
+  background: #fff;
+  border-radius: 50%;
+  display: block;
+  height: 12px;
+  mix-blend-mode: difference;
+  width: 12px;
 }
 
 .meta-switch-first-fill {

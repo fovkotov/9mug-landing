@@ -167,7 +167,7 @@ function setupDirectionalProductHero() {
     sideFarBoundary: 0.7,
     horizontalSensitivity: 1.05,
     verticalSensitivity: 0.95,
-    showZones: true
+    showZones: false
   });
 
   // Ensure the page-entry warmup stays referenced / in flight.

@@ -1,5 +1,6 @@
 import Lenis from "lenis";
 import { play } from "cuelume";
+import { bindProductOrientationHandoff } from "./device-orientation-permission.js";
 import "./shop.css";
 
 const baseUrl = import.meta.env.BASE_URL ?? "/";
@@ -313,3 +314,4 @@ if (lenis) {
 }
 
 window.addEventListener("resize", syncSectionIndicators);
+bindProductOrientationHandoff();

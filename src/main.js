@@ -1,4 +1,5 @@
 import { play } from "cuelume";
+import { bindProductOrientationHandoff } from "./device-orientation-permission.js";
 import "./styles.css";
 
 const baseUrl = import.meta.env.BASE_URL ?? "/";
@@ -232,3 +233,4 @@ window.addEventListener("keydown", primeHomeVideos, { once: true });
 prepareHomeVideos();
 setRadioUiState();
 updateNoiseUiState();
+bindProductOrientationHandoff();

@@ -7,6 +7,12 @@
  * Interaction updates only set target orientation; rendering runs in rAF.
  */
 
+import {
+  needsOrientationPermission,
+  orientationApiAvailable,
+  requestDeviceOrientationPermission
+} from "../device-orientation-permission.js";
+
 const DIRECTION_KEYS = [
   "center",
   "left",
@@ -73,14 +79,6 @@ function isMobileInteraction() {
   const noHover = window.matchMedia("(hover: none)").matches;
   const narrow = window.matchMedia("(max-width: 900px)").matches;
   return coarse || noHover || narrow || !supportsFinePointer();
-}
-
-function needsOrientationPermission() {
-  return (
-    orientationApiAvailable() &&
-    typeof DeviceOrientationEvent !== "undefined" &&
-    typeof DeviceOrientationEvent.requestPermission === "function"
-  );
 }
 
 function normalizeImages(images = {}) {
@@ -152,10 +150,6 @@ async function waitForFramePainted(img) {
   }
 }
 
-function orientationApiAvailable() {
-  return typeof window !== "undefined" && "DeviceOrientationEvent" in window;
-}
-
 /**
  * @param {HTMLElement} root
  * @param {{
@@ -201,8 +195,7 @@ export function createProductViewer(root, options = {}) {
   let zoneCtx = null;
   let zoneLabelLayer = null;
   let zoneResizeObserver = null;
-  let motionGate = null;
-  let motionGateButton = null;
+  let firstGestureBound = false;
 
   // Shared look target in the same normalized space as desktop mouse.
   let targetX = 0;
@@ -565,81 +558,17 @@ export function createProductViewer(root, options = {}) {
     orientationListening = false;
   }
 
-  function hideMotionGate() {
-    if (!motionGate) return;
-    motionGate.hidden = true;
-    root.classList.remove("has-motion-gate");
-  }
-
-  function showMotionGate(mode = "ask") {
-    if (!motionGate || !motionGateButton) return;
-    motionGate.hidden = false;
-    root.classList.add("has-motion-gate");
-    if (mode === "denied") {
-      motionGate.dataset.state = "denied";
-      motionGateButton.textContent = "Движение недоступно — листай пальцем";
-    } else if (mode === "loading") {
-      motionGate.dataset.state = "loading";
-      motionGateButton.textContent = "Запрос доступа…";
-      motionGateButton.disabled = true;
-    } else {
-      motionGate.dataset.state = "ask";
-      motionGateButton.disabled = false;
-      motionGateButton.textContent = needsOrientationPermission()
-        ? "Разрешить доступ к движению"
-        : "Включить движение";
-    }
-  }
-
-  async function requestOrientationPermission() {
-    if (!orientationApiAvailable()) {
-      return false;
-    }
-
-    // Android / desktop browsers: no permission prompt API.
-    if (!needsOrientationPermission()) {
-      orientationPermission = "granted";
-      return true;
-    }
-
-    try {
-      const requests = [DeviceOrientationEvent.requestPermission()];
-      if (
-        typeof DeviceMotionEvent !== "undefined" &&
-        typeof DeviceMotionEvent.requestPermission === "function"
-      ) {
-        requests.push(DeviceMotionEvent.requestPermission());
-      }
-
-      const results = await Promise.all(requests);
-      const granted = results.every((result) => result === "granted");
-      orientationPermission = granted ? "granted" : "denied";
-      return granted;
-    } catch (error) {
-      // Do not permanently lock out on transient gesture errors.
-      console.warn("Device orientation permission failed", error);
-      orientationPermission = "unknown";
-      return false;
-    }
-  }
-
   async function enableOrientationMode() {
     if (prefersMouse || orientationActive || destroyed || orientationRequesting) return false;
 
     orientationRequesting = true;
-    showMotionGate("loading");
-
-    const granted = await requestOrientationPermission();
+    const status = await requestDeviceOrientationPermission();
     orientationRequesting = false;
+    orientationPermission = status === "granted" ? "granted" : status === "denied" ? "denied" : "unknown";
 
-    if (!granted) {
+    if (status !== "granted") {
       touchEnabled = true;
       root.setAttribute("data-input", "touch");
-      showMotionGate(orientationPermission === "denied" ? "denied" : "ask");
-      // Keep a short denied hint, then allow using the page.
-      if (orientationPermission === "denied") {
-        window.setTimeout(() => hideMotionGate(), 1800);
-      }
       return false;
     }
 
@@ -651,53 +580,55 @@ export function createProductViewer(root, options = {}) {
     latestBeta = null;
     latestGamma = null;
     root.setAttribute("data-input", "orientation");
-    hideMotionGate();
     startOrientationListening();
     ensureLoop();
     return true;
   }
 
-  function setupMotionGate() {
-    if (!mobileInput || !orientationApiAvailable()) {
-      if (mobileInput) {
-        root.setAttribute("data-input", "touch");
+  function bindFirstGestureOrientationRequest() {
+    if (!mobileInput || firstGestureBound || orientationActive || destroyed) return;
+    firstGestureBound = true;
+
+    const onFirstGesture = () => {
+      window.removeEventListener("pointerdown", onFirstGesture, true);
+      window.removeEventListener("touchstart", onFirstGesture, true);
+      if (!orientationActive) {
+        void enableOrientationMode();
       }
+    };
+
+    window.addEventListener("pointerdown", onFirstGesture, true);
+    window.addEventListener("touchstart", onFirstGesture, { capture: true, passive: true });
+  }
+
+  async function bootstrapMobileOrientation() {
+    if (!mobileInput || destroyed) return;
+
+    if (!orientationApiAvailable()) {
+      root.setAttribute("data-input", "touch");
       return;
     }
 
-    motionGate = document.createElement("div");
-    motionGate.className = "product-viewer__motion-gate";
-    motionGate.dataset.state = "ask";
+    // Android: no permission prompt — start on page entry.
+    if (!needsOrientationPermission()) {
+      await enableOrientationMode();
+      return;
+    }
 
-    const copy = document.createElement("p");
-    copy.className = "product-viewer__motion-gate-copy";
-    copy.textContent = "Чтобы кружка реагировала на наклон телефона, нужен доступ к движению устройства.";
+    // iOS: permission is requested when tapping a link to this page.
+    // If already granted (or handoff just happened), this resolves without a dialog.
+    const started = await enableOrientationMode();
+    if (started) return;
 
-    motionGateButton = document.createElement("button");
-    motionGateButton.type = "button";
-    motionGateButton.className = "product-viewer__motion-gate-btn";
-    motionGateButton.textContent = needsOrientationPermission()
-      ? "Разрешить доступ к движению"
-      : "Включить движение";
-
-    // Must stay inside a direct user gesture for iOS permission dialogs.
-    motionGateButton.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      void enableOrientationMode();
-    });
-
-    motionGate.append(copy, motionGateButton);
-    root.append(motionGate);
-    root.classList.add("has-motion-gate");
+    // Direct open / refresh without prior grant: ask on the first tap.
+    bindFirstGestureOrientationRequest();
+    root.setAttribute("data-input", "touch");
   }
 
   // —— Touch fallback ——
   function handleTouchPointerDown(event) {
     if (prefersMouse || !touchEnabled || !canInteract()) return;
     if (event.pointerType === "mouse") return;
-    // Don't start a drag when tapping the permission button.
-    if (event.target?.closest?.(".product-viewer__motion-gate")) return;
 
     touchDragging = true;
     touchStartX = event.clientX;
@@ -782,13 +713,13 @@ export function createProductViewer(root, options = {}) {
 
     if (mobileInput) {
       root.setAttribute("data-input", orientationActive ? "orientation" : "touch");
+      void bootstrapMobileOrientation();
     }
     ensureLoop();
   }
 
   setupZoneOverlay();
   setupVisibility();
-  setupMotionGate();
 
   if (prefersMouse) {
     root.addEventListener("pointerenter", handlePointerEnter);

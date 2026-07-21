@@ -2,7 +2,7 @@
  * Directional product hero viewer.
  *
  * Vanilla mountable component with the same contract as <ProductViewer />:
- *   images, transitionDuration, deadZoneRadius,
+ *   images, transitionDuration, deadZoneHalfWidth, deadZoneHalfHeight,
  *   horizontalSensitivity, verticalSensitivity
  *
  * Interaction updates run through requestAnimationFrame and only mutate
@@ -148,6 +148,8 @@ async function waitForFramePainted(img) {
  * @param {{
  *   images: Record<string, string>,
  *   transitionDuration?: number,
+ *   deadZoneHalfWidth?: number,
+ *   deadZoneHalfHeight?: number,
  *   deadZoneRadius?: number,
  *   horizontalSensitivity?: number,
  *   verticalSensitivity?: number,
@@ -160,7 +162,10 @@ export function createProductViewer(root, options = {}) {
   }
 
   const images = normalizeImages(options.images);
-  const deadZoneRadius = options.deadZoneRadius ?? 0.14;
+  // Rectangular center zone. Legacy deadZoneRadius maps to a square half-extent.
+  const legacyRadius = options.deadZoneRadius ?? 0.14;
+  const deadZoneHalfWidth = options.deadZoneHalfWidth ?? legacyRadius * 2;
+  const deadZoneHalfHeight = options.deadZoneHalfHeight ?? legacyRadius * 1.35;
   const horizontalSensitivity = options.horizontalSensitivity ?? 1;
   const verticalSensitivity = options.verticalSensitivity ?? 1;
   const showZones = Boolean(options.showZones);
@@ -209,8 +214,9 @@ export function createProductViewer(root, options = {}) {
   }
 
   function pickDirection(nx, ny) {
-    const distance = Math.hypot(nx, ny);
-    if (distance <= deadZoneRadius) return "center";
+    if (Math.abs(nx) <= deadZoneHalfWidth && Math.abs(ny) <= deadZoneHalfHeight) {
+      return "center";
+    }
 
     let bestKey = "center";
     let bestScore = Number.POSITIVE_INFINITY;

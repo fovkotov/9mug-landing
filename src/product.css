@@ -246,6 +246,7 @@ a {
   align-items: center;
   display: flex;
   gap: 3.5px;
+  transform: translateY(-2px);
 }
 
 .meta-switch-btn {

@@ -263,23 +263,12 @@ a {
 
 /* Source is white: under parent difference it reads as the solid dark swatch. */
 .meta-switch-fill {
-  align-items: center;
   background: #fff;
   border: 0.875px solid rgba(255, 255, 255, 0.12);
   border-radius: 105px;
-  display: flex;
-  height: 14px;
-  justify-content: center;
-  width: 14px;
-}
-
-.meta-switch-second-dot {
-  background: #fff;
-  border-radius: 50%;
   display: block;
-  height: 12px;
-  mix-blend-mode: difference;
-  width: 12px;
+  height: 14px;
+  width: 14px;
 }
 
 .meta-switch-first-fill {
@@ -293,8 +282,13 @@ a {
   width: 14px;
 }
 
+/* Source white under parent difference → reads as the dark center dot. */
 .meta-switch-first-dot {
-  display: none;
+  background: #fff;
+  border-radius: 50%;
+  display: block;
+  height: 6px;
+  width: 6px;
 }
 
 .price-plus-icon {

@@ -251,6 +251,10 @@ a {
   display: none;
 }
 
+.home-mobile-title {
+  display: none;
+}
+
 .home-media,
 .home-media img {
   display: block;
@@ -359,9 +363,24 @@ a {
     color: var(--ui-overlay);
   }
 
-  /* First screen on mobile stays clean — no 9MUG / price overlay. */
-  .home-meta {
-    display: none;
+  .home-mobile-title {
+    bottom: 48px;
+    color: #fff;
+    display: block;
+    font-family: var(--font-ui);
+    font-feature-settings: "lnum" 1, "pnum" 1;
+    font-size: 17px;
+    height: 17px;
+    left: 50%;
+    letter-spacing: 0.34px;
+    line-height: 17px;
+    mix-blend-mode: difference;
+    pointer-events: auto;
+    position: absolute;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    width: 49px;
+    z-index: 3;
   }
 }
 

@@ -23,21 +23,6 @@ const DIRECTION_KEYS = [
   "downRight"
 ];
 
-/** Direction tips in normalized cursor space (center handled by dead zone). */
-const DIRECTION_VECTORS = {
-  center: { x: 0, y: 0 },
-  left: { x: -0.55, y: 0 },
-  farLeft: { x: -1, y: 0 },
-  right: { x: 0.55, y: 0 },
-  farRight: { x: 1, y: 0 },
-  up: { x: 0, y: -0.72 },
-  down: { x: 0, y: 0.72 },
-  upLeft: { x: -0.68, y: -0.68 },
-  upRight: { x: 0.68, y: -0.68 },
-  downLeft: { x: -0.68, y: 0.68 },
-  downRight: { x: 0.68, y: 0.68 }
-};
-
 const ZONE_LABELS = {
   center: "center",
   left: "left",
@@ -150,6 +135,7 @@ async function waitForFramePainted(img) {
  *   transitionDuration?: number,
  *   deadZoneHalfWidth?: number,
  *   deadZoneHalfHeight?: number,
+ *   sideFarBoundary?: number,
  *   deadZoneRadius?: number,
  *   horizontalSensitivity?: number,
  *   verticalSensitivity?: number,
@@ -162,10 +148,14 @@ export function createProductViewer(root, options = {}) {
   }
 
   const images = normalizeImages(options.images);
-  // Rectangular center zone. Legacy deadZoneRadius maps to a square half-extent.
+  // Rectangular zone grid. Legacy deadZoneRadius maps to a square half-extent.
   const legacyRadius = options.deadZoneRadius ?? 0.14;
   const deadZoneHalfWidth = options.deadZoneHalfWidth ?? legacyRadius * 2;
   const deadZoneHalfHeight = options.deadZoneHalfHeight ?? legacyRadius * 1.35;
+  const sideFarBoundary = Math.max(
+    options.sideFarBoundary ?? deadZoneHalfWidth + 0.42,
+    deadZoneHalfWidth + 0.08
+  );
   const horizontalSensitivity = options.horizontalSensitivity ?? 1;
   const verticalSensitivity = options.verticalSensitivity ?? 1;
   const showZones = Boolean(options.showZones);
@@ -213,27 +203,34 @@ export function createProductViewer(root, options = {}) {
     layerNodes.set(key, img);
   }
 
+  function firstAvailable(...keys) {
+    for (const key of keys) {
+      if (availableKeys.includes(key)) return key;
+    }
+    return availableKeys.includes("center") ? "center" : availableKeys[0];
+  }
+
+  /** Axis-aligned rectangular zones (same mid-band height for center / left / right). */
   function pickDirection(nx, ny) {
-    if (Math.abs(nx) <= deadZoneHalfWidth && Math.abs(ny) <= deadZoneHalfHeight) {
-      return "center";
+    const inMidBand = Math.abs(ny) <= deadZoneHalfHeight;
+
+    if (inMidBand) {
+      if (nx < -sideFarBoundary) return firstAvailable("farLeft", "left", "center");
+      if (nx < -deadZoneHalfWidth) return firstAvailable("left", "farLeft", "center");
+      if (nx <= deadZoneHalfWidth) return firstAvailable("center");
+      if (nx <= sideFarBoundary) return firstAvailable("right", "farRight", "center");
+      return firstAvailable("farRight", "right", "center");
     }
 
-    let bestKey = "center";
-    let bestScore = Number.POSITIVE_INFINITY;
-
-    for (const key of availableKeys) {
-      if (key === "center") continue;
-      const vector = DIRECTION_VECTORS[key];
-      const dx = nx - vector.x;
-      const dy = ny - vector.y;
-      const score = dx * dx + dy * dy;
-      if (score < bestScore) {
-        bestScore = score;
-        bestKey = key;
-      }
+    if (ny < -deadZoneHalfHeight) {
+      if (nx < -deadZoneHalfWidth) return firstAvailable("upLeft", "up", "left", "center");
+      if (nx > deadZoneHalfWidth) return firstAvailable("upRight", "up", "right", "center");
+      return firstAvailable("up", "center");
     }
 
-    return bestKey;
+    if (nx < -deadZoneHalfWidth) return firstAvailable("downLeft", "down", "left", "center");
+    if (nx > deadZoneHalfWidth) return firstAvailable("downRight", "down", "right", "center");
+    return firstAvailable("down", "center");
   }
 
   function computeNormalizedFromLocal(localX, localY, width, height) {

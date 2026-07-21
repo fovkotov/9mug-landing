@@ -161,9 +161,10 @@ function setupDirectionalProductHero() {
   createProductViewer(productViewerRoot, {
     images: mugFrameImages,
     transitionDuration: 0,
-    // Rectangle center zone (~2x previous circular dead zone).
+    // Rectangular mid-band: far_left | left | center | right | far_right
     deadZoneHalfWidth: 0.28,
     deadZoneHalfHeight: 0.19,
+    sideFarBoundary: 0.7,
     horizontalSensitivity: 1.05,
     verticalSensitivity: 0.95,
     showZones: true

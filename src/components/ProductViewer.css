@@ -7,6 +7,16 @@
   width: 100%;
 }
 
+.product-viewer.is-mobile-input {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.product-viewer.is-touch-dragging {
+  cursor: grabbing;
+}
+
 .product-viewer__stage {
   height: 100%;
   inset: 0;

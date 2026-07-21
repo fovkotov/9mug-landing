@@ -167,6 +167,8 @@ function setupDirectionalProductHero() {
     sideFarBoundary: 0.7,
     horizontalSensitivity: 1.05,
     verticalSensitivity: 0.95,
+    maxGamma: 20,
+    maxBeta: 12,
     showZones: false
   });
 

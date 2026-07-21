@@ -1,12 +1,10 @@
 /**
  * Directional product hero viewer.
  *
- * Vanilla mountable component with the same contract as <ProductViewer />:
- *   images, transitionDuration, deadZoneHalfWidth, deadZoneHalfHeight,
- *   horizontalSensitivity, verticalSensitivity
+ * Desktop: mouse look-around.
+ * Mobile: DeviceOrientation (calibrated) with touch-drag fallback.
  *
- * Interaction updates run through requestAnimationFrame and only mutate
- * z-index — frames stay fully painted to avoid decode flashes.
+ * Interaction updates only set target orientation; rendering runs in rAF.
  */
 
 const DIRECTION_KEYS = [
@@ -51,12 +49,27 @@ const ZONE_COLORS = {
   downRight: [255, 120, 160]
 };
 
+const MAX_GAMMA_DEG = 20;
+const MAX_BETA_DEG = 12;
+const ORIENT_LERP = 0.14;
+const TOUCH_RELEASE_LERP = 0.12;
+const MOUSE_LERP = 1;
+const SNAP_EPSILON = 0.004;
+
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
+function lerp(current, target, amount) {
+  return current + (target - current) * amount;
+}
+
 function supportsFinePointer() {
   return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+}
+
+function isCoarsePointer() {
+  return window.matchMedia("(pointer: coarse)").matches || !supportsFinePointer();
 }
 
 function normalizeImages(images = {}) {
@@ -128,6 +141,10 @@ async function waitForFramePainted(img) {
   }
 }
 
+function orientationApiAvailable() {
+  return typeof window !== "undefined" && "DeviceOrientationEvent" in window;
+}
+
 /**
  * @param {HTMLElement} root
  * @param {{
@@ -139,7 +156,9 @@ async function waitForFramePainted(img) {
  *   deadZoneRadius?: number,
  *   horizontalSensitivity?: number,
  *   verticalSensitivity?: number,
- *   showZones?: boolean
+ *   showZones?: boolean,
+ *   maxGamma?: number,
+ *   maxBeta?: number
  * }} options
  */
 export function createProductViewer(root, options = {}) {
@@ -148,7 +167,6 @@ export function createProductViewer(root, options = {}) {
   }
 
   const images = normalizeImages(options.images);
-  // Rectangular zone grid. Legacy deadZoneRadius maps to a square half-extent.
   const legacyRadius = options.deadZoneRadius ?? 0.14;
   const deadZoneHalfWidth = options.deadZoneHalfWidth ?? legacyRadius * 2;
   const deadZoneHalfHeight = options.deadZoneHalfHeight ?? legacyRadius * 1.35;
@@ -159,25 +177,62 @@ export function createProductViewer(root, options = {}) {
   const horizontalSensitivity = options.horizontalSensitivity ?? 1;
   const verticalSensitivity = options.verticalSensitivity ?? 1;
   const showZones = Boolean(options.showZones);
+  const maxGamma = options.maxGamma ?? MAX_GAMMA_DEG;
+  const maxBeta = options.maxBeta ?? MAX_BETA_DEG;
+
+  const prefersMouse = supportsFinePointer();
+  const mobileInput = isCoarsePointer();
 
   let destroyed = false;
   let ready = false;
   let activeKey = "center";
-  let pointerInside = false;
-  let latestPointer = null;
-  let rafId = 0;
-  let needsUpdate = false;
   let zoneCanvas = null;
   let zoneCtx = null;
   let zoneLabelLayer = null;
   let zoneResizeObserver = null;
+
+  // Shared look target in the same normalized space as desktop mouse.
+  let targetX = 0;
+  let targetY = 0;
+  let smoothX = 0;
+  let smoothY = 0;
+  let lerpAmount = prefersMouse ? MOUSE_LERP : ORIENT_LERP;
+  let rafId = 0;
+  let loopRunning = false;
+
+  // Desktop mouse
+  let pointerInside = false;
+
+  // Orientation
+  let orientationActive = false;
+  let orientationListening = false;
+  let orientationPermission = "unknown";
+  let neutralBeta = null;
+  let neutralGamma = null;
+  let latestBeta = null;
+  let latestGamma = null;
+
+  // Touch fallback
+  let touchDragging = false;
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchOriginX = 0;
+  let touchOriginY = 0;
+  let touchEnabled = mobileInput;
+
+  // Visibility gating
+  let heroVisible = true;
+  let pageVisible = document.visibilityState !== "hidden";
+  let intersectionObserver = null;
 
   const layerNodes = new Map();
   const availableKeys = DIRECTION_KEYS.filter((key) => Boolean(images[key]));
 
   root.classList.add("product-viewer");
   root.classList.toggle("has-zones", showZones);
+  root.classList.toggle("is-mobile-input", mobileInput);
   root.setAttribute("data-ready", "false");
+  root.setAttribute("data-input", prefersMouse ? "mouse" : "pending");
 
   const stage = document.createElement("div");
   stage.className = "product-viewer__stage";
@@ -210,7 +265,7 @@ export function createProductViewer(root, options = {}) {
     return availableKeys.includes("center") ? "center" : availableKeys[0];
   }
 
-  /** Axis-aligned rectangular zones (same mid-band height for center / left / right). */
+  /** Axis-aligned rectangular zones (shared by mouse / orientation / touch). */
   function pickDirection(nx, ny) {
     const inMidBand = Math.abs(ny) <= deadZoneHalfHeight;
 
@@ -256,6 +311,17 @@ export function createProductViewer(root, options = {}) {
     );
   }
 
+  /** Map relative degrees → same normalized space as desktop zones. */
+  function orientationToNormalized(relGamma, relBeta) {
+    const gx = clamp(relGamma, -maxGamma, maxGamma) / maxGamma;
+    const by = clamp(relBeta, -maxBeta, maxBeta) / maxBeta;
+    // 10° → ~0.5 (left/right), 20° → 1 (far_*). Vertical clears mid-band gently.
+    return {
+      x: gx * Math.max(sideFarBoundary + 0.2, 1),
+      y: by * Math.max(deadZoneHalfHeight + 0.35, 0.55)
+    };
+  }
+
   function setActiveDirection(nextKey) {
     if (!layerNodes.has(nextKey) || nextKey === activeKey) return;
 
@@ -271,6 +337,63 @@ export function createProductViewer(root, options = {}) {
         label.classList.toggle("is-active", label.dataset.key === nextKey);
       }
     }
+  }
+
+  function setTarget(nx, ny, nextLerp = lerpAmount) {
+    targetX = nx;
+    targetY = ny;
+    lerpAmount = nextLerp;
+    ensureLoop();
+  }
+
+  function canInteract() {
+    return ready && !destroyed && heroVisible && pageVisible;
+  }
+
+  function renderFrame() {
+    rafId = 0;
+    if (destroyed || !ready) {
+      loopRunning = false;
+      return;
+    }
+
+    smoothX = lerp(smoothX, targetX, lerpAmount);
+    smoothY = lerp(smoothY, targetY, lerpAmount);
+
+    if (Math.abs(smoothX - targetX) < SNAP_EPSILON) smoothX = targetX;
+    if (Math.abs(smoothY - targetY) < SNAP_EPSILON) smoothY = targetY;
+
+    setActiveDirection(pickDirection(smoothX, smoothY));
+
+    const settled =
+      smoothX === targetX &&
+      smoothY === targetY &&
+      !(orientationActive && orientationListening) &&
+      !pointerInside &&
+      !touchDragging;
+
+    if (settled && targetX === 0 && targetY === 0) {
+      loopRunning = false;
+      return;
+    }
+
+    // Keep looping while sensors/pointer are live or still easing.
+    if (
+      orientationActive &&
+      orientationListening &&
+      canInteract()
+    ) {
+      applyOrientationSample();
+    }
+
+    loopRunning = true;
+    rafId = requestAnimationFrame(renderFrame);
+  }
+
+  function ensureLoop() {
+    if (destroyed || !ready || loopRunning) return;
+    loopRunning = true;
+    rafId = requestAnimationFrame(renderFrame);
   }
 
   function paintZoneOverlay() {
@@ -362,44 +485,180 @@ export function createProductViewer(root, options = {}) {
     window.addEventListener("orientationchange", paintZoneOverlay);
   }
 
-  function flushPointerUpdate() {
-    rafId = 0;
-    if (!ready || destroyed || !needsUpdate) return;
-    needsUpdate = false;
-
-    if (!pointerInside || !latestPointer) {
-      setActiveDirection("center");
-      return;
-    }
-
-    const { x, y } = computeNormalizedPointer(latestPointer.x, latestPointer.y);
-    setActiveDirection(pickDirection(x, y));
-  }
-
-  function scheduleUpdate() {
-    needsUpdate = true;
-    if (rafId || !ready || destroyed) return;
-    rafId = requestAnimationFrame(flushPointerUpdate);
-  }
-
+  // —— Desktop mouse ——
   function handlePointerEnter(event) {
-    if (!supportsFinePointer()) return;
+    if (!prefersMouse || !canInteract()) return;
     pointerInside = true;
-    latestPointer = { x: event.clientX, y: event.clientY };
-    scheduleUpdate();
+    const { x, y } = computeNormalizedPointer(event.clientX, event.clientY);
+    setTarget(x, y, MOUSE_LERP);
   }
 
   function handlePointerMove(event) {
-    if (!supportsFinePointer()) return;
+    if (!prefersMouse || !canInteract()) return;
     pointerInside = true;
-    latestPointer = { x: event.clientX, y: event.clientY };
-    scheduleUpdate();
+    const { x, y } = computeNormalizedPointer(event.clientX, event.clientY);
+    setTarget(x, y, MOUSE_LERP);
   }
 
   function handlePointerLeave() {
+    if (!prefersMouse) return;
     pointerInside = false;
-    latestPointer = null;
-    scheduleUpdate();
+    setTarget(0, 0, ORIENT_LERP);
+  }
+
+  // —— Orientation ——
+  function applyOrientationSample() {
+    if (latestBeta == null || latestGamma == null) return;
+    if (neutralBeta == null || neutralGamma == null) {
+      neutralBeta = latestBeta;
+      neutralGamma = latestGamma;
+    }
+
+    const relGamma = latestGamma - neutralGamma;
+    const relBeta = latestBeta - neutralBeta;
+    const mapped = orientationToNormalized(relGamma, relBeta);
+    targetX = mapped.x;
+    targetY = mapped.y;
+    lerpAmount = ORIENT_LERP;
+  }
+
+  function handleDeviceOrientation(event) {
+    if (!orientationActive || !canInteract()) return;
+    if (event.beta == null || event.gamma == null) return;
+
+    latestBeta = event.beta;
+    latestGamma = event.gamma;
+    applyOrientationSample();
+    ensureLoop();
+  }
+
+  function startOrientationListening() {
+    if (orientationListening || destroyed || !orientationActive) return;
+    window.addEventListener("deviceorientation", handleDeviceOrientation, true);
+    orientationListening = true;
+    root.setAttribute("data-input", "orientation");
+    ensureLoop();
+  }
+
+  function stopOrientationListening() {
+    if (!orientationListening) return;
+    window.removeEventListener("deviceorientation", handleDeviceOrientation, true);
+    orientationListening = false;
+  }
+
+  async function requestOrientationPermission() {
+    if (!orientationApiAvailable()) {
+      orientationPermission = "denied";
+      return false;
+    }
+
+    try {
+      if (typeof DeviceOrientationEvent.requestPermission === "function") {
+        const result = await DeviceOrientationEvent.requestPermission();
+        orientationPermission = result === "granted" ? "granted" : "denied";
+        return orientationPermission === "granted";
+      }
+      orientationPermission = "granted";
+      return true;
+    } catch {
+      orientationPermission = "denied";
+      return false;
+    }
+  }
+
+  async function enableOrientationMode() {
+    if (prefersMouse || orientationActive || destroyed) return;
+    const granted = await requestOrientationPermission();
+    if (!granted) {
+      touchEnabled = true;
+      root.setAttribute("data-input", "touch");
+      return;
+    }
+
+    orientationActive = true;
+    touchEnabled = false;
+    neutralBeta = null;
+    neutralGamma = null;
+    root.setAttribute("data-input", "orientation");
+    if (heroVisible && pageVisible) {
+      startOrientationListening();
+    }
+  }
+
+  function handleOrientationGesture() {
+    if (prefersMouse || orientationActive || orientationPermission === "denied") return;
+    void enableOrientationMode();
+  }
+
+  // —— Touch fallback ——
+  function handleTouchPointerDown(event) {
+    handleOrientationGesture();
+
+    if (orientationActive || prefersMouse || !touchEnabled || !canInteract()) return;
+    if (event.pointerType === "mouse") return;
+
+    touchDragging = true;
+    touchStartX = event.clientX;
+    touchStartY = event.clientY;
+    touchOriginX = targetX;
+    touchOriginY = targetY;
+    root.classList.add("is-touch-dragging");
+    root.setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+  }
+
+  function handleTouchPointerMove(event) {
+    if (!touchDragging || orientationActive || prefersMouse || !canInteract()) return;
+
+    const rect = root.getBoundingClientRect();
+    const dx = event.clientX - touchStartX;
+    const dy = event.clientY - touchStartY;
+    const nx = clamp(touchOriginX + (dx / Math.max(rect.width, 1)) * 2.2, -1.2, 1.2);
+    const ny = clamp(touchOriginY + (dy / Math.max(rect.height, 1)) * 1.4, -0.9, 0.9);
+    setTarget(nx, ny, ORIENT_LERP);
+  }
+
+  function handleTouchPointerUp(event) {
+    if (!touchDragging) return;
+    touchDragging = false;
+    root.classList.remove("is-touch-dragging");
+    if (root.hasPointerCapture?.(event.pointerId)) {
+      root.releasePointerCapture(event.pointerId);
+    }
+    if (!orientationActive) {
+      setTarget(0, 0, TOUCH_RELEASE_LERP);
+    }
+  }
+
+  // —— Visibility ——
+  function syncListeningState() {
+    if (destroyed) return;
+    const shouldListen = orientationActive && heroVisible && pageVisible;
+    if (shouldListen) startOrientationListening();
+    else stopOrientationListening();
+
+    if (!shouldListen && !pointerInside && !touchDragging) {
+      setTarget(0, 0, ORIENT_LERP);
+    } else if (shouldListen) {
+      ensureLoop();
+    }
+  }
+
+  function handleVisibilityChange() {
+    pageVisible = document.visibilityState !== "hidden";
+    syncListeningState();
+  }
+
+  function setupVisibility() {
+    intersectionObserver = new IntersectionObserver(
+      (entries) => {
+        heroVisible = entries.some((entry) => entry.isIntersecting && entry.intersectionRatio > 0.15);
+        syncListeningState();
+      },
+      { threshold: [0, 0.15, 0.5, 1] }
+    );
+    intersectionObserver.observe(root);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
   }
 
   async function preload() {
@@ -416,14 +675,28 @@ export function createProductViewer(root, options = {}) {
     root.setAttribute("data-ready", "true");
     root.classList.add("is-ready");
     paintZoneOverlay();
-    scheduleUpdate();
+
+    if (mobileInput) {
+      root.setAttribute("data-input", "touch");
+    }
+    ensureLoop();
   }
 
   setupZoneOverlay();
+  setupVisibility();
 
-  root.addEventListener("pointerenter", handlePointerEnter);
-  root.addEventListener("pointermove", handlePointerMove);
-  root.addEventListener("pointerleave", handlePointerLeave);
+  if (prefersMouse) {
+    root.addEventListener("pointerenter", handlePointerEnter);
+    root.addEventListener("pointermove", handlePointerMove);
+    root.addEventListener("pointerleave", handlePointerLeave);
+  } else {
+    root.addEventListener("pointerdown", handleTouchPointerDown, { passive: false });
+    root.addEventListener("pointermove", handleTouchPointerMove, { passive: false });
+    root.addEventListener("pointerup", handleTouchPointerUp);
+    root.addEventListener("pointercancel", handleTouchPointerUp);
+    // iOS requires a user gesture; also catch taps on the hero before drag.
+    root.addEventListener("touchstart", handleOrientationGesture, { passive: true, once: false });
+  }
 
   const preloadPromise = preload();
 
@@ -436,11 +709,20 @@ export function createProductViewer(root, options = {}) {
       if (destroyed) return;
       destroyed = true;
       cancelAnimationFrame(rafId);
+      loopRunning = false;
+      stopOrientationListening();
       zoneResizeObserver?.disconnect();
+      intersectionObserver?.disconnect();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("orientationchange", paintZoneOverlay);
       root.removeEventListener("pointerenter", handlePointerEnter);
       root.removeEventListener("pointermove", handlePointerMove);
       root.removeEventListener("pointerleave", handlePointerLeave);
+      root.removeEventListener("pointerdown", handleTouchPointerDown);
+      root.removeEventListener("pointermove", handleTouchPointerMove);
+      root.removeEventListener("pointerup", handleTouchPointerUp);
+      root.removeEventListener("pointercancel", handleTouchPointerUp);
+      root.removeEventListener("touchstart", handleOrientationGesture);
       root.replaceChildren();
       layerNodes.clear();
     }

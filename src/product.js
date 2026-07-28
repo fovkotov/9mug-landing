@@ -10,8 +10,10 @@ import {
   preloadMugFrameImages
 } from "./components/ProductViewer.js";
 
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const isMobileViewport = () => window.matchMedia("(max-width: 900px)").matches;
 const baseUrl = import.meta.env.BASE_URL ?? "/";
+
 function resolvePublicAssetPath(path) {
   if (!path) return "";
   if (/^(?:[a-z]+:)?\/\//i.test(path) || path.startsWith("data:")) return path;
@@ -68,6 +70,19 @@ let noiseNode = null;
 let noiseGain = null;
 let brownNoiseLastOut = 0;
 let endVideoPrimed = false;
+const scratchSection = document.querySelector("#scratchSection");
+const scratchCanvas = document.querySelector("#scratchCanvas");
+const scratchCursorSource = resolvePublicAssetPath("/media/scratch/cursor.png");
+const scratchCoverSources = {
+  desktop: {
+    "1x": resolvePublicAssetPath("/media/scratch/cover-desktop-1x.webp"),
+    "2x": resolvePublicAssetPath("/media/scratch/cover-desktop.webp")
+  },
+  mobile: {
+    "1x": resolvePublicAssetPath("/media/scratch/cover-mobile-1x.webp"),
+    "2x": resolvePublicAssetPath("/media/scratch/cover-mobile.webp")
+  }
+};
 
 function prepareEndVideo() {
   if (!scrollVideo) return;
@@ -175,6 +190,234 @@ function setupProductHero() {
   }
 
   setupDirectionalProductHero();
+}
+
+function setupScratchPanel() {
+  if (!scratchSection || !scratchCanvas) return;
+
+  const ctx = scratchCanvas.getContext("2d", { alpha: true });
+  if (!ctx) return;
+
+  const coverImage = new Image();
+  coverImage.decoding = "async";
+
+  let scratchCursor = null;
+  let coverReady = false;
+  let isPointerInside = false;
+  let lastPoint = null;
+  let activeCoverSource = "";
+  let dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  const supportsFinePointer = () =>
+    window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+  function getCoverSource() {
+    const density = (window.devicePixelRatio || 1) >= 1.5 ? "2x" : "1x";
+    const set = isMobileViewport() ? scratchCoverSources.mobile : scratchCoverSources.desktop;
+    return set[density] || set["1x"];
+  }
+
+  function getBladeSize() {
+    // Match reference guide: thin vertical line from tip, ~full cursor height.
+    const cursorHeight = isMobileViewport() ? 144 : 176;
+    const cursorWidth = cursorHeight * (134 / 352);
+    return {
+      width: Math.max(2 * dpr, cursorWidth * 0.034 * dpr),
+      height: cursorHeight * 0.93 * dpr
+    };
+  }
+
+  function setScratchCursorVisibility(visible) {
+    if (!scratchCursor) return;
+    scratchSection.classList.toggle("has-scratch-cursor", visible);
+  }
+
+  function updateScratchCursorPosition(clientX, clientY) {
+    if (!scratchCursor) return;
+    const rect = scratchSection.getBoundingClientRect();
+    const x = clamp(clientX - rect.left, 0, rect.width);
+    const y = clamp(clientY - rect.top, 0, rect.height);
+    scratchCursor.style.setProperty("--cursor-x", `${x}px`);
+    scratchCursor.style.setProperty("--cursor-y", `${y}px`);
+  }
+
+  function setupScratchCursor() {
+    if (scratchCursor || !supportsFinePointer()) return;
+
+    scratchCursor = document.createElement("span");
+    scratchCursor.className = "scratch-cursor";
+    scratchCursor.setAttribute("aria-hidden", "true");
+
+    const cursorImage = document.createElement("img");
+    cursorImage.alt = "";
+    cursorImage.src = scratchCursorSource;
+    cursorImage.draggable = false;
+    scratchCursor.append(cursorImage);
+    scratchSection.append(scratchCursor);
+  }
+
+  function paintCover() {
+    if (!coverReady) return;
+
+    const width = scratchSection.clientWidth;
+    const height = scratchSection.clientHeight;
+    if (width <= 0 || height <= 0) return;
+
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    scratchCanvas.width = Math.round(width * dpr);
+    scratchCanvas.height = Math.round(height * dpr);
+    scratchCanvas.style.width = `${width}px`;
+    scratchCanvas.style.height = `${height}px`;
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+    ctx.drawImage(coverImage, 0, 0, scratchCanvas.width, scratchCanvas.height);
+    lastPoint = null;
+  }
+
+  function loadCoverImage() {
+    const nextSource = getCoverSource();
+    if (!nextSource) return;
+
+    if (activeCoverSource === nextSource && coverReady && coverImage.complete) {
+      paintCover();
+      return;
+    }
+
+    coverReady = false;
+    activeCoverSource = nextSource;
+    coverImage.onload = () => {
+      coverReady = true;
+      paintCover();
+    };
+    coverImage.onerror = () => {
+      coverReady = false;
+    };
+    coverImage.src = nextSource;
+  }
+
+  function getCanvasPoint(clientX, clientY) {
+    const rect = scratchCanvas.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return null;
+    return {
+      x: ((clientX - rect.left) / rect.width) * scratchCanvas.width,
+      y: ((clientY - rect.top) / rect.height) * scratchCanvas.height
+    };
+  }
+
+  function scratchAt(point) {
+    if (!point || !coverReady) return;
+
+    const { width: bladeWidth, height: bladeHeight } = getBladeSize();
+    ctx.save();
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.fillStyle = "#000";
+
+    if (lastPoint) {
+      // Sweep a vertical blade strip between positions so motion stays a line, not a dot trail.
+      ctx.beginPath();
+      ctx.moveTo(lastPoint.x, lastPoint.y);
+      ctx.lineTo(point.x, point.y);
+      ctx.lineTo(point.x + bladeWidth, point.y);
+      ctx.lineTo(point.x + bladeWidth, point.y + bladeHeight);
+      ctx.lineTo(lastPoint.x + bladeWidth, lastPoint.y + bladeHeight);
+      ctx.lineTo(lastPoint.x, lastPoint.y + bladeHeight);
+      ctx.closePath();
+      ctx.fill();
+    } else {
+      ctx.fillRect(point.x, point.y, bladeWidth, bladeHeight);
+    }
+
+    ctx.restore();
+    lastPoint = point;
+  }
+
+  function handlePointerEnter(event) {
+    armScratchAssets();
+    isPointerInside = true;
+    setupScratchCursor();
+    updateScratchCursorPosition(event.clientX, event.clientY);
+    setScratchCursorVisibility(Boolean(scratchCursor));
+    lastPoint = getCanvasPoint(event.clientX, event.clientY);
+    scratchAt(lastPoint);
+  }
+
+  function handlePointerMove(event) {
+    if (!isPointerInside) return;
+    updateScratchCursorPosition(event.clientX, event.clientY);
+    if (!scratchSection.classList.contains("has-scratch-cursor") && scratchCursor) {
+      setScratchCursorVisibility(true);
+    }
+    scratchAt(getCanvasPoint(event.clientX, event.clientY));
+  }
+
+  function handlePointerLeave() {
+    isPointerInside = false;
+    lastPoint = null;
+    setScratchCursorVisibility(false);
+  }
+
+  function handlePointerDown(event) {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    scratchCanvas.setPointerCapture?.(event.pointerId);
+    isPointerInside = true;
+    setupScratchCursor();
+    updateScratchCursorPosition(event.clientX, event.clientY);
+    setScratchCursorVisibility(Boolean(scratchCursor));
+    lastPoint = getCanvasPoint(event.clientX, event.clientY);
+    scratchAt(lastPoint);
+  }
+
+  function handlePointerUp(event) {
+    if (scratchCanvas.hasPointerCapture?.(event.pointerId)) {
+      scratchCanvas.releasePointerCapture(event.pointerId);
+    }
+  }
+
+  let assetsArmed = false;
+  const armScratchAssets = () => {
+    if (assetsArmed) return;
+    assetsArmed = true;
+    loadCoverImage();
+  };
+
+  let resizeFrame = 0;
+  function handleResize() {
+    if (!assetsArmed) return;
+    cancelAnimationFrame(resizeFrame);
+    resizeFrame = requestAnimationFrame(() => {
+      if (activeCoverSource !== getCoverSource()) {
+        loadCoverImage();
+        return;
+      }
+      paintCover();
+    });
+  }
+
+  scratchCanvas.addEventListener("pointerenter", handlePointerEnter);
+  scratchCanvas.addEventListener("pointermove", handlePointerMove);
+  scratchCanvas.addEventListener("pointerleave", handlePointerLeave);
+  scratchCanvas.addEventListener("pointerdown", handlePointerDown);
+  scratchCanvas.addEventListener("pointerup", handlePointerUp);
+  scratchCanvas.addEventListener("pointercancel", handlePointerUp);
+  window.addEventListener("resize", handleResize);
+  window.addEventListener("orientationchange", handleResize);
+
+  setupScratchCursor();
+
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        armScratchAssets();
+        observer.disconnect();
+      },
+      { rootMargin: "240px 0px" }
+    );
+    observer.observe(scratchSection);
+  } else {
+    armScratchAssets();
+  }
 }
 
 function setupEndVideoPlayback() {
@@ -365,6 +608,7 @@ setRadioUiState();
 updateNoiseUiState();
 setBagUiState();
 setupProductHero();
+setupScratchPanel();
 setupEndVideoPlayback();
 
 function raf(time) {

@@ -158,7 +158,7 @@ function setupDirectionalProductHero() {
   createProductViewer(productViewerRoot, {
     images: mugFrameImages,
     transitionDuration: 0,
-    // Rectangular mid-band: far_left | left | center | right | far_right
+    // 5-col grid; far_* full height. Up/down bands bisected in the zone overlay.
     deadZoneHalfWidth: 0.28,
     deadZoneHalfHeight: 0.19,
     sideFarBoundary: 0.7,

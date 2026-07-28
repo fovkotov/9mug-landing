@@ -272,16 +272,21 @@ export function createProductViewer(root, options = {}) {
     return availableKeys.includes("center") ? "center" : availableKeys[0];
   }
 
-  /** Axis-aligned rectangular zones (shared by mouse / orientation / touch). */
+  /**
+   * 5-column rectangular grid; far_left / far_right run full height.
+   * Up / down bands are also bisected for overlay (same direction per half).
+   * Corner blocks (former 2-col up_left etc.) become a 2×2 of cells.
+   */
   function pickDirection(nx, ny) {
+    if (nx < -sideFarBoundary) return firstAvailable("farLeft", "left", "center");
+    if (nx > sideFarBoundary) return firstAvailable("farRight", "right", "center");
+
     const inMidBand = Math.abs(ny) <= deadZoneHalfHeight;
 
     if (inMidBand) {
-      if (nx < -sideFarBoundary) return firstAvailable("farLeft", "left", "center");
       if (nx < -deadZoneHalfWidth) return firstAvailable("left", "farLeft", "center");
-      if (nx <= deadZoneHalfWidth) return firstAvailable("center");
-      if (nx <= sideFarBoundary) return firstAvailable("right", "farRight", "center");
-      return firstAvailable("farRight", "right", "center");
+      if (nx > deadZoneHalfWidth) return firstAvailable("right", "farRight", "center");
+      return firstAvailable("center");
     }
 
     if (ny < -deadZoneHalfHeight) {
@@ -302,6 +307,14 @@ export function createProductViewer(root, options = {}) {
       x: clamp((localX / maxX) * horizontalSensitivity, -1.75, 1.75),
       y: clamp((localY / maxY) * verticalSensitivity, -1.2, 1.2)
     };
+  }
+
+  function normalizedToLocalX(nx, width) {
+    return width / 2 + (nx / horizontalSensitivity) * (width / 2);
+  }
+
+  function normalizedToLocalY(ny, height) {
+    return height / 2 + (ny / verticalSensitivity) * (height / 2);
   }
 
   function computeNormalizedPointer(clientX, clientY) {
@@ -419,6 +432,12 @@ export function createProductViewer(root, options = {}) {
     zoneCanvas.style.width = `${width}px`;
     zoneCanvas.style.height = `${height}px`;
 
+    // Bisect up / down bands so corner 2×2 and center halves read clearly.
+    const nyTop = -verticalSensitivity;
+    const nyBottom = verticalSensitivity;
+    const upHalfNy = (nyTop - deadZoneHalfHeight) / 2;
+    const downHalfNy = (nyBottom + deadZoneHalfHeight) / 2;
+
     const imageData = zoneCtx.createImageData(cols, rows);
     const data = imageData.data;
     const centroids = Object.fromEntries(availableKeys.map((key) => [key, { x: 0, y: 0, n: 0 }]));
@@ -439,7 +458,12 @@ export function createProductViewer(root, options = {}) {
         data[index] = color[0];
         data[index + 1] = color[1];
         data[index + 2] = color[2];
-        data[index + 3] = key === "center" ? 48 : 72;
+
+        let alpha = key === "center" ? 48 : 72;
+        // Alternate shade on up/down halves so the split reads as separate rectangles.
+        if (ny < -deadZoneHalfHeight && ny < upHalfNy) alpha = Math.min(110, alpha + 28);
+        if (ny > deadZoneHalfHeight && ny > downHalfNy) alpha = Math.min(110, alpha + 28);
+        data[index + 3] = alpha;
 
         const bucket = centroids[key];
         if (bucket) {
@@ -451,6 +475,37 @@ export function createProductViewer(root, options = {}) {
     }
 
     zoneCtx.putImageData(imageData, 0, 0);
+
+    // Subdivision strokes in canvas pixel space (scaled by sample).
+    const toCanvasX = (nx) => normalizedToLocalX(nx, width) / sample;
+    const toCanvasY = (ny) => normalizedToLocalY(ny, height) / sample;
+    const xLines = [
+      -sideFarBoundary,
+      -deadZoneHalfWidth,
+      deadZoneHalfWidth,
+      sideFarBoundary
+    ].map(toCanvasX);
+    const yLines = [
+      upHalfNy,
+      -deadZoneHalfHeight,
+      deadZoneHalfHeight,
+      downHalfNy
+    ].map(toCanvasY);
+
+    zoneCtx.save();
+    zoneCtx.strokeStyle = "rgba(220, 40, 40, 0.85)";
+    zoneCtx.lineWidth = 1;
+    zoneCtx.beginPath();
+    for (const x of xLines) {
+      zoneCtx.moveTo(x, 0);
+      zoneCtx.lineTo(x, rows);
+    }
+    for (const y of yLines) {
+      zoneCtx.moveTo(0, y);
+      zoneCtx.lineTo(cols, y);
+    }
+    zoneCtx.stroke();
+    zoneCtx.restore();
 
     if (!zoneLabelLayer) return;
     zoneLabelLayer.replaceChildren();

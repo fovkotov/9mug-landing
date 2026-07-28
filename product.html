@@ -46,43 +46,40 @@
       </div>
     </header>
 
-    <aside class="meta-bar" aria-label="Product actions">
-      <div class="meta-title-row">
-        <span class="meta-title-text">9MUG</span>
-        <div class="meta-switcher" id="metaSwitcher" aria-label="Switch mug design">
-          <button id="metaSwitchFirst" class="meta-switch-btn is-active" type="button" aria-label="Mug design 1" aria-pressed="true">
-            <span class="meta-switch-first-fill" aria-hidden="true">
-              <span class="meta-switch-first-dot"></span>
-            </span>
-          </button>
-          <button id="metaSwitchSecond" class="meta-switch-btn" type="button" aria-label="Mug design 2" aria-pressed="false">
-            <span class="meta-switch-fill" aria-hidden="true">
-              <span class="meta-switch-second-dot"></span>
-            </span>
-          </button>
-        </div>
-      </div>
-      <div
-        id="priceToggle"
-        class="meta-bar-price price-toggle"
-        role="button"
-        tabindex="0"
-        aria-pressed="false"
-      >
-        <img id="priceToggleIcon" class="price-plus-icon" src="/media/price-plus.svg" alt="" />
-        <span>$300</span>
-      </div>
+    <aside class="meta-bar" aria-label="Product info">
+      <span class="meta-title-text">MUG9</span>
     </aside>
 
-    <div class="bottom-links" aria-label="Additional links">
-      <a href="#" class="bottom-link bottom-link-details">Details</a>
-      <a href="#" class="bottom-link bottom-link-support">Support</a>
+    <div class="color-bar" aria-label="Product color">
+      <span class="color-bar-label">White</span>
+      <div class="meta-switcher" id="metaSwitcher" aria-label="Switch mug design">
+        <button id="metaSwitchFirst" class="meta-switch-btn is-active" type="button" aria-label="Mug design 1" aria-pressed="true">
+          <span class="meta-switch-first-fill" aria-hidden="true">
+            <span class="meta-switch-first-dot"></span>
+          </span>
+        </button>
+        <button id="metaSwitchSecond" class="meta-switch-btn" type="button" aria-label="Mug design 2" aria-pressed="false">
+          <span class="meta-switch-fill"></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="cart-bar" aria-label="Purchase">
+      <button
+        id="addToCart"
+        class="cart-bar-btn"
+        type="button"
+        aria-pressed="false"
+      >
+        <span class="cart-price">$300</span>
+        <span class="cart-label">Add to cart</span>
+      </button>
     </div>
 
     <main id="smoothRoot">
       <section class="panel panel-hero contrast-target" data-contrast-type="media" data-hero-mode="directional">
         <!-- Active: directional ProductViewer (mug_frames look-around) -->
-        <div id="productViewerRoot" class="product-viewer-root" aria-label="9MUG product view"></div>
+        <div id="productViewerRoot" class="product-viewer-root" aria-label="MUG9 product view"></div>
 
         <!--
           Legacy slide hero — exact previous first-screen interaction.
@@ -108,70 +105,60 @@
         </div>
       </section>
 
-      <section
-        id="scratchSection"
-        class="panel panel-scratch contrast-target"
-        data-contrast-type="media"
-        aria-label="Scratch to reveal"
-      >
-        <img
-          class="scratch-reveal desktop-only"
-          src="/media/scratch/reveal-desktop-1x.webp"
-          srcset="/media/scratch/reveal-desktop-1x.webp 1440w, /media/scratch/reveal-desktop.webp 2880w"
-          sizes="100vw"
-          alt=""
-          decoding="async"
-          loading="lazy"
-          draggable="false"
-        />
-        <img
-          class="scratch-reveal mobile-only"
-          src="/media/scratch/reveal-mobile-1x.webp"
-          srcset="/media/scratch/reveal-mobile-1x.webp 402w, /media/scratch/reveal-mobile.webp 804w"
-          sizes="100vw"
-          alt=""
-          decoding="async"
-          loading="lazy"
-          draggable="false"
-        />
-        <canvas id="scratchCanvas" class="scratch-canvas" aria-hidden="true"></canvas>
-      </section>
-
       <section class="image-grid-section contrast-target" data-contrast-type="media">
         <div class="image-grid-row image-grid-row-two">
-          <img class="image-grid-item" src="/media/grid-top-left.jpg" alt="" loading="lazy" decoding="async" />
-          <img class="image-grid-item" src="/media/grid-top-right.jpg" alt="" loading="lazy" decoding="async" />
+          <div class="image-grid-cell">
+            <img class="image-grid-item" src="/media/grid-top-left.png" alt="" loading="lazy" decoding="async" />
+          </div>
+          <div class="image-grid-cell">
+            <img class="image-grid-item" src="/media/grid-top-right.png" alt="" loading="lazy" decoding="async" />
+          </div>
         </div>
-        <div class="image-grid-row image-grid-row-full">
-          <img class="image-grid-item" src="/media/grid-middle.jpg" alt="" loading="lazy" decoding="async" />
-        </div>
-        <div class="image-grid-row image-grid-row-two">
-          <img class="image-grid-item" src="/media/grid-bottom-left.jpg" alt="" loading="lazy" decoding="async" />
-          <img class="image-grid-item" src="/media/grid-bottom-right.jpg" alt="" loading="lazy" decoding="async" />
+        <div class="image-grid-row image-grid-row-split">
+          <div class="image-grid-cell image-grid-cell-tall">
+            <img class="image-grid-item" src="/media/grid-middle.png" alt="" loading="lazy" decoding="async" />
+          </div>
+          <div class="image-grid-stack">
+            <div class="image-grid-cell">
+              <img class="image-grid-item" src="/media/grid-bottom-left.png" alt="" loading="lazy" decoding="async" />
+            </div>
+            <div class="image-grid-cell image-grid-cell-specs">
+              <img
+                class="image-grid-specs desktop-only"
+                src="/media/grid-specs-desktop.png"
+                alt="Packed in a cardboard box with a handle. Product size: 22×16.5×8.5cm. Material: Porcelain."
+                loading="lazy"
+                decoding="async"
+              />
+              <img
+                class="image-grid-specs mobile-only"
+                src="/media/grid-specs-mobile.png"
+                alt="Packed in a cardboard box with a handle. Product size: 22×16.5×8.5cm. Material: Porcelain."
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          </div>
         </div>
       </section>
 
-      <section id="scrollVideoSection" class="scroll-video-section contrast-target" data-contrast-type="video">
-        <div class="scroll-video-sticky">
-          <video
-            id="scrollVideo"
-            class="panel-video desktop-only"
-            src="/media/scroll-video.mp4"
-            muted
-            playsinline
-            preload="auto"
-          ></video>
-          <video
-            id="scrollVideoMobile"
-            class="panel-video mobile-only"
-            src="/media/scroll-video.mp4"
-            muted
-            playsinline
-            preload="auto"
-          ></video>
-        </div>
+      <section class="panel panel-color contrast-target" data-contrast-type="media" aria-label="Color block">
+        <img class="panel-media desktop-only" src="/media/color-block.png" alt="" loading="lazy" decoding="async" />
+        <img class="panel-media mobile-only" src="/media/color-block-mobile.png" alt="" loading="lazy" decoding="async" />
       </section>
 
+      <section id="scrollVideoSection" class="panel panel-end-video contrast-target" data-contrast-type="video">
+        <video
+          id="scrollVideo"
+          class="panel-video"
+          src="/media/scroll-video.mp4"
+          muted
+          playsinline
+          loop
+          autoplay
+          preload="auto"
+        ></video>
+      </section>
     </main>
 
     <audio id="radioPlayer" preload="metadata"></audio>

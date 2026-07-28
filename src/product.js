@@ -158,11 +158,10 @@ function setupDirectionalProductHero() {
   createProductViewer(productViewerRoot, {
     images: mugFrameImages,
     transitionDuration: 0,
-    // Curved full-height far columns + bowed mid / up / down bands
+    // Rectangular mid-band: far_left | left | center | right | far_right
     deadZoneHalfWidth: 0.28,
     deadZoneHalfHeight: 0.19,
     sideFarBoundary: 0.7,
-    zoneCurve: 0.55,
     horizontalSensitivity: 1.05,
     verticalSensitivity: 0.95,
     maxGamma: 20,

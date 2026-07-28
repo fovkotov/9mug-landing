@@ -159,7 +159,6 @@ async function waitForFramePainted(img) {
  *   deadZoneHalfHeight?: number,
  *   sideFarBoundary?: number,
  *   deadZoneRadius?: number,
- *   zoneCurve?: number,
  *   horizontalSensitivity?: number,
  *   verticalSensitivity?: number,
  *   showZones?: boolean,
@@ -180,8 +179,6 @@ export function createProductViewer(root, options = {}) {
     options.sideFarBoundary ?? deadZoneHalfWidth + 0.42,
     deadZoneHalfWidth + 0.08
   );
-  // Mild barrel bow: mid-height far edges sit closer to center; up/down edges rise at the sides.
-  const zoneCurve = clamp(options.zoneCurve ?? 0.45, 0, 1.5);
   const horizontalSensitivity = options.horizontalSensitivity ?? 1;
   const verticalSensitivity = options.verticalSensitivity ?? 1;
   const showZones = Boolean(options.showZones);
@@ -275,52 +272,26 @@ export function createProductViewer(root, options = {}) {
     return availableKeys.includes("center") ? "center" : availableKeys[0];
   }
 
-  /** Curved zone half-height: arches down/up so mid-band is shorter at x≈0. */
-  function curvedHalfHeight(nx) {
-    return deadZoneHalfHeight * (1 + zoneCurve * nx * nx);
-  }
-
-  /** Curved center half-width: bows with |y| so diagonals stay aligned. */
-  function curvedHalfWidth(ny) {
-    return deadZoneHalfWidth * (1 + zoneCurve * ny * ny);
-  }
-
-  /**
-   * Curved far boundary: full-height columns.
-   * At mid-height the edge sits closer to center; toward top/bottom it flares out.
-   */
-  function curvedFarBoundary(ny) {
-    return sideFarBoundary * (1 + zoneCurve * ny * ny);
-  }
-
-  /**
-   * Shared by mouse / orientation / touch.
-   * Far left/right run the full height; remaining bands use curved mid / up / down splits.
-   */
+  /** Axis-aligned rectangular zones (shared by mouse / orientation / touch). */
   function pickDirection(nx, ny) {
-    const farB = curvedFarBoundary(ny);
-    const halfW = curvedHalfWidth(ny);
-    const halfH = curvedHalfHeight(nx);
-
-    if (nx < -farB) return firstAvailable("farLeft", "left", "center");
-    if (nx > farB) return firstAvailable("farRight", "right", "center");
-
-    const inMidBand = Math.abs(ny) <= halfH;
+    const inMidBand = Math.abs(ny) <= deadZoneHalfHeight;
 
     if (inMidBand) {
-      if (nx < -halfW) return firstAvailable("left", "farLeft", "center");
-      if (nx > halfW) return firstAvailable("right", "farRight", "center");
-      return firstAvailable("center");
+      if (nx < -sideFarBoundary) return firstAvailable("farLeft", "left", "center");
+      if (nx < -deadZoneHalfWidth) return firstAvailable("left", "farLeft", "center");
+      if (nx <= deadZoneHalfWidth) return firstAvailable("center");
+      if (nx <= sideFarBoundary) return firstAvailable("right", "farRight", "center");
+      return firstAvailable("farRight", "right", "center");
     }
 
-    if (ny < -halfH) {
-      if (nx < -halfW) return firstAvailable("upLeft", "up", "left", "center");
-      if (nx > halfW) return firstAvailable("upRight", "up", "right", "center");
+    if (ny < -deadZoneHalfHeight) {
+      if (nx < -deadZoneHalfWidth) return firstAvailable("upLeft", "up", "left", "center");
+      if (nx > deadZoneHalfWidth) return firstAvailable("upRight", "up", "right", "center");
       return firstAvailable("up", "center");
     }
 
-    if (nx < -halfW) return firstAvailable("downLeft", "down", "left", "center");
-    if (nx > halfW) return firstAvailable("downRight", "down", "right", "center");
+    if (nx < -deadZoneHalfWidth) return firstAvailable("downLeft", "down", "left", "center");
+    if (nx > deadZoneHalfWidth) return firstAvailable("downRight", "down", "right", "center");
     return firstAvailable("down", "center");
   }
 

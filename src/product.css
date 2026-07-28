@@ -404,7 +404,6 @@ a {
 
 .image-grid-item,
 .image-grid-specs {
-  display: block;
   height: 100%;
   inset: 0;
   object-fit: cover;
@@ -413,9 +412,20 @@ a {
   width: 100%;
 }
 
+.image-grid-item {
+  display: block;
+}
+
+.image-grid-specs.desktop-only {
+  display: block;
+}
+
+.image-grid-specs.mobile-only {
+  display: none;
+}
+
 .image-grid-cell-specs .image-grid-specs {
   object-fit: contain;
-  opacity: 0.48;
 }
 
 .panel-color {
@@ -842,8 +852,15 @@ a {
     height: auto;
   }
 
+  .image-grid-specs.desktop-only {
+    display: none;
+  }
+
+  .image-grid-specs.mobile-only {
+    display: block;
+  }
+
   .image-grid-cell-specs .image-grid-specs {
-    opacity: 1;
     object-fit: cover;
   }
 

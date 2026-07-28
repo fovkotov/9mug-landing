@@ -69,7 +69,7 @@ let audioContext = null;
 let noiseNode = null;
 let noiseGain = null;
 let brownNoiseLastOut = 0;
-let endVideoPrimed = false;
+let scrollVideoPrimed = false;
 const scratchSection = document.querySelector("#scratchSection");
 const scratchCanvas = document.querySelector("#scratchCanvas");
 const scratchCursorSource = resolvePublicAssetPath("/media/scratch/cursor.png");
@@ -84,7 +84,7 @@ const scratchCoverSources = {
   }
 };
 
-function prepareEndVideo() {
+function prepareScrollVideo() {
   if (!scrollVideo) return;
 
   const rawSrc = scrollVideo.getAttribute("src") ?? "";
@@ -96,11 +96,14 @@ function prepareEndVideo() {
   scrollVideo.preload = "auto";
   scrollVideo.muted = true;
   scrollVideo.playsInline = true;
-  scrollVideo.loop = true;
+  scrollVideo.loop = false;
   scrollVideo.load();
+  scrollVideo.pause();
+  scrollVideo.currentTime = 0;
+  scrollVideo.addEventListener("loadedmetadata", syncScrollVideoFrame);
 }
 
-prepareEndVideo();
+prepareScrollVideo();
 
 function playTrack(index) {
   radioPlayer.src = radioTracks[index];
@@ -420,35 +423,20 @@ function setupScratchPanel() {
   }
 }
 
-function setupEndVideoPlayback() {
-  if (!scrollVideo) return;
+function syncScrollVideoFrame() {
+  if (!scrollVideoSection || !scrollVideo) return;
+  if (!Number.isFinite(scrollVideo.duration) || scrollVideo.duration <= 0) return;
 
-  const playVideo = () => {
-    scrollVideo.play().catch(() => {
-      // Autoplay may still be blocked until a gesture.
-    });
-  };
+  const rect = scrollVideoSection.getBoundingClientRect();
+  const scrollRange = scrollVideoSection.offsetHeight - window.innerHeight;
+  if (scrollRange <= 0) return;
 
-  const pauseVideo = () => {
-    scrollVideo.pause();
-  };
+  const scrolled = clamp(-rect.top, 0, scrollRange);
+  const progress = scrolled / scrollRange;
+  const targetTime = scrollVideo.duration * progress;
 
-  if ("IntersectionObserver" in window && scrollVideoSection) {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (!entry) return;
-        if (entry.isIntersecting && entry.intersectionRatio > 0.35) {
-          playVideo();
-        } else {
-          pauseVideo();
-        }
-      },
-      { threshold: [0, 0.35, 0.7] }
-    );
-    observer.observe(scrollVideoSection);
-  } else {
-    playVideo();
+  if (Math.abs(scrollVideo.currentTime - targetTime) > 0.033) {
+    scrollVideo.currentTime = targetTime;
   }
 }
 
@@ -494,20 +482,15 @@ function disableBrownNoise() {
   updateNoiseUiState();
 }
 
-function primeEndVideo() {
-  if (endVideoPrimed || !scrollVideo) return;
-  endVideoPrimed = true;
+function primeScrollVideo() {
+  if (scrollVideoPrimed || !scrollVideo) return;
+  scrollVideoPrimed = true;
 
   scrollVideo
     .play()
     .then(() => {
-      if (!scrollVideoSection) return;
-      const rect = scrollVideoSection.getBoundingClientRect();
-      const visible =
-        rect.bottom > 0 && rect.top < window.innerHeight && rect.height > 0;
-      if (!visible) {
-        scrollVideo.pause();
-      }
+      scrollVideo.pause();
+      syncScrollVideoFrame();
     })
     .catch(() => {
       // ignored - browser may still block without direct gesture.
@@ -599,20 +582,20 @@ addToCartBtn?.addEventListener("click", () => {
   toggleBagState();
 });
 
-window.addEventListener("pointerdown", primeEndVideo, { once: true });
-window.addEventListener("touchstart", primeEndVideo, { once: true, passive: true });
-window.addEventListener("wheel", primeEndVideo, { once: true, passive: true });
-window.addEventListener("keydown", primeEndVideo, { once: true });
+window.addEventListener("pointerdown", primeScrollVideo, { once: true });
+window.addEventListener("touchstart", primeScrollVideo, { once: true, passive: true });
+window.addEventListener("wheel", primeScrollVideo, { once: true, passive: true });
+window.addEventListener("keydown", primeScrollVideo, { once: true });
 
 setRadioUiState();
 updateNoiseUiState();
 setBagUiState();
 setupProductHero();
 setupScratchPanel();
-setupEndVideoPlayback();
 
 function raf(time) {
   lenis.raf(time);
+  syncScrollVideoFrame();
   requestAnimationFrame(raf);
 }
 

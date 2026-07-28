@@ -401,8 +401,18 @@ a {
   background: #8b1e1e;
 }
 
-.panel-end-video {
+.scroll-video-section {
   background: #000;
+  height: 300vh;
+  position: relative;
+}
+
+.scroll-video-sticky {
+  height: 100vh;
+  inset: 0;
+  overflow: hidden;
+  position: sticky;
+  top: 0;
 }
 
 .panel-hero {
@@ -805,6 +815,10 @@ a {
   .image-grid-cell-specs .image-grid-specs {
     opacity: 1;
     object-fit: cover;
+  }
+
+  .scroll-video-section {
+    height: 280vh;
   }
 
   .hero-drag-slider {

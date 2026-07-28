@@ -134,10 +134,16 @@ function setBagUiState() {
   if (addToCartBtn) {
     addToCartBtn.classList.toggle("is-added", bagSelected);
     addToCartBtn.setAttribute("aria-pressed", String(bagSelected));
-    const label = addToCartBtn.querySelector(".cart-label");
-    if (label) {
-      label.textContent = bagSelected ? "In cart" : "Add to cart";
-    }
+    addToCartBtn.setAttribute(
+      "aria-label",
+      bagSelected ? "In cart, $300" : "Add to cart, $300"
+    );
+  }
+  const cartBar = document.querySelector(".cart-bar");
+  cartBar?.classList.toggle("is-added", bagSelected);
+  const label = document.querySelector(".cart-label");
+  if (label) {
+    label.textContent = bagSelected ? "In cart" : "Add to cart";
   }
 }
 

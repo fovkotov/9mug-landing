@@ -221,26 +221,11 @@ a {
 
 .cart-bar {
   bottom: 0;
+  height: 41px;
   position: fixed;
   right: 0;
   width: 360px;
   z-index: 30;
-}
-
-.cart-bar-btn {
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-  display: block;
-  font-family: var(--font-ui);
-  font-feature-settings: "lnum" 1, "pnum" 1;
-  font-size: 17px;
-  height: 41px;
-  letter-spacing: 0.34px;
-  line-height: normal;
-  padding: 0;
-  position: relative;
-  width: 100%;
 }
 
 .cart-bar-shape {
@@ -250,21 +235,45 @@ a {
   pointer-events: none;
   position: absolute;
   width: 100%;
+  z-index: 0;
 }
 
-.cart-bar-btn.is-added .cart-label {
+.cart-bar-ui {
+  color: rgba(255, 255, 255, 0.8);
+  font-family: var(--font-ui);
+  font-feature-settings: "lnum" 1, "pnum" 1;
+  font-size: 17px;
+  height: 100%;
+  inset: 0;
+  letter-spacing: 0.34px;
+  line-height: normal;
+  mix-blend-mode: difference;
+  pointer-events: none;
+  position: absolute;
+  z-index: 1;
+}
+
+.cart-bar-btn {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  height: 100%;
+  inset: 0;
+  padding: 0;
+  position: absolute;
+  width: 100%;
+  z-index: 2;
+}
+
+.cart-bar.is-added .cart-label {
   opacity: 0.55;
 }
 
 .cart-price,
 .cart-label {
-  color: rgba(255, 255, 255, 0.8);
-  mix-blend-mode: difference;
-  pointer-events: none;
   position: absolute;
   top: 8px;
   white-space: nowrap;
-  z-index: 1;
 }
 
 .cart-price {
@@ -801,13 +810,10 @@ a {
 
   .cart-bar {
     bottom: 0;
+    height: 42px;
     left: 0;
     right: 0;
     width: 100%;
-  }
-
-  .cart-bar-btn {
-    height: 42px;
   }
 
   .cart-price {

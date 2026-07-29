@@ -11,7 +11,8 @@ export default defineConfig({
       input: {
         main: "index.html",
         shop: "shop.html",
-        product: "product.html"
+        product: "product.html",
+        productClassic: "product-classic.html"
       }
     }
   }

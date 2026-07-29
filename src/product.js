@@ -158,7 +158,7 @@ function setupDirectionalProductHero() {
   createProductViewer(productViewerRoot, {
     images: mugFrameImages,
     transitionDuration: 0,
-    // 5-col grid; far_* full height. Up/down bands bisected in the zone overlay.
+    // 5×5 unique frames: each overlay cell → its own H/V mug pose (±30°, step 15°).
     deadZoneHalfWidth: 0.28,
     deadZoneHalfHeight: 0.19,
     sideFarBoundary: 0.7,

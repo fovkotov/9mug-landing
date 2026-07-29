@@ -13,33 +13,45 @@ import {
   requestDeviceOrientationPermission
 } from "../device-orientation-permission.js";
 
-const DIRECTION_KEYS = [
-  "center",
-  "left",
-  "farLeft",
-  "right",
-  "farRight",
-  "up",
-  "down",
-  "upLeft",
-  "upRight",
-  "downLeft",
-  "downRight"
-];
+/** 5×5 look-around grid — one unique frame / angle pair per cell. */
+const GRID_SIZE = 5;
+const CENTER_KEY = "c13";
 
-const ZONE_COLORS = {
-  center: [255, 255, 255],
-  left: [80, 160, 255],
-  farLeft: [40, 100, 220],
-  right: [255, 150, 80],
-  farRight: [230, 90, 40],
-  up: [120, 220, 140],
-  down: [220, 120, 200],
-  upLeft: [90, 200, 200],
-  upRight: [200, 200, 90],
-  downLeft: [180, 120, 255],
-  downRight: [255, 120, 160]
-};
+/** Keys c01…c25 in row-major order (1 = top-left, 13 = center, 25 = bottom-right). */
+const DIRECTION_KEYS = Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, i) => {
+  return `c${String(i + 1).padStart(2, "0")}`;
+});
+
+/** Mug yaw/pitch degrees for each cell (col → H, row → V; bottom row = −30°). */
+const CELL_ANGLES = (() => {
+  const hVals = [-30, -15, 0, 15, 30];
+  const vVals = [30, 15, 0, -15, -30];
+  const map = {};
+  let n = 0;
+  for (let row = 0; row < GRID_SIZE; row += 1) {
+    for (let col = 0; col < GRID_SIZE; col += 1) {
+      n += 1;
+      map[`c${String(n).padStart(2, "0")}`] = { col, row, h: hVals[col], v: vVals[row] };
+    }
+  }
+  return map;
+})();
+
+function cellKey(col, row) {
+  return `c${String(row * GRID_SIZE + col + 1).padStart(2, "0")}`;
+}
+
+function zoneColorForKey(key) {
+  const meta = CELL_ANGLES[key];
+  if (!meta) return [200, 200, 200];
+  const t = meta.col / (GRID_SIZE - 1);
+  const u = meta.row / (GRID_SIZE - 1);
+  return [
+    Math.round(40 + t * 200),
+    Math.round(100 + (1 - Math.abs(t - 0.5) * 2) * 100),
+    Math.round(220 - u * 140)
+  ];
+}
 
 const MAX_GAMMA_DEG = 20;
 const MAX_BETA_DEG = 12;
@@ -176,7 +188,7 @@ export function createProductViewer(root, options = {}) {
 
   let destroyed = false;
   let ready = false;
-  let activeKey = "center";
+  let activeKey = CENTER_KEY;
   let zoneCanvas = null;
   let zoneCtx = null;
   let zoneLabelLayer = null;
@@ -246,46 +258,59 @@ export function createProductViewer(root, options = {}) {
     img.fetchPriority = "high";
     img.src = src;
     img.dataset.direction = key;
-    const isCenter = key === "center";
+    const isCenter = key === CENTER_KEY;
     img.classList.toggle("is-active", isCenter);
     img.setAttribute("aria-hidden", isCenter ? "false" : "true");
     stage.append(img);
     layerNodes.set(key, img);
   }
 
-  function firstAvailable(...keys) {
-    for (const key of keys) {
-      if (availableKeys.includes(key)) return key;
-    }
-    return availableKeys.includes("center") ? "center" : availableKeys[0];
+  function gridEdges() {
+    const nyTop = -verticalSensitivity;
+    const nyBottom = verticalSensitivity;
+    const upHalfNy = (nyTop - deadZoneHalfHeight) / 2;
+    const downHalfNy = (nyBottom + deadZoneHalfHeight) / 2;
+    return {
+      xEdges: [
+        -horizontalSensitivity,
+        -sideFarBoundary,
+        -deadZoneHalfWidth,
+        deadZoneHalfWidth,
+        sideFarBoundary,
+        horizontalSensitivity
+      ],
+      yEdges: [nyTop, upHalfNy, -deadZoneHalfHeight, deadZoneHalfHeight, downHalfNy, nyBottom]
+    };
   }
 
-  /**
-   * 5-column rectangular grid; far_left / far_right run full height.
-   * Up / down bands are also bisected for overlay (same direction per half).
-   * Corner blocks (former 2-col up_left etc.) become a 2×2 of cells.
-   */
+  function binIndex(value, edges) {
+    for (let i = 0; i < edges.length - 1; i += 1) {
+      const lo = edges[i];
+      const hi = edges[i + 1];
+      if (i === edges.length - 2) {
+        if (value >= lo && value <= hi) return i;
+      } else if (value >= lo && value < hi) {
+        return i;
+      }
+    }
+    if (value < edges[0]) return 0;
+    return edges.length - 2;
+  }
+
+  /** Map normalized pointer → unique 5×5 cell key (c01…c25). */
   function pickDirection(nx, ny) {
-    if (nx < -sideFarBoundary) return firstAvailable("farLeft", "left", "center");
-    if (nx > sideFarBoundary) return firstAvailable("farRight", "right", "center");
+    const { xEdges, yEdges } = gridEdges();
+    const col = binIndex(nx, xEdges);
+    const row = binIndex(ny, yEdges);
+    const key = cellKey(col, row);
+    return availableKeys.includes(key) ? key : firstAvailable(CENTER_KEY, availableKeys[0]);
+  }
 
-    const inMidBand = Math.abs(ny) <= deadZoneHalfHeight;
-
-    if (inMidBand) {
-      if (nx < -deadZoneHalfWidth) return firstAvailable("left", "farLeft", "center");
-      if (nx > deadZoneHalfWidth) return firstAvailable("right", "farRight", "center");
-      return firstAvailable("center");
+  function firstAvailable(...keys) {
+    for (const key of keys) {
+      if (key && availableKeys.includes(key)) return key;
     }
-
-    if (ny < -deadZoneHalfHeight) {
-      if (nx < -deadZoneHalfWidth) return firstAvailable("upLeft", "up", "left", "center");
-      if (nx > deadZoneHalfWidth) return firstAvailable("upRight", "up", "right", "center");
-      return firstAvailable("up", "center");
-    }
-
-    if (nx < -deadZoneHalfWidth) return firstAvailable("downLeft", "down", "left", "center");
-    if (nx > deadZoneHalfWidth) return firstAvailable("downRight", "down", "right", "center");
-    return firstAvailable("down", "center");
+    return availableKeys.includes(CENTER_KEY) ? CENTER_KEY : availableKeys[0];
   }
 
   function computeNormalizedFromLocal(localX, localY, width, height) {
@@ -297,23 +322,9 @@ export function createProductViewer(root, options = {}) {
     };
   }
 
-  /** Map a 5×5 overlay cell to its direction key. */
+  /** Map a 5×5 overlay cell to its unique frame key. */
   function cellDirection(col, row) {
-    if (col === 0) return "farLeft";
-    if (col === 4) return "farRight";
-    if (row === 2) {
-      if (col === 1) return "left";
-      if (col === 3) return "right";
-      return "center";
-    }
-    if (row < 2) {
-      if (col === 1) return "upLeft";
-      if (col === 3) return "upRight";
-      return "up";
-    }
-    if (col === 1) return "downLeft";
-    if (col === 3) return "downRight";
-    return "down";
+    return cellKey(col, row);
   }
 
   function computeNormalizedPointer(clientX, clientY) {
@@ -433,27 +444,7 @@ export function createProductViewer(root, options = {}) {
     zoneCanvas.style.width = `${width}px`;
     zoneCanvas.style.height = `${height}px`;
 
-    // 5×5 overlay cells: up/down bands bisected, far columns full height.
-    const nyTop = -verticalSensitivity;
-    const nyBottom = verticalSensitivity;
-    const upHalfNy = (nyTop - deadZoneHalfHeight) / 2;
-    const downHalfNy = (nyBottom + deadZoneHalfHeight) / 2;
-    const xEdges = [
-      -horizontalSensitivity,
-      -sideFarBoundary,
-      -deadZoneHalfWidth,
-      deadZoneHalfWidth,
-      sideFarBoundary,
-      horizontalSensitivity
-    ];
-    const yEdges = [
-      nyTop,
-      upHalfNy,
-      -deadZoneHalfHeight,
-      deadZoneHalfHeight,
-      downHalfNy,
-      nyBottom
-    ];
+    const { xEdges, yEdges } = gridEdges();
 
     const imageData = zoneCtx.createImageData(cols, rows);
     const data = imageData.data;
@@ -469,16 +460,12 @@ export function createProductViewer(root, options = {}) {
           height
         );
         const key = pickDirection(nx, ny);
-        const color = ZONE_COLORS[key] || [200, 200, 200];
+        const color = zoneColorForKey(key);
         const index = (row * cols + col) * 4;
         data[index] = color[0];
         data[index + 1] = color[1];
         data[index + 2] = color[2];
-
-        let alpha = key === "center" ? 48 : 72;
-        if (ny < -deadZoneHalfHeight && ny < upHalfNy) alpha = Math.min(110, alpha + 28);
-        if (ny > deadZoneHalfHeight && ny > downHalfNy) alpha = Math.min(110, alpha + 28);
-        data[index + 3] = alpha;
+        data[index + 3] = key === CENTER_KEY ? 48 : 78;
       }
     }
 
@@ -810,28 +797,17 @@ export function createProductViewer(root, options = {}) {
 }
 
 /**
- * Semantic image map helper — filenames map 1:1 to keys.
- * Swap the folder/basePath to replace the product later.
+ * 5×5 unique frame map — cell_01.webp … cell_25.webp (row-major).
+ * Angles: H −30…+30, V +30…−30 (bottom row shows mug underside).
  */
 export function createMugFrameImages(resolvePath, basePath = "/media/mug_frames") {
-  const fileMap = {
-    center: "center.webp",
-    left: "left.webp",
-    farLeft: "far_left.webp",
-    right: "right.webp",
-    farRight: "far_right.webp",
-    up: "up.webp",
-    down: "down.webp",
-    upLeft: "up_left.webp",
-    upRight: "up_right.webp",
-    downLeft: "down_left.webp",
-    downRight: "down_right.webp"
-  };
-
+  const root = basePath.replace(/\/$/, "");
   const images = {};
-  for (const [key, fileName] of Object.entries(fileMap)) {
-    const absolute = `${basePath.replace(/\/$/, "")}/${fileName}`;
+  for (const key of DIRECTION_KEYS) {
+    const absolute = `${root}/cell_${key.slice(1)}.webp`;
     images[key] = typeof resolvePath === "function" ? resolvePath(absolute) : absolute;
   }
   return images;
 }
+
+export { CELL_ANGLES, CENTER_KEY, DIRECTION_KEYS as MUG_FRAME_KEYS };

@@ -166,7 +166,7 @@ function setupDirectionalProductHero() {
     verticalSensitivity: 0.95,
     maxGamma: 20,
     maxBeta: 12,
-    showZones: true
+    showZones: false
   });
 
   // Ensure the page-entry warmup stays referenced / in flight.

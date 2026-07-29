@@ -41,6 +41,11 @@ function cellKey(col, row) {
   return `c${String(row * GRID_SIZE + col + 1).padStart(2, "0")}`;
 }
 
+/** Screen top/bottom swapped; middle row (center) stays. */
+function frameRowForScreenRow(row) {
+  return GRID_SIZE - 1 - row;
+}
+
 function zoneColorForKey(key) {
   const meta = CELL_ANGLES[key];
   if (!meta) return [200, 200, 200];
@@ -302,7 +307,7 @@ export function createProductViewer(root, options = {}) {
     const { xEdges, yEdges } = gridEdges();
     const col = binIndex(nx, xEdges);
     const row = binIndex(ny, yEdges);
-    const key = cellKey(col, row);
+    const key = cellKey(col, frameRowForScreenRow(row));
     return availableKeys.includes(key) ? key : firstAvailable(CENTER_KEY, availableKeys[0]);
   }
 
@@ -324,7 +329,7 @@ export function createProductViewer(root, options = {}) {
 
   /** Map a 5×5 overlay cell to its unique frame key. */
   function cellDirection(col, row) {
-    return cellKey(col, row);
+    return cellKey(col, frameRowForScreenRow(row));
   }
 
   function computeNormalizedPointer(clientX, clientY) {

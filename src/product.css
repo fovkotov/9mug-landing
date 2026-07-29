@@ -203,7 +203,7 @@ a {
   align-items: flex-start;
   bottom: 16px;
   display: flex;
-  gap: 7px;
+  gap: 8px;
   left: calc(25% + 12px);
   mix-blend-mode: difference;
   position: fixed;
@@ -798,6 +798,7 @@ a {
     bottom: calc(42px + 58px);
     left: 50%;
     pointer-events: none;
+    position: absolute;
     top: auto;
     transform: translateX(-50%);
   }
@@ -805,6 +806,7 @@ a {
   .color-bar {
     bottom: calc(42px + 16px);
     left: 50%;
+    position: absolute;
     transform: translateX(-50%);
   }
 

@@ -833,12 +833,12 @@ a {
   }
 
   .cart-price {
-    left: 16px;
+    left: 0;
   }
 
   .cart-label {
     left: auto;
-    right: 16px;
+    right: 0;
   }
 
   .control-btn,

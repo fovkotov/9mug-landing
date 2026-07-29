@@ -52,7 +52,7 @@ a {
 }
 
 .top-nav {
-  align-items: center;
+  align-items: start;
   column-gap: var(--layout-gutter);
   display: grid;
   grid-template-columns: repeat(var(--layout-columns), minmax(0, 1fr));

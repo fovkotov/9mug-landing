@@ -64,7 +64,7 @@ a {
 }
 
 .top-nav {
-  align-items: center;
+  align-items: start;
   color: var(--ui-overlay);
   column-gap: var(--layout-gutter);
   display: grid;

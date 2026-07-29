@@ -139,8 +139,8 @@ function setBagUiState() {
       bagSelected ? "In cart, $300" : "Add to cart, $300"
     );
   }
-  const cartBar = document.querySelector(".cart-bar");
-  cartBar?.classList.toggle("is-added", bagSelected);
+  const cartBarUi = document.querySelector(".cart-bar-ui");
+  cartBarUi?.classList.toggle("is-added", bagSelected);
   const label = document.querySelector(".cart-label");
   if (label) {
     label.textContent = bagSelected ? "In cart" : "Add to cart";

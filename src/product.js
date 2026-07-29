@@ -165,7 +165,8 @@ function setupDirectionalProductHero() {
     horizontalSensitivity: 1.05,
     verticalSensitivity: 0.95,
     maxGamma: 20,
-    maxBeta: 12,
+    // Slightly wider pitch so strong phone tilt reliably hits outer rows.
+    maxBeta: 16,
     showZones: false
   });
 

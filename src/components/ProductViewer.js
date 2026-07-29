@@ -350,10 +350,10 @@ export function createProductViewer(root, options = {}) {
   function orientationToNormalized(relGamma, relBeta) {
     const gx = clamp(relGamma, -maxGamma, maxGamma) / maxGamma;
     const by = clamp(relBeta, -maxBeta, maxBeta) / maxBeta;
-    // 10° → ~0.5 (left/right), 20° → 1 (far_*). Vertical clears mid-band gently.
+    // Full tilt must reach outer 5×5 bands (top/bottom rows need |ny| past mid splits).
     return {
-      x: gx * Math.max(sideFarBoundary + 0.2, 1),
-      y: by * Math.max(deadZoneHalfHeight + 0.35, 0.55)
+      x: gx * horizontalSensitivity,
+      y: by * verticalSensitivity
     };
   }
 

@@ -246,7 +246,9 @@ export function createProductViewer(root, options = {}) {
     img.fetchPriority = "high";
     img.src = src;
     img.dataset.direction = key;
-    img.classList.toggle("is-active", key === "center");
+    const isCenter = key === "center";
+    img.classList.toggle("is-active", isCenter);
+    img.setAttribute("aria-hidden", isCenter ? "false" : "true");
     stage.append(img);
     layerNodes.set(key, img);
   }
@@ -342,10 +344,12 @@ export function createProductViewer(root, options = {}) {
   function setActiveDirection(nextKey) {
     if (!layerNodes.has(nextKey) || nextKey === activeKey) return;
 
-    const previous = layerNodes.get(activeKey);
-    const next = layerNodes.get(nextKey);
-    previous?.classList.remove("is-active");
-    next?.classList.add("is-active");
+    for (const [key, node] of layerNodes) {
+      const on = key === nextKey;
+      node.classList.toggle("is-active", on);
+      node.setAttribute("aria-hidden", on ? "false" : "true");
+    }
+
     activeKey = nextKey;
     root.dataset.direction = nextKey;
 

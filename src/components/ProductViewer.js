@@ -27,20 +27,6 @@ const DIRECTION_KEYS = [
   "downRight"
 ];
 
-const ZONE_LABELS = {
-  center: "center",
-  left: "left",
-  farLeft: "far_left",
-  right: "right",
-  farRight: "far_right",
-  up: "up",
-  down: "down",
-  upLeft: "up_left",
-  upRight: "up_right",
-  downLeft: "down_left",
-  downRight: "down_right"
-};
-
 const ZONE_COLORS = {
   center: [255, 255, 255],
   left: [80, 160, 255],
@@ -309,12 +295,23 @@ export function createProductViewer(root, options = {}) {
     };
   }
 
-  function normalizedToLocalX(nx, width) {
-    return width / 2 + (nx / horizontalSensitivity) * (width / 2);
-  }
-
-  function normalizedToLocalY(ny, height) {
-    return height / 2 + (ny / verticalSensitivity) * (height / 2);
+  /** Map a 5×5 overlay cell to its direction key. */
+  function cellDirection(col, row) {
+    if (col === 0) return "farLeft";
+    if (col === 4) return "farRight";
+    if (row === 2) {
+      if (col === 1) return "left";
+      if (col === 3) return "right";
+      return "center";
+    }
+    if (row < 2) {
+      if (col === 1) return "upLeft";
+      if (col === 3) return "upRight";
+      return "up";
+    }
+    if (col === 1) return "downLeft";
+    if (col === 3) return "downRight";
+    return "down";
   }
 
   function computeNormalizedPointer(clientX, clientY) {
@@ -432,15 +429,30 @@ export function createProductViewer(root, options = {}) {
     zoneCanvas.style.width = `${width}px`;
     zoneCanvas.style.height = `${height}px`;
 
-    // Bisect up / down bands so corner 2×2 and center halves read clearly.
+    // 5×5 overlay cells: up/down bands bisected, far columns full height.
     const nyTop = -verticalSensitivity;
     const nyBottom = verticalSensitivity;
     const upHalfNy = (nyTop - deadZoneHalfHeight) / 2;
     const downHalfNy = (nyBottom + deadZoneHalfHeight) / 2;
+    const xEdges = [
+      -horizontalSensitivity,
+      -sideFarBoundary,
+      -deadZoneHalfWidth,
+      deadZoneHalfWidth,
+      sideFarBoundary,
+      horizontalSensitivity
+    ];
+    const yEdges = [
+      nyTop,
+      upHalfNy,
+      -deadZoneHalfHeight,
+      deadZoneHalfHeight,
+      downHalfNy,
+      nyBottom
+    ];
 
     const imageData = zoneCtx.createImageData(cols, rows);
     const data = imageData.data;
-    const centroids = Object.fromEntries(availableKeys.map((key) => [key, { x: 0, y: 0, n: 0 }]));
 
     for (let row = 0; row < rows; row += 1) {
       for (let col = 0; col < cols; col += 1) {
@@ -460,68 +472,44 @@ export function createProductViewer(root, options = {}) {
         data[index + 2] = color[2];
 
         let alpha = key === "center" ? 48 : 72;
-        // Alternate shade on up/down halves so the split reads as separate rectangles.
         if (ny < -deadZoneHalfHeight && ny < upHalfNy) alpha = Math.min(110, alpha + 28);
         if (ny > deadZoneHalfHeight && ny > downHalfNy) alpha = Math.min(110, alpha + 28);
         data[index + 3] = alpha;
-
-        const bucket = centroids[key];
-        if (bucket) {
-          bucket.x += px;
-          bucket.y += py;
-          bucket.n += 1;
-        }
       }
     }
 
     zoneCtx.putImageData(imageData, 0, 0);
 
-    // Subdivision strokes in canvas pixel space (scaled by sample).
-    const toCanvasX = (nx) => normalizedToLocalX(nx, width) / sample;
-    const toCanvasY = (ny) => normalizedToLocalY(ny, height) / sample;
-    const xLines = [
-      -sideFarBoundary,
-      -deadZoneHalfWidth,
-      deadZoneHalfWidth,
-      sideFarBoundary
-    ].map(toCanvasX);
-    const yLines = [
-      upHalfNy,
-      -deadZoneHalfHeight,
-      deadZoneHalfHeight,
-      downHalfNy
-    ].map(toCanvasY);
-
-    zoneCtx.save();
-    zoneCtx.strokeStyle = "rgba(220, 40, 40, 0.85)";
-    zoneCtx.lineWidth = 1;
-    zoneCtx.beginPath();
-    for (const x of xLines) {
-      zoneCtx.moveTo(x, 0);
-      zoneCtx.lineTo(x, rows);
-    }
-    for (const y of yLines) {
-      zoneCtx.moveTo(0, y);
-      zoneCtx.lineTo(cols, y);
-    }
-    zoneCtx.stroke();
-    zoneCtx.restore();
-
     if (!zoneLabelLayer) return;
     zoneLabelLayer.replaceChildren();
 
-    for (const key of availableKeys) {
-      const bucket = centroids[key];
-      if (!bucket || bucket.n === 0) continue;
+    const nxToPercent = (nx) =>
+      ((nx / horizontalSensitivity) * 0.5 + 0.5) * 100;
+    const nyToPercent = (ny) =>
+      ((ny / verticalSensitivity) * 0.5 + 0.5) * 100;
 
-      const label = document.createElement("span");
-      label.className = "product-viewer__zone-label";
-      label.dataset.key = key;
-      label.textContent = ZONE_LABELS[key] || key;
-      label.style.left = `${(bucket.x / bucket.n / width) * 100}%`;
-      label.style.top = `${(bucket.y / bucket.n / height) * 100}%`;
-      label.classList.toggle("is-active", key === activeKey);
-      zoneLabelLayer.append(label);
+    let section = 1;
+    for (let row = 0; row < 5; row += 1) {
+      for (let col = 0; col < 5; col += 1) {
+        const key = cellDirection(col, row);
+        if (!availableKeys.includes(key)) {
+          section += 1;
+          continue;
+        }
+
+        const cx = (xEdges[col] + xEdges[col + 1]) / 2;
+        const cy = (yEdges[row] + yEdges[row + 1]) / 2;
+        const label = document.createElement("span");
+        label.className = "product-viewer__zone-label";
+        label.dataset.key = key;
+        label.dataset.section = String(section);
+        label.textContent = String(section);
+        label.style.left = `${nxToPercent(cx)}%`;
+        label.style.top = `${nyToPercent(cy)}%`;
+        label.classList.toggle("is-active", key === activeKey);
+        zoneLabelLayer.append(label);
+        section += 1;
+      }
     }
   }
 

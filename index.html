@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>9PRA</title>
+    <link rel="preload" as="image" href="./media/home/hero-mat.jpg" />
   </head>
   <body class="page-home">
     <header class="top-nav">
@@ -34,35 +35,22 @@
       </div>
     </header>
 
-    <aside class="meta-left desktop-only" aria-hidden="true">
-      <span class="meta-item is-active">9MUG</span>
+    <aside class="meta-left desktop-only" aria-label="Section menu">
+      <a class="meta-item is-active" href="./mat.html">9CUTTING MAT</a>
+      <a class="meta-item" href="./product.html">9MUG</a>
     </aside>
 
     <main class="home-main">
-      <section class="home-panel home-panel-video">
-        <a class="hero-panel-link" href="./product.html" aria-label="Open product page"></a>
-        <a class="home-mobile-title mobile-only" href="./product.html">9MUG</a>
-        <video
-          id="homeVideo"
-          class="panel-video desktop-only"
-          src="./media/home/hero-video.mp4"
-          muted
-          playsinline
-          loop
-          autoplay
-          preload="auto"
-        ></video>
-        <video
-          id="homeVideoMobile"
-          class="panel-video mobile-only"
-          src="./media/home/hero-video.mp4"
-          muted
-          playsinline
-          loop
-          autoplay
-          preload="auto"
-        ></video>
-        <div class="home-video-dim" aria-hidden="true"></div>
+      <section class="home-panel home-panel-hero">
+        <a class="hero-panel-link" href="./mat.html" aria-label="Open cutting mat page"></a>
+        <img
+          class="home-hero-image"
+          src="/media/home/hero-mat.jpg"
+          alt=""
+          decoding="async"
+          fetchpriority="high"
+        />
+        <a class="home-mobile-title mobile-only" href="./mat.html">9CUTTING MAT</a>
       </section>
     </main>
 

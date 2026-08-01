@@ -126,6 +126,11 @@
 }
 
 @media (max-width: 900px) {
+  .panel-hero.is-directional-hero .product-viewer__stage {
+    transform: scale(0.9);
+    transform-origin: center center;
+  }
+
   .cut-mat-cursor img {
     height: 144px;
   }

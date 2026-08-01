@@ -36,12 +36,12 @@
     </header>
 
     <aside class="meta-left desktop-only" aria-label="Section menu">
-      <a class="meta-item is-active" href="./mat.html">9CUTTING MAT</a>
-      <a class="meta-item" href="./product.html">9MUG</a>
+      <a class="meta-item is-active" href="#section-mat" data-section-link>9CUTTING MAT</a>
+      <a class="meta-item" href="#section-mug" data-section-link>9MUG</a>
     </aside>
 
     <main class="home-main">
-      <section class="home-panel home-panel-hero">
+      <section id="section-mat" class="home-panel home-panel-hero">
         <a class="hero-panel-link" href="./mat.html" aria-label="Open cutting mat page"></a>
         <img
           class="home-hero-image"
@@ -51,6 +51,15 @@
           fetchpriority="high"
         />
         <a class="home-mobile-title mobile-only" href="./mat.html">9CUTTING MAT</a>
+      </section>
+
+      <section id="section-mug" class="home-panel home-panel-mug">
+        <a class="hero-panel-link" href="./product.html" aria-label="Open mug page"></a>
+        <picture class="home-media">
+          <source media="(max-width: 900px)" srcset="/media/home/hero-mobile.png" />
+          <img src="/media/home/hero-desktop.png" alt="" loading="lazy" decoding="async" />
+        </picture>
+        <a class="home-mobile-title mobile-only" href="./product.html">9MUG</a>
       </section>
     </main>
 

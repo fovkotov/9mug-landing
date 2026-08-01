@@ -119,6 +119,12 @@
   width: 100%;
 }
 
+.mat-sticker-host canvas,
+.mat-sticker-host canvas:focus,
+.mat-sticker-host canvas:focus-visible {
+  outline: none;
+}
+
 @media (max-width: 900px) {
   .cut-mat-cursor img {
     height: 144px;

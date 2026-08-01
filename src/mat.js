@@ -97,6 +97,8 @@ function setupDirectionalMatHero() {
     verticalSensitivity: 0.95,
     maxGamma: 20,
     maxBeta: 16,
+    // Mat grid is authored top→bottom; swap the mug-style vertical flip.
+    flipVerticalFrames: false,
     showZones: false
   });
 

@@ -42,8 +42,8 @@ function cellKey(col, row) {
 }
 
 /** Screen top/bottom swapped; middle row (center) stays. */
-function frameRowForScreenRow(row) {
-  return GRID_SIZE - 1 - row;
+function frameRowForScreenRow(row, flipVertical = true) {
+  return flipVertical ? GRID_SIZE - 1 - row : row;
 }
 
 function zoneColorForKey(key) {
@@ -166,7 +166,8 @@ async function waitForFramePainted(img) {
  *   verticalSensitivity?: number,
  *   showZones?: boolean,
  *   maxGamma?: number,
- *   maxBeta?: number
+ *   maxBeta?: number,
+ *   flipVerticalFrames?: boolean
  * }} options
  */
 export function createProductViewer(root, options = {}) {
@@ -187,6 +188,8 @@ export function createProductViewer(root, options = {}) {
   const showZones = Boolean(options.showZones);
   const maxGamma = options.maxGamma ?? MAX_GAMMA_DEG;
   const maxBeta = options.maxBeta ?? MAX_BETA_DEG;
+  // Mug frames are authored with screen Y flipped; mat frames are not.
+  const flipVerticalFrames = options.flipVerticalFrames !== false;
 
   const prefersMouse = supportsFinePointer() && !isMobileInteraction();
   const mobileInput = !prefersMouse;
@@ -307,7 +310,7 @@ export function createProductViewer(root, options = {}) {
     const { xEdges, yEdges } = gridEdges();
     const col = binIndex(nx, xEdges);
     const row = binIndex(ny, yEdges);
-    const key = cellKey(col, frameRowForScreenRow(row));
+    const key = cellKey(col, frameRowForScreenRow(row, flipVerticalFrames));
     return availableKeys.includes(key) ? key : firstAvailable(CENTER_KEY, availableKeys[0]);
   }
 
@@ -329,7 +332,7 @@ export function createProductViewer(root, options = {}) {
 
   /** Map a 5×5 overlay cell to its unique frame key. */
   function cellDirection(col, row) {
-    return cellKey(col, frameRowForScreenRow(row));
+    return cellKey(col, frameRowForScreenRow(row, flipVerticalFrames));
   }
 
   function computeNormalizedPointer(clientX, clientY) {

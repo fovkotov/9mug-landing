@@ -55,10 +55,17 @@
 
       <section id="section-mug" class="home-panel home-panel-mug">
         <a class="hero-panel-link" href="./product.html" aria-label="Open mug page"></a>
-        <picture class="home-media">
-          <source media="(max-width: 900px)" srcset="/media/home/hero-mobile.png" />
-          <img src="/media/home/hero-desktop.png" alt="" loading="lazy" decoding="async" />
-        </picture>
+        <video
+          id="homeVideo"
+          class="panel-video"
+          src="./media/home/hero-video.mp4"
+          muted
+          playsinline
+          loop
+          autoplay
+          preload="auto"
+        ></video>
+        <div class="home-video-dim" aria-hidden="true"></div>
         <a class="home-mobile-title mobile-only" href="./product.html">9MUG</a>
       </section>
     </main>

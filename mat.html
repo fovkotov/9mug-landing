@@ -5,7 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>9PRA — Cutting Mat</title>
-    <link rel="preload" as="image" href="./media/mat/hero.png" />
+    <link rel="preload" as="image" href="./media/mat_frames/cell_13.webp" />
+    <link rel="preload" as="image" href="./media/mat_frames/cell_12.webp" />
+    <link rel="preload" as="image" href="./media/mat_frames/cell_11.webp" />
+    <link rel="preload" as="image" href="./media/mat_frames/cell_14.webp" />
+    <link rel="preload" as="image" href="./media/mat_frames/cell_15.webp" />
+    <link rel="preload" as="image" href="./media/mat_frames/cell_23.webp" />
+    <link rel="preload" as="image" href="./media/mat_frames/cell_03.webp" />
   </head>
   <body>
     <header id="topNav" class="top-nav">
@@ -72,10 +78,8 @@
     </div>
 
     <main id="smoothRoot">
-      <section class="panel panel-hero contrast-target" data-contrast-type="media" data-hero-mode="static">
-        <div class="mat-hero-root" aria-label="MAT9 product view">
-          <img class="panel-media" src="/media/mat/hero.png" alt="" decoding="async" />
-        </div>
+      <section class="panel panel-hero contrast-target" data-contrast-type="media" data-hero-mode="directional">
+        <div id="productViewerRoot" class="product-viewer-root" aria-label="MAT9 product view"></div>
       </section>
 
       <section class="image-grid-section contrast-target" data-contrast-type="media">

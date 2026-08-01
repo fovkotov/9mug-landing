@@ -802,14 +802,19 @@ export function createProductViewer(root, options = {}) {
 }
 
 /**
- * 5×5 unique frame map — cell_01.webp … cell_25.webp (row-major).
- * Angles: H −30…+30, V +30…−30 (bottom row shows mug underside).
+ * 5×5 unique frame map — cell_01…cell_25 (row-major).
+ * Angles: H −30…+30, V +30…−30 (bottom row shows underside).
  */
-export function createMugFrameImages(resolvePath, basePath = "/media/mug_frames") {
+export function createMugFrameImages(
+  resolvePath,
+  basePath = "/media/mug_frames",
+  { extension = "webp" } = {}
+) {
   const root = basePath.replace(/\/$/, "");
+  const ext = String(extension || "webp").replace(/^\./, "");
   const images = {};
   for (const key of DIRECTION_KEYS) {
-    const absolute = `${root}/cell_${key.slice(1)}.webp`;
+    const absolute = `${root}/cell_${key.slice(1)}.${ext}`;
     images[key] = typeof resolvePath === "function" ? resolvePath(absolute) : absolute;
   }
   return images;

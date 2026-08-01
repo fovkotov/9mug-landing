@@ -1,6 +1,12 @@
 import Lenis from "lenis";
 import { play } from "cuelume";
 import "./mat.css";
+import "./components/ProductViewer.css";
+import {
+  createMugFrameImages,
+  createProductViewer,
+  preloadMugFrameImages
+} from "./components/ProductViewer.js";
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const isMobileViewport = () => window.matchMedia("(max-width: 900px)").matches;
@@ -14,6 +20,11 @@ function resolvePublicAssetPath(path) {
   return `${normalizedBase}${path}`;
 }
 
+const matFrameImages = createMugFrameImages(resolvePublicAssetPath, "/media/mat_frames", {
+  extension: "webp"
+});
+const matFramesWarmup = preloadMugFrameImages(matFrameImages);
+
 const radioBtn = document.querySelector("#radioBtn");
 const radioIcon = document.querySelector("#radioIcon");
 const noiseBtn = document.querySelector("#noiseBtn");
@@ -22,6 +33,8 @@ const radioPlayIconSource = resolvePublicAssetPath("/media/radio-icon-play.png")
 const radioPauseIconSource = resolvePublicAssetPath("/media/radio-icon-pause.png");
 const addToCartBtn = document.querySelector("#addToCart");
 const bagStatusText = document.querySelector("#bagStatusText");
+const heroPanel = document.querySelector(".panel-hero");
+const productViewerRoot = document.querySelector("#productViewerRoot");
 
 const lenis = new Lenis({
   smoothWheel: true,
@@ -65,6 +78,29 @@ const cutCursorSource = resolvePublicAssetPath("/media/mat/cut-cursor.png");
 
 function playButtonTick() {
   play("tick");
+}
+
+function setupDirectionalMatHero() {
+  if (!heroPanel || !productViewerRoot) return;
+
+  productViewerRoot.hidden = false;
+  heroPanel.dataset.heroMode = "directional";
+  heroPanel.classList.add("is-directional-hero");
+
+  createProductViewer(productViewerRoot, {
+    images: matFrameImages,
+    transitionDuration: 0,
+    deadZoneHalfWidth: 0.28,
+    deadZoneHalfHeight: 0.19,
+    sideFarBoundary: 0.7,
+    horizontalSensitivity: 1.05,
+    verticalSensitivity: 0.95,
+    maxGamma: 20,
+    maxBeta: 16,
+    showZones: false
+  });
+
+  void matFramesWarmup;
 }
 
 function setRadioUiState() {
@@ -859,6 +895,7 @@ addToCartBtn?.addEventListener("click", () => {
 setRadioUiState();
 updateNoiseUiState();
 setBagUiState();
+setupDirectionalMatHero();
 setupScratchPanel();
 setupCutMatPanel();
 void setupMatStickers();

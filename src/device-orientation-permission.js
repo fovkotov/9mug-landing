@@ -44,16 +44,20 @@ export async function requestDeviceOrientationPermission() {
 }
 
 /**
- * Intercept product-page links: ask for motion access during the same tap,
- * then continue navigation.
+ * Intercept product/mat page links: ask for motion access during the same tap,
+ * then continue navigation. Required on iOS so DeviceOrientation can start
+ * without a second permission gesture on the destination page.
  */
 export function bindProductOrientationHandoff(
-  selector = 'a[href*="product.html"]'
+  selector = 'a[href*="product.html"], a[href*="product-classic.html"], a[href*="mat.html"]'
 ) {
   const links = document.querySelectorAll(selector);
   if (!links.length) return;
 
   for (const link of links) {
+    if (link.dataset.orientationHandoffBound === "true") continue;
+    link.dataset.orientationHandoffBound = "true";
+
     link.addEventListener("click", (event) => {
       // Desktop mouse look doesn't need sensors.
       const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;

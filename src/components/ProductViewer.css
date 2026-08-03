@@ -84,3 +84,10 @@
   background: rgba(0, 0, 0, 0.75);
   border-color: rgba(255, 255, 255, 0.85);
 }
+
+@media (max-width: 900px) {
+  /* Tall phone viewports + cover crop the square product on the sides. */
+  .product-viewer__frame {
+    object-fit: contain;
+  }
+}

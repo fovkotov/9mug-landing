@@ -126,6 +126,16 @@
 }
 
 @media (max-width: 900px) {
+  /* Fill the phone width (no side gutters), then zoom the mat 1.5×. */
+  .panel-hero.is-directional-hero .product-viewer__frame {
+    object-fit: contain;
+  }
+
+  .panel-hero.is-directional-hero .product-viewer__stage {
+    transform: scale(1.5);
+    transform-origin: center center;
+  }
+
   .cut-mat-cursor img {
     height: 144px;
   }

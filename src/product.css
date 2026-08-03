@@ -237,6 +237,7 @@ a {
   display: block;
   height: 100%;
   inset: 0;
+  object-fit: fill;
   pointer-events: none;
   position: absolute;
   width: 100%;
@@ -801,7 +802,7 @@ a {
 
   .product-meta {
     align-items: center;
-    bottom: calc(42px + 16px);
+    bottom: calc(34px + 16px);
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -826,19 +827,25 @@ a {
   .cart-bar,
   .cart-bar-ui {
     bottom: 0;
-    height: 42px;
+    height: 34px;
     left: 0;
     right: 0;
     width: 100%;
   }
 
-  .cart-price {
-    left: 16px;
+  .cart-bar-ui {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 16px;
   }
 
+  .cart-price,
   .cart-label {
     left: auto;
-    right: 16px;
+    position: static;
+    right: auto;
+    top: auto;
   }
 
   .control-btn,

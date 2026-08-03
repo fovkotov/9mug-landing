@@ -833,16 +833,11 @@ a {
     width: 100%;
   }
 
-  .cart-bar-shape {
-    inset: 0 16px 0 0;
-    width: auto;
-  }
-
   .cart-bar-ui {
     align-items: center;
     display: flex;
     justify-content: space-between;
-    padding: 8px 32px 8px 16px;
+    padding: 8px 16px;
   }
 
   .cart-price,

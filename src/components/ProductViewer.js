@@ -8,9 +8,9 @@
  */
 
 import {
+  ensureDeviceOrientationPermission,
   needsOrientationPermission,
-  orientationApiAvailable,
-  requestDeviceOrientationPermission
+  orientationApiAvailable
 } from "../device-orientation-permission.js";
 
 /** 5×5 look-around grid — one unique frame / angle pair per cell. */
@@ -604,7 +604,7 @@ export function createProductViewer(root, options = {}) {
     if (prefersMouse || orientationActive || destroyed || orientationRequesting) return false;
 
     orientationRequesting = true;
-    const status = await requestDeviceOrientationPermission();
+    const status = await ensureDeviceOrientationPermission();
     orientationRequesting = false;
     orientationPermission = status === "granted" ? "granted" : status === "denied" ? "denied" : "unknown";
 
@@ -651,19 +651,14 @@ export function createProductViewer(root, options = {}) {
       return;
     }
 
-    // Android: no permission prompt — start on page entry.
-    if (!needsOrientationPermission()) {
-      await enableOrientationMode();
-      return;
-    }
-
-    // iOS: permission is requested when tapping a link to this page.
-    // If already granted (or handoff just happened), this resolves without a dialog.
+    // Silent check → request if needed (Android starts immediately;
+    // iOS reuses a prior grant or asks on the first tap).
     const started = await enableOrientationMode();
     if (started) return;
 
-    // Direct open / refresh without prior grant: ask on the first tap.
-    bindFirstGestureOrientationRequest();
+    if (needsOrientationPermission()) {
+      bindFirstGestureOrientationRequest();
+    }
     root.setAttribute("data-input", "touch");
   }
 

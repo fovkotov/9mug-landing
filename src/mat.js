@@ -1,5 +1,6 @@
 import Lenis from "lenis";
 import { play } from "cuelume";
+import { ensureDeviceOrientationOnEntry } from "./device-orientation-permission.js";
 import "./mat.css";
 import "./components/ProductViewer.css";
 import {
@@ -7,6 +8,9 @@ import {
   createProductViewer,
   preloadMugFrameImages
 } from "./components/ProductViewer.js";
+
+// Silent motion-permission check as soon as the mat page opens.
+ensureDeviceOrientationOnEntry();
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const isMobileViewport = () => window.matchMedia("(max-width: 900px)").matches;

@@ -1,5 +1,6 @@
 import Lenis from "lenis";
 import { play } from "cuelume";
+import { ensureDeviceOrientationOnEntry } from "./device-orientation-permission.js";
 import "./product.css";
 import "./components/ProductViewer.css";
 import { HERO_INTERACTION_MODE } from "./hero/hero-mode.js";
@@ -9,6 +10,9 @@ import {
   createProductViewer,
   preloadMugFrameImages
 } from "./components/ProductViewer.js";
+
+// Silent motion-permission check as soon as the product page opens.
+ensureDeviceOrientationOnEntry();
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const isMobileViewport = () => window.matchMedia("(max-width: 900px)").matches;

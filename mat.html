@@ -131,44 +131,52 @@
         />
 
         <div class="draw-mat-stage" id="drawMatStage">
-          <div
-            class="draw-paper"
-            data-paper="a"
-            style="--paper-rotate: -7deg; left: 8%; top: 18%; width: min(34vw, 420px);"
-          >
-            <div class="draw-paper-rotator">
-              <img class="draw-paper-bg" src="/media/mat/paper-a.png" alt="" draggable="false" />
-              <canvas class="draw-paper-canvas" aria-hidden="true"></canvas>
-            </div>
-          </div>
-          <div
-            class="draw-paper"
-            data-paper="b"
-            style="--paper-rotate: 9deg; left: 52%; top: 12%; width: min(26vw, 320px);"
-          >
-            <div class="draw-paper-rotator">
-              <img class="draw-paper-bg" src="/media/mat/paper-b.png" alt="" draggable="false" />
-              <canvas class="draw-paper-canvas" aria-hidden="true"></canvas>
-            </div>
-          </div>
+          <!-- Figma 49:31 @ 1440×800 — large drawable scrap (1 16) -->
           <div
             class="draw-paper"
             data-paper="c"
-            style="--paper-rotate: -3deg; left: 22%; top: 38%; width: min(28vw, 360px);"
+            data-drawable="true"
+            style="--paper-rotate: 27.26deg; left: 30.6%; top: 43%; width: 18.1%;"
           >
             <div class="draw-paper-rotator">
               <img class="draw-paper-bg" src="/media/mat/paper-c.png" alt="" draggable="false" />
               <canvas class="draw-paper-canvas" aria-hidden="true"></canvas>
             </div>
           </div>
+          <!-- Square drawable scrap (Paper-1) -->
+          <div
+            class="draw-paper"
+            data-paper="b"
+            data-drawable="true"
+            style="--paper-rotate: -5deg; left: 62.7%; top: 52.2%; width: 13.5%;"
+          >
+            <div class="draw-paper-rotator">
+              <img class="draw-paper-bg" src="/media/mat/paper-b.png" alt="" draggable="false" />
+              <canvas class="draw-paper-canvas" aria-hidden="true"></canvas>
+            </div>
+          </div>
+          <!-- Small right scrap (Paper) -->
+          <div
+            class="draw-paper"
+            data-paper="a"
+            data-drawable="true"
+            data-flip="y"
+            style="--paper-rotate: -175deg; left: 65.05%; top: 38.66%; width: 13.5%;"
+          >
+            <div class="draw-paper-rotator">
+              <img class="draw-paper-bg" src="/media/mat/paper-a.png" alt="" draggable="false" />
+              <canvas class="draw-paper-canvas" aria-hidden="true"></canvas>
+            </div>
+          </div>
+          <!-- Upper small leaflets — move only (7 7) -->
           <div
             class="draw-paper"
             data-paper="d"
-            style="--paper-rotate: 14deg; left: 62%; top: 42%; width: min(20vw, 260px);"
+            data-drawable="false"
+            style="--paper-rotate: 0deg; left: 20.07%; top: 4.63%; width: 12.78%;"
           >
             <div class="draw-paper-rotator">
               <img class="draw-paper-bg" src="/media/mat/paper-d.png" alt="" draggable="false" />
-              <canvas class="draw-paper-canvas" aria-hidden="true"></canvas>
             </div>
           </div>
         </div>

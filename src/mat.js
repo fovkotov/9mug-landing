@@ -403,9 +403,13 @@ function setupDrawMatPanel() {
       img,
       canvas,
       ctx: canvas?.getContext("2d", { alpha: true }) || null,
+      drawable: el.dataset.drawable !== "false",
+      flipY: el.dataset.flip === "y",
       rotation,
       hitCanvas: null,
       hitCtx: null,
+      hitWidth: 0,
+      hitHeight: 0,
       naturalWidth: 0,
       naturalHeight: 0,
       ready: false
@@ -452,18 +456,33 @@ function setupDrawMatPanel() {
     paper.el.style.zIndex = String(zCounter);
   }
 
-  function syncCanvasSize(paper) {
-    if (!paper.canvas || !paper.ctx || !paper.ready) return;
+  function syncPaperBuffers(paper) {
+    if (!paper.ready || !paper.img) return;
     const width = paper.el.clientWidth;
-    const height = paper.img?.clientHeight || paper.el.clientHeight;
+    const height = paper.img.clientHeight || paper.el.clientHeight;
     if (width <= 0 || height <= 0) return;
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const nextW = Math.round(width * dpr);
     const nextH = Math.round(height * dpr);
+
+    if (!paper.hitCanvas) {
+      paper.hitCanvas = document.createElement("canvas");
+      paper.hitCtx = paper.hitCanvas.getContext("2d", { willReadFrequently: true });
+    }
+
+    if (paper.hitWidth !== nextW || paper.hitHeight !== nextH) {
+      paper.hitCanvas.width = nextW;
+      paper.hitCanvas.height = nextH;
+      paper.hitWidth = nextW;
+      paper.hitHeight = nextH;
+      paper.hitCtx.clearRect(0, 0, nextW, nextH);
+      paper.hitCtx.drawImage(paper.img, 0, 0, nextW, nextH);
+    }
+
+    if (!paper.drawable || !paper.canvas || !paper.ctx) return;
     if (paper.canvas.width === nextW && paper.canvas.height === nextH) return;
 
-    // Preserve existing ink when resizing
     const prev = document.createElement("canvas");
     prev.width = paper.canvas.width;
     prev.height = paper.canvas.height;
@@ -481,25 +500,16 @@ function setupDrawMatPanel() {
     if (prev.width && prev.height) {
       paper.ctx.drawImage(prev, 0, 0, nextW, nextH);
     }
-
-    if (!paper.hitCanvas) {
-      paper.hitCanvas = document.createElement("canvas");
-      paper.hitCtx = paper.hitCanvas.getContext("2d", { willReadFrequently: true });
-    }
-    paper.hitCanvas.width = nextW;
-    paper.hitCanvas.height = nextH;
-    paper.hitCtx.clearRect(0, 0, nextW, nextH);
-    paper.hitCtx.drawImage(paper.img, 0, 0, nextW, nextH);
   }
 
   function preparePaper(paper) {
-    if (!paper.img || !paper.canvas) return;
+    if (!paper.img) return;
 
     const arm = () => {
       paper.naturalWidth = paper.img.naturalWidth || paper.img.width;
       paper.naturalHeight = paper.img.naturalHeight || paper.img.height;
       paper.ready = true;
-      syncCanvasSize(paper);
+      syncPaperBuffers(paper);
     };
 
     if (paper.img.complete && paper.img.naturalWidth) {
@@ -511,10 +521,10 @@ function setupDrawMatPanel() {
   }
 
   function clientToPaperPoint(paper, clientX, clientY) {
-    syncCanvasSize(paper);
+    syncPaperBuffers(paper);
     const layout = readPaperLayout(paper);
     const stageRect = drawMatStage.getBoundingClientRect();
-    if (layout.width <= 0 || layout.height <= 0) return null;
+    if (layout.width <= 0 || layout.height <= 0 || !paper.hitWidth || !paper.hitHeight) return null;
 
     const stageX = clientX - stageRect.left;
     const stageY = clientY - stageRect.top;
@@ -522,11 +532,13 @@ function setupDrawMatPanel() {
     const originY = layout.top + layout.height / 2;
     const dx = stageX - originX;
     const dy = stageY - originY;
+    // Inverse of: scaleY(±1) then rotate(R)
     const rad = (-paper.rotation * Math.PI) / 180;
     const cos = Math.cos(rad);
     const sin = Math.sin(rad);
-    const ux = dx * cos - dy * sin;
-    const uy = dx * sin + dy * cos;
+    let ux = dx * cos - dy * sin;
+    let uy = dx * sin + dy * cos;
+    if (paper.flipY) uy = -uy;
     const localX = ux + layout.width / 2;
     const localY = uy + layout.height / 2;
 
@@ -534,8 +546,8 @@ function setupDrawMatPanel() {
       return null;
     }
 
-    const scaleX = paper.canvas.width / layout.width;
-    const scaleY = paper.canvas.height / layout.height;
+    const scaleX = paper.hitWidth / layout.width;
+    const scaleY = paper.hitHeight / layout.height;
     return {
       x: localX * scaleX,
       y: localY * scaleY,
@@ -546,9 +558,9 @@ function setupDrawMatPanel() {
   }
 
   function alphaAt(paper, point) {
-    if (!paper.hitCtx || !point) return 0;
-    const x = clamp(Math.floor(point.x), 0, paper.canvas.width - 1);
-    const y = clamp(Math.floor(point.y), 0, paper.canvas.height - 1);
+    if (!paper.hitCtx || !point || !paper.hitWidth) return 0;
+    const x = clamp(Math.floor(point.x), 0, paper.hitWidth - 1);
+    const y = clamp(Math.floor(point.y), 0, paper.hitHeight - 1);
     try {
       return paper.hitCtx.getImageData(x, y, 1, 1).data[3];
     } catch {
@@ -574,12 +586,12 @@ function setupDrawMatPanel() {
 
   function strokeWidthFor(paper) {
     const base = isMobileViewport() ? 3.2 : 2.6;
-    const dpr = paper.canvas.width / Math.max(1, paper.el.clientWidth);
+    const dpr = paper.hitWidth / Math.max(1, paper.el.clientWidth);
     return base * dpr;
   }
 
   function drawStroke(paper, from, to) {
-    if (!paper.ctx || !to) return;
+    if (!paper.drawable || !paper.ctx || !to) return;
     if (alphaAt(paper, to) <= 18) return;
 
     paper.ctx.save();
@@ -679,14 +691,18 @@ function setupDrawMatPanel() {
       const dy = event.clientY - pointerOrigin.y;
       if (Math.hypot(dx, dy) > 7) {
         clearPendingTimer();
-        gestureMode = "draw";
-        const point = clientToPaperPoint(activePaper, event.clientX, event.clientY);
-        lastDrawPoint = point;
-        drawStroke(activePaper, null, point);
+        if (!activePaper.drawable) {
+          beginDrag(activePaper, event.clientX, event.clientY);
+        } else {
+          gestureMode = "draw";
+          const point = clientToPaperPoint(activePaper, event.clientX, event.clientY);
+          lastDrawPoint = point;
+          drawStroke(activePaper, null, point);
+        }
       }
     }
 
-    if (gestureMode === "draw" && activePaper) {
+    if (gestureMode === "draw" && activePaper?.drawable) {
       const point = clientToPaperPoint(activePaper, event.clientX, event.clientY);
       if (point && alphaAt(activePaper, point) > 18) {
         drawStroke(activePaper, lastDrawPoint, point);
@@ -725,14 +741,20 @@ function setupDrawMatPanel() {
     activePaper = hit.paper;
     pointerOrigin = { x: event.clientX, y: event.clientY };
     lastClient = { x: event.clientX, y: event.clientY };
-    gestureMode = "pending";
     lastDrawPoint = hit.point;
     bringToFront(hit.paper);
     setupDrawCursor();
     updateDrawCursorPosition(event.clientX, event.clientY);
     setDrawCursorVisibility(Boolean(drawCursor));
-
     clearPendingTimer();
+
+    // Small upper scraps: drag only, no ink.
+    if (!hit.paper.drawable) {
+      beginDrag(hit.paper, event.clientX, event.clientY);
+      return;
+    }
+
+    gestureMode = "pending";
     pendingTimer = window.setTimeout(() => {
       if (gestureMode === "pending" && activePaper) {
         beginDrag(activePaper, lastClient.x, lastClient.y);
@@ -743,7 +765,7 @@ function setupDrawMatPanel() {
   function handlePointerUp(event) {
     if (activePointerId !== null && event.pointerId !== activePointerId) return;
 
-    if (gestureMode === "pending" && activePaper && lastDrawPoint) {
+    if (gestureMode === "pending" && activePaper?.drawable && lastDrawPoint) {
       // Tap: leave a small mark
       drawStroke(activePaper, null, lastDrawPoint);
     }
@@ -761,7 +783,7 @@ function setupDrawMatPanel() {
     cancelAnimationFrame(resizeFrame);
     resizeFrame = requestAnimationFrame(() => {
       papers.forEach((paper) => {
-        if (paper.ready) syncCanvasSize(paper);
+        if (paper.ready) syncPaperBuffers(paper);
       });
     });
   }

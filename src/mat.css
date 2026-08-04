@@ -40,17 +40,21 @@
   z-index: 12;
 }
 
-.draw-paper.is-dragging .draw-paper-rotator {
-  transform: rotate(var(--paper-rotate)) scale(1.03);
-}
-
 .draw-paper-rotator {
   display: block;
   position: relative;
-  transform: rotate(var(--paper-rotate, 0deg));
+  transform: rotate(var(--paper-rotate, 0deg)) var(--paper-flip, scaleY(1));
   transform-origin: center center;
   transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
   width: 100%;
+}
+
+.draw-paper[data-flip="y"] {
+  --paper-flip: scaleY(-1);
+}
+
+.draw-paper.is-dragging .draw-paper-rotator {
+  transform: rotate(var(--paper-rotate)) var(--paper-flip, scaleY(1)) scale(1.03);
 }
 
 .draw-paper-bg {

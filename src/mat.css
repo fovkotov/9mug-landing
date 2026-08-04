@@ -1,14 +1,14 @@
 @import "./product.css";
 
-.panel-cut-mat {
-  background: #cfcbc7;
+.panel-draw-mat {
+  background: #b9b3ad;
   cursor: none;
   overflow: hidden;
   touch-action: none;
   user-select: none;
 }
 
-.cut-mat-surface {
+.draw-mat-surface {
   height: 100%;
   inset: 0;
   object-fit: cover;
@@ -18,7 +18,7 @@
   width: 100%;
 }
 
-.cut-mat-stage {
+.draw-mat-stage {
   height: 100%;
   inset: 0;
   position: absolute;
@@ -26,48 +26,56 @@
   z-index: 2;
 }
 
-.cut-object {
-  display: block;
-  pointer-events: none;
+.draw-paper {
   position: absolute;
+  touch-action: none;
   transform-origin: center center;
-  transition: opacity 0.35s ease, transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: left, top, transform;
   z-index: 3;
 }
 
-.cut-object.is-severed {
-  opacity: 0;
-  pointer-events: none;
+.draw-paper.is-dragging {
+  cursor: none;
+  filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.28));
+  z-index: 12;
 }
 
-.cut-object-half {
-  pointer-events: none;
-  position: absolute;
-  transform-origin: center center;
-  transition: transform 0.7s cubic-bezier(0.22, 0.8, 0.2, 1), opacity 0.7s ease;
-  z-index: 3;
+.draw-paper.is-dragging .draw-paper-rotator {
+  transform: rotate(var(--paper-rotate)) scale(1.03);
 }
 
-.cut-object-half img,
-.cut-object-half canvas {
+.draw-paper-rotator {
   display: block;
-  height: 100%;
+  position: relative;
+  transform: rotate(var(--paper-rotate, 0deg));
+  transform-origin: center center;
+  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
   width: 100%;
 }
 
-.cut-object-half.is-left {
-  transform: translate(-18px, 10px) rotate(-8deg);
+.draw-paper-bg {
+  display: block;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  width: 100%;
 }
 
-.cut-object-half.is-right {
-  transform: translate(22px, 28px) rotate(11deg);
+.draw-paper-canvas {
+  display: block;
+  height: 100%;
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  width: 100%;
 }
 
-.cut-mat-cursor {
+.draw-mat-cursor {
   --cursor-x: 0px;
   --cursor-y: 0px;
-  --cursor-hotspot-x: 94%;
-  --cursor-hotspot-y: 0%;
+  /* Pencil tip (red hotspot marker) */
+  --cursor-hotspot-x: 54.6%;
+  --cursor-hotspot-y: 7.05%;
   left: var(--cursor-x);
   opacity: 0;
   pointer-events: none;
@@ -75,54 +83,18 @@
   top: var(--cursor-y);
   transform: translate(calc(-1 * var(--cursor-hotspot-x)), calc(-1 * var(--cursor-hotspot-y)));
   transition: opacity 0.12s ease;
-  z-index: 8;
+  z-index: 20;
 }
 
-.panel-cut-mat.has-cut-cursor .cut-mat-cursor {
+.panel-draw-mat.has-draw-cursor .draw-mat-cursor {
   opacity: 1;
 }
 
-.cut-mat-cursor img {
+.draw-mat-cursor img {
   display: block;
   height: 176px;
   object-fit: contain;
   width: auto;
-}
-
-.mat-sticker-host {
-  cursor: grab;
-  height: min(28vw, 240px);
-  position: absolute;
-  touch-action: none;
-  width: min(28vw, 240px);
-  z-index: 7;
-}
-
-.mat-sticker-host.is-fallback {
-  align-items: center;
-  background: #fff;
-  border: 4px solid #111;
-  border-radius: 18px;
-  display: grid;
-  font-family: "Arial Black", sans-serif;
-  font-size: clamp(18px, 3vw, 28px);
-  font-weight: 900;
-  justify-items: center;
-  letter-spacing: 0.04em;
-}
-
-.mat-sticker-host sticker-forge,
-.mat-sticker-host > canvas,
-.mat-sticker-host > div {
-  display: block;
-  height: 100%;
-  width: 100%;
-}
-
-.mat-sticker-host canvas,
-.mat-sticker-host canvas:focus,
-.mat-sticker-host canvas:focus-visible {
-  outline: none;
 }
 
 @media (max-width: 900px) {
@@ -136,12 +108,7 @@
     transform-origin: center center;
   }
 
-  .cut-mat-cursor img {
+  .draw-mat-cursor img {
     height: 144px;
-  }
-
-  .mat-sticker-host {
-    height: min(42vw, 180px);
-    width: min(42vw, 180px);
   }
 }

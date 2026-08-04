@@ -117,43 +117,61 @@
       </section>
 
       <section
-        id="cutMatSection"
-        class="panel panel-cut-mat contrast-target"
+        id="drawMatSection"
+        class="panel panel-draw-mat contrast-target"
         data-contrast-type="media"
-        aria-label="Cut objects on the mat"
+        aria-label="Draw on paper scraps"
       >
-        <img class="cut-mat-surface" src="/media/mat/grid-middle.png" alt="" draggable="false" />
+        <img
+          class="draw-mat-surface"
+          src="/media/mat/draw-mat-bg.webp"
+          alt=""
+          draggable="false"
+          decoding="async"
+        />
 
-        <div class="cut-mat-stage" id="cutMatStage">
-          <canvas
-            class="cut-object"
-            data-cut-id="scrap-eye"
-            width="220"
-            height="160"
-            style="left: 14%; top: 22%; width: min(18vw, 220px); height: auto;"
-            aria-hidden="true"
-          ></canvas>
-          <canvas
-            class="cut-object"
-            data-cut-id="scrap-tape"
-            width="280"
-            height="70"
-            style="left: 58%; top: 48%; width: min(22vw, 280px); height: auto; transform: rotate(-12deg);"
-            aria-hidden="true"
-          ></canvas>
-          <canvas
-            class="cut-object"
-            data-cut-id="scrap-blade"
-            width="90"
-            height="260"
-            style="left: 38%; top: 30%; width: min(7vw, 90px); height: auto; transform: rotate(8deg);"
-            aria-hidden="true"
-          ></canvas>
-
-          <div class="mat-sticker-host" id="matStickerA" style="left: 22%; top: 58%;"></div>
-          <div class="mat-sticker-host" id="matStickerB" style="left: 68%; top: 18%;"></div>
+        <div class="draw-mat-stage" id="drawMatStage">
+          <div
+            class="draw-paper"
+            data-paper="a"
+            style="--paper-rotate: -7deg; left: 8%; top: 18%; width: min(34vw, 420px);"
+          >
+            <div class="draw-paper-rotator">
+              <img class="draw-paper-bg" src="/media/mat/paper-a.png" alt="" draggable="false" />
+              <canvas class="draw-paper-canvas" aria-hidden="true"></canvas>
+            </div>
+          </div>
+          <div
+            class="draw-paper"
+            data-paper="b"
+            style="--paper-rotate: 9deg; left: 52%; top: 12%; width: min(26vw, 320px);"
+          >
+            <div class="draw-paper-rotator">
+              <img class="draw-paper-bg" src="/media/mat/paper-b.png" alt="" draggable="false" />
+              <canvas class="draw-paper-canvas" aria-hidden="true"></canvas>
+            </div>
+          </div>
+          <div
+            class="draw-paper"
+            data-paper="c"
+            style="--paper-rotate: -3deg; left: 22%; top: 38%; width: min(28vw, 360px);"
+          >
+            <div class="draw-paper-rotator">
+              <img class="draw-paper-bg" src="/media/mat/paper-c.png" alt="" draggable="false" />
+              <canvas class="draw-paper-canvas" aria-hidden="true"></canvas>
+            </div>
+          </div>
+          <div
+            class="draw-paper"
+            data-paper="d"
+            style="--paper-rotate: 14deg; left: 62%; top: 42%; width: min(20vw, 260px);"
+          >
+            <div class="draw-paper-rotator">
+              <img class="draw-paper-bg" src="/media/mat/paper-d.png" alt="" draggable="false" />
+              <canvas class="draw-paper-canvas" aria-hidden="true"></canvas>
+            </div>
+          </div>
         </div>
-
       </section>
     </main>
 

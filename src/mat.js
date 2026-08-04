@@ -76,9 +76,9 @@ const scratchCoverSources = {
   }
 };
 
-const cutMatSection = document.querySelector("#cutMatSection");
-const cutMatStage = document.querySelector("#cutMatStage");
-const cutCursorSource = resolvePublicAssetPath("/media/mat/cut-cursor.png");
+const drawMatSection = document.querySelector("#drawMatSection");
+const drawMatStage = document.querySelector("#drawMatStage");
+const drawCursorSource = resolvePublicAssetPath("/media/mat/draw-cursor.png");
 
 function playButtonTick() {
   play("tick");
@@ -371,404 +371,411 @@ function setupScratchPanel() {
   }
 }
 
-function drawCutObject(canvas, id) {
-  const ctx = canvas.getContext("2d", { alpha: true });
-  if (!ctx) return;
+function setupDrawMatPanel() {
+  if (!drawMatSection || !drawMatStage) return;
 
-  const w = canvas.width;
-  const h = canvas.height;
-  ctx.clearRect(0, 0, w, h);
-
-  if (id === "scrap-eye") {
-    ctx.fillStyle = "#111";
-    ctx.beginPath();
-    ctx.moveTo(18, 28);
-    ctx.lineTo(w - 22, 18);
-    ctx.lineTo(w - 14, h - 24);
-    ctx.lineTo(26, h - 16);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = "#ebe6e2";
-    ctx.beginPath();
-    ctx.ellipse(w * 0.48, h * 0.5, w * 0.28, h * 0.26, -0.15, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = "#111";
-    ctx.beginPath();
-    ctx.arc(w * 0.5, h * 0.5, Math.min(w, h) * 0.13, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = "#f2efec";
-    ctx.beginPath();
-    ctx.arc(w * 0.54, h * 0.44, Math.min(w, h) * 0.04, 0, Math.PI * 2);
-    ctx.fill();
-    return;
-  }
-
-  if (id === "scrap-tape") {
-    ctx.save();
-    ctx.translate(0, h * 0.15);
-    ctx.fillStyle = "rgba(20, 20, 20, 0.88)";
-    ctx.fillRect(8, 8, w - 16, h * 0.55);
-    ctx.fillStyle = "rgba(236, 230, 224, 0.92)";
-    for (let i = 0; i < 7; i += 1) {
-      const x = 22 + i * ((w - 44) / 6);
-      ctx.fillRect(x, 18, 3, h * 0.35);
-    }
-    ctx.restore();
-    return;
-  }
-
-  // scrap-blade: slender craft-knife silhouette
-  ctx.fillStyle = "#161616";
-  ctx.beginPath();
-  ctx.moveTo(w * 0.42, 8);
-  ctx.lineTo(w * 0.62, 8);
-  ctx.lineTo(w * 0.7, h * 0.42);
-  ctx.lineTo(w * 0.58, h * 0.96);
-  ctx.lineTo(w * 0.38, h * 0.96);
-  ctx.lineTo(w * 0.3, h * 0.42);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.fillStyle = "#ece8e4";
-  ctx.beginPath();
-  ctx.moveTo(w * 0.48, 14);
-  ctx.lineTo(w * 0.56, 14);
-  ctx.lineTo(w * 0.52, h * 0.38);
-  ctx.closePath();
-  ctx.fill();
-}
-
-function severCutObject(canvas) {
-  if (!cutMatStage || canvas.classList.contains("is-severed")) return;
-
-  const stageRect = cutMatStage.getBoundingClientRect();
-  const rect = canvas.getBoundingClientRect();
-  const left = rect.left - stageRect.left;
-  const top = rect.top - stageRect.top;
-  const width = rect.width;
-  const height = rect.height;
-  const transform = canvas.style.transform || "";
-
-  const snapshot = canvas.toDataURL("image/png");
-
-  const makeHalf = (side) => {
-    const half = document.createElement("div");
-    half.className = `cut-object-half is-${side}`;
-    half.style.left = `${left}px`;
-    half.style.top = `${top}px`;
-    half.style.width = `${width}px`;
-    half.style.height = `${height}px`;
-    half.style.transform = transform;
-
-    const img = document.createElement("img");
-    img.src = snapshot;
-    img.alt = "";
-    img.draggable = false;
-    img.style.clipPath =
-      side === "left" ? "inset(0 50% 0 0)" : "inset(0 0 0 50%)";
-    half.append(img);
-    return half;
-  };
-
-  const leftHalf = makeHalf("left");
-  const rightHalf = makeHalf("right");
-  cutMatStage.append(leftHalf, rightHalf);
-
-  canvas.classList.add("is-severed");
-
-  requestAnimationFrame(() => {
-    leftHalf.classList.add("is-left");
-    rightHalf.classList.add("is-right");
-  });
-
-  window.setTimeout(() => {
-    leftHalf.remove();
-    rightHalf.remove();
-  }, 900);
-}
-
-function setupCutMatPanel() {
-  if (!cutMatSection || !cutMatStage) return;
-
-  const objects = [...cutMatStage.querySelectorAll(".cut-object")];
-  objects.forEach((canvas) => {
-    drawCutObject(canvas, canvas.dataset.cutId || "");
-  });
-
-  const cutProgress = new Map(
-    objects.map((canvas) => [canvas, { columns: new Set(), severed: false }])
-  );
-
-  let cutCursor = null;
-  let isPointerInside = false;
-  let lastPoint = null;
+  const paperNodes = [...drawMatStage.querySelectorAll(".draw-paper")];
+  if (!paperNodes.length) return;
 
   const supportsFinePointer = () =>
     window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
-  function getBladeSize() {
-    const cursorHeight = isMobileViewport() ? 144 : 176;
-    const cursorWidth = cursorHeight * (134 / 352);
+  let drawCursor = null;
+  let zCounter = 10;
+  let activePointerId = null;
+  let gestureMode = "idle"; // idle | pending | draw | drag
+  let activePaper = null;
+  let lastDrawPoint = null;
+  let pendingTimer = 0;
+  let pointerOrigin = null;
+  let lastClient = { x: 0, y: 0 };
+  let dragOffset = { x: 0, y: 0 };
+
+  const papers = paperNodes.map((el, index) => {
+    const img = el.querySelector(".draw-paper-bg");
+    const canvas = el.querySelector(".draw-paper-canvas");
+    const rotateVar = getComputedStyle(el).getPropertyValue("--paper-rotate").trim();
+    const rotation = Number.parseFloat(rotateVar) || 0;
+    el.style.zIndex = String(index + 3);
+
     return {
-      width: Math.max(2, cursorWidth * 0.034),
-      height: cursorHeight * 0.93
+      el,
+      img,
+      canvas,
+      ctx: canvas?.getContext("2d", { alpha: true }) || null,
+      rotation,
+      hitCanvas: null,
+      hitCtx: null,
+      naturalWidth: 0,
+      naturalHeight: 0,
+      ready: false
+    };
+  });
+
+  function getStageSize() {
+    return {
+      width: drawMatStage.clientWidth,
+      height: drawMatStage.clientHeight
     };
   }
 
-  function setupCutCursor() {
-    if (cutCursor || !supportsFinePointer()) return;
-    cutCursor = document.createElement("span");
-    cutCursor.className = "cut-mat-cursor";
-    cutCursor.setAttribute("aria-hidden", "true");
-    const img = document.createElement("img");
-    img.alt = "";
-    img.src = cutCursorSource;
-    img.draggable = false;
-    cutCursor.append(img);
-    cutMatSection.append(cutCursor);
-  }
-
-  function setCutCursorVisibility(visible) {
-    if (!cutCursor) return;
-    cutMatSection.classList.toggle("has-cut-cursor", visible);
-  }
-
-  function updateCutCursorPosition(clientX, clientY) {
-    if (!cutCursor) return;
-    const rect = cutMatSection.getBoundingClientRect();
-    cutCursor.style.setProperty("--cursor-x", `${clamp(clientX - rect.left, 0, rect.width)}px`);
-    cutCursor.style.setProperty("--cursor-y", `${clamp(clientY - rect.top, 0, rect.height)}px`);
-  }
-
-  function getSectionPoint(clientX, clientY) {
-    const rect = cutMatSection.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) return null;
+  function readPaperLayout(paper) {
+    const stage = getStageSize();
+    const left = paper.el.offsetLeft;
+    const top = paper.el.offsetTop;
+    const width = paper.el.offsetWidth;
+    const height = paper.el.offsetHeight || width;
     return {
-      x: clientX - rect.left,
-      y: clientY - rect.top,
-      clientX,
-      clientY
+      left,
+      top,
+      width,
+      height,
+      stageWidth: stage.width,
+      stageHeight: stage.height
     };
   }
 
-  function cutObjectAt(canvas, clientX, clientY, blade) {
-    const state = cutProgress.get(canvas);
-    if (!state || state.severed) return;
+  function setPaperPosition(paper, left, top) {
+    const layout = readPaperLayout(paper);
+    const maxLeft = Math.max(0, layout.stageWidth - layout.width * 0.35);
+    const maxTop = Math.max(0, layout.stageHeight - layout.height * 0.35);
+    const minLeft = -layout.width * 0.35;
+    const minTop = -layout.height * 0.35;
+    const nextLeft = clamp(left, minLeft, maxLeft);
+    const nextTop = clamp(top, minTop, maxTop);
+    paper.el.style.left = `${nextLeft}px`;
+    paper.el.style.top = `${nextTop}px`;
+  }
 
-    const rect = canvas.getBoundingClientRect();
-    const localX = clientX - rect.left;
-    const localY = clientY - rect.top;
-    if (localX < -blade.width || localX > rect.width + blade.width) return;
-    if (localY < -blade.height || localY > rect.height + blade.height) return;
+  function bringToFront(paper) {
+    zCounter += 1;
+    paper.el.style.zIndex = String(zCounter);
+  }
 
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const ctx = canvas.getContext("2d", { alpha: true });
-    if (!ctx) return;
+  function syncCanvasSize(paper) {
+    if (!paper.canvas || !paper.ctx || !paper.ready) return;
+    const width = paper.el.clientWidth;
+    const height = paper.img?.clientHeight || paper.el.clientHeight;
+    if (width <= 0 || height <= 0) return;
 
-    const x = localX * scaleX;
-    const y = localY * scaleY;
-    const w = blade.width * scaleX;
-    const h = blade.height * scaleY;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const nextW = Math.round(width * dpr);
+    const nextH = Math.round(height * dpr);
+    if (paper.canvas.width === nextW && paper.canvas.height === nextH) return;
 
-    ctx.save();
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.fillStyle = "#000";
-    ctx.fillRect(x, y, Math.max(2, w), h);
-    ctx.restore();
+    // Preserve existing ink when resizing
+    const prev = document.createElement("canvas");
+    prev.width = paper.canvas.width;
+    prev.height = paper.canvas.height;
+    const prevCtx = prev.getContext("2d");
+    if (prevCtx && paper.canvas.width && paper.canvas.height) {
+      prevCtx.drawImage(paper.canvas, 0, 0);
+    }
 
-    const col = clamp(Math.floor((localX / rect.width) * 12), 0, 11);
-    state.columns.add(col);
+    paper.canvas.width = nextW;
+    paper.canvas.height = nextH;
+    paper.canvas.style.width = `${width}px`;
+    paper.canvas.style.height = `${height}px`;
+    paper.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    paper.ctx.clearRect(0, 0, nextW, nextH);
+    if (prev.width && prev.height) {
+      paper.ctx.drawImage(prev, 0, 0, nextW, nextH);
+    }
 
-    if (state.columns.size >= 7) {
-      state.severed = true;
-      severCutObject(canvas);
-      playButtonTick();
+    if (!paper.hitCanvas) {
+      paper.hitCanvas = document.createElement("canvas");
+      paper.hitCtx = paper.hitCanvas.getContext("2d", { willReadFrequently: true });
+    }
+    paper.hitCanvas.width = nextW;
+    paper.hitCanvas.height = nextH;
+    paper.hitCtx.clearRect(0, 0, nextW, nextH);
+    paper.hitCtx.drawImage(paper.img, 0, 0, nextW, nextH);
+  }
+
+  function preparePaper(paper) {
+    if (!paper.img || !paper.canvas) return;
+
+    const arm = () => {
+      paper.naturalWidth = paper.img.naturalWidth || paper.img.width;
+      paper.naturalHeight = paper.img.naturalHeight || paper.img.height;
+      paper.ready = true;
+      syncCanvasSize(paper);
+    };
+
+    if (paper.img.complete && paper.img.naturalWidth) {
+      arm();
+      return;
+    }
+
+    paper.img.addEventListener("load", arm, { once: true });
+  }
+
+  function clientToPaperPoint(paper, clientX, clientY) {
+    syncCanvasSize(paper);
+    const layout = readPaperLayout(paper);
+    const stageRect = drawMatStage.getBoundingClientRect();
+    if (layout.width <= 0 || layout.height <= 0) return null;
+
+    const stageX = clientX - stageRect.left;
+    const stageY = clientY - stageRect.top;
+    const originX = layout.left + layout.width / 2;
+    const originY = layout.top + layout.height / 2;
+    const dx = stageX - originX;
+    const dy = stageY - originY;
+    const rad = (-paper.rotation * Math.PI) / 180;
+    const cos = Math.cos(rad);
+    const sin = Math.sin(rad);
+    const ux = dx * cos - dy * sin;
+    const uy = dx * sin + dy * cos;
+    const localX = ux + layout.width / 2;
+    const localY = uy + layout.height / 2;
+
+    if (localX < -2 || localY < -2 || localX > layout.width + 2 || localY > layout.height + 2) {
+      return null;
+    }
+
+    const scaleX = paper.canvas.width / layout.width;
+    const scaleY = paper.canvas.height / layout.height;
+    return {
+      x: localX * scaleX,
+      y: localY * scaleY,
+      localX,
+      localY,
+      layout
+    };
+  }
+
+  function alphaAt(paper, point) {
+    if (!paper.hitCtx || !point) return 0;
+    const x = clamp(Math.floor(point.x), 0, paper.canvas.width - 1);
+    const y = clamp(Math.floor(point.y), 0, paper.canvas.height - 1);
+    try {
+      return paper.hitCtx.getImageData(x, y, 1, 1).data[3];
+    } catch {
+      return 0;
     }
   }
 
-  function cutAt(point) {
-    if (!point) return;
-    const blade = getBladeSize();
+  function hitPaper(clientX, clientY) {
+    const ordered = [...papers].sort(
+      (a, b) => Number(b.el.style.zIndex || 0) - Number(a.el.style.zIndex || 0)
+    );
 
-    objects.forEach((canvas) => {
-      cutObjectAt(canvas, point.clientX, point.clientY, blade);
-    });
-
-    lastPoint = point;
+    for (const paper of ordered) {
+      if (!paper.ready) continue;
+      const point = clientToPaperPoint(paper, clientX, clientY);
+      if (!point) continue;
+      if (alphaAt(paper, point) > 18) {
+        return { paper, point };
+      }
+    }
+    return null;
   }
 
-  function isOverSticker(event) {
-    return Boolean(event.target?.closest?.(".mat-sticker-host"));
+  function strokeWidthFor(paper) {
+    const base = isMobileViewport() ? 3.2 : 2.6;
+    const dpr = paper.canvas.width / Math.max(1, paper.el.clientWidth);
+    return base * dpr;
+  }
+
+  function drawStroke(paper, from, to) {
+    if (!paper.ctx || !to) return;
+    if (alphaAt(paper, to) <= 18) return;
+
+    paper.ctx.save();
+    paper.ctx.lineCap = "round";
+    paper.ctx.lineJoin = "round";
+    paper.ctx.strokeStyle = "rgba(22, 20, 18, 0.9)";
+    paper.ctx.lineWidth = strokeWidthFor(paper);
+    paper.ctx.beginPath();
+    if (from && alphaAt(paper, from) > 18) {
+      paper.ctx.moveTo(from.x, from.y);
+      paper.ctx.lineTo(to.x, to.y);
+    } else {
+      paper.ctx.moveTo(to.x, to.y);
+      paper.ctx.lineTo(to.x + 0.01, to.y + 0.01);
+    }
+    paper.ctx.stroke();
+    paper.ctx.restore();
+  }
+
+  function setupDrawCursor() {
+    if (drawCursor || !supportsFinePointer()) return;
+    drawCursor = document.createElement("span");
+    drawCursor.className = "draw-mat-cursor";
+    drawCursor.setAttribute("aria-hidden", "true");
+    const img = document.createElement("img");
+    img.alt = "";
+    img.src = drawCursorSource;
+    img.draggable = false;
+    drawCursor.append(img);
+    drawMatSection.append(drawCursor);
+  }
+
+  function setDrawCursorVisibility(visible) {
+    if (!drawCursor) return;
+    drawMatSection.classList.toggle("has-draw-cursor", visible);
+  }
+
+  function updateDrawCursorPosition(clientX, clientY) {
+    if (!drawCursor) return;
+    const rect = drawMatSection.getBoundingClientRect();
+    drawCursor.style.setProperty("--cursor-x", `${clamp(clientX - rect.left, 0, rect.width)}px`);
+    drawCursor.style.setProperty("--cursor-y", `${clamp(clientY - rect.top, 0, rect.height)}px`);
+  }
+
+  function clearPendingTimer() {
+    if (pendingTimer) {
+      window.clearTimeout(pendingTimer);
+      pendingTimer = 0;
+    }
+  }
+
+  function beginDrag(paper, clientX, clientY) {
+    const layout = readPaperLayout(paper);
+    const stageRect = drawMatStage.getBoundingClientRect();
+    gestureMode = "drag";
+    activePaper = paper;
+    lastDrawPoint = null;
+    bringToFront(paper);
+    paper.el.classList.add("is-dragging");
+    dragOffset = {
+      x: clientX - stageRect.left - layout.left,
+      y: clientY - stageRect.top - layout.top
+    };
+    playButtonTick();
+  }
+
+  function endGesture() {
+    clearPendingTimer();
+    if (activePaper) {
+      activePaper.el.classList.remove("is-dragging");
+    }
+    gestureMode = "idle";
+    activePaper = null;
+    lastDrawPoint = null;
+    pointerOrigin = null;
+    activePointerId = null;
   }
 
   function handlePointerEnter(event) {
-    if (isOverSticker(event)) {
-      setCutCursorVisibility(false);
-      return;
-    }
-    isPointerInside = true;
-    setupCutCursor();
-    updateCutCursorPosition(event.clientX, event.clientY);
-    setCutCursorVisibility(Boolean(cutCursor));
-    lastPoint = getSectionPoint(event.clientX, event.clientY);
-    cutAt(lastPoint);
+    setupDrawCursor();
+    updateDrawCursorPosition(event.clientX, event.clientY);
+    setDrawCursorVisibility(Boolean(drawCursor));
   }
 
   function handlePointerMove(event) {
-    if (isOverSticker(event)) {
-      isPointerInside = false;
-      lastPoint = null;
-      setCutCursorVisibility(false);
+    lastClient = { x: event.clientX, y: event.clientY };
+    setupDrawCursor();
+    updateDrawCursorPosition(event.clientX, event.clientY);
+    if (!drawMatSection.classList.contains("has-draw-cursor") && drawCursor) {
+      setDrawCursorVisibility(true);
+    }
+
+    if (activePointerId !== null && event.pointerId !== activePointerId) return;
+
+    if (gestureMode === "pending" && pointerOrigin && activePaper) {
+      const dx = event.clientX - pointerOrigin.x;
+      const dy = event.clientY - pointerOrigin.y;
+      if (Math.hypot(dx, dy) > 7) {
+        clearPendingTimer();
+        gestureMode = "draw";
+        const point = clientToPaperPoint(activePaper, event.clientX, event.clientY);
+        lastDrawPoint = point;
+        drawStroke(activePaper, null, point);
+      }
+    }
+
+    if (gestureMode === "draw" && activePaper) {
+      const point = clientToPaperPoint(activePaper, event.clientX, event.clientY);
+      if (point && alphaAt(activePaper, point) > 18) {
+        drawStroke(activePaper, lastDrawPoint, point);
+        lastDrawPoint = point;
+      } else {
+        lastDrawPoint = null;
+      }
       return;
     }
 
-    isPointerInside = true;
-    setupCutCursor();
-    updateCutCursorPosition(event.clientX, event.clientY);
-    if (!cutMatSection.classList.contains("has-cut-cursor") && cutCursor) {
-      setCutCursorVisibility(true);
+    if (gestureMode === "drag" && activePaper) {
+      const stageRect = drawMatStage.getBoundingClientRect();
+      setPaperPosition(
+        activePaper,
+        event.clientX - stageRect.left - dragOffset.x,
+        event.clientY - stageRect.top - dragOffset.y
+      );
     }
-    cutAt(getSectionPoint(event.clientX, event.clientY));
   }
 
   function handlePointerLeave() {
-    isPointerInside = false;
-    lastPoint = null;
-    setCutCursorVisibility(false);
+    if (gestureMode === "idle") {
+      setDrawCursorVisibility(false);
+    }
   }
 
   function handlePointerDown(event) {
-    if (isOverSticker(event)) return;
     if (event.pointerType === "mouse" && event.button !== 0) return;
-    cutMatSection.setPointerCapture?.(event.pointerId);
-    isPointerInside = true;
-    setupCutCursor();
-    updateCutCursorPosition(event.clientX, event.clientY);
-    setCutCursorVisibility(Boolean(cutCursor));
-    lastPoint = getSectionPoint(event.clientX, event.clientY);
-    cutAt(lastPoint);
+
+    const hit = hitPaper(event.clientX, event.clientY);
+    if (!hit) return;
+
+    event.preventDefault();
+    drawMatSection.setPointerCapture?.(event.pointerId);
+    activePointerId = event.pointerId;
+    activePaper = hit.paper;
+    pointerOrigin = { x: event.clientX, y: event.clientY };
+    lastClient = { x: event.clientX, y: event.clientY };
+    gestureMode = "pending";
+    lastDrawPoint = hit.point;
+    bringToFront(hit.paper);
+    setupDrawCursor();
+    updateDrawCursorPosition(event.clientX, event.clientY);
+    setDrawCursorVisibility(Boolean(drawCursor));
+
+    clearPendingTimer();
+    pendingTimer = window.setTimeout(() => {
+      if (gestureMode === "pending" && activePaper) {
+        beginDrag(activePaper, lastClient.x, lastClient.y);
+      }
+    }, 220);
   }
 
   function handlePointerUp(event) {
-    if (cutMatSection.hasPointerCapture?.(event.pointerId)) {
-      cutMatSection.releasePointerCapture(event.pointerId);
+    if (activePointerId !== null && event.pointerId !== activePointerId) return;
+
+    if (gestureMode === "pending" && activePaper && lastDrawPoint) {
+      // Tap: leave a small mark
+      drawStroke(activePaper, null, lastDrawPoint);
     }
+
+    if (drawMatSection.hasPointerCapture?.(event.pointerId)) {
+      drawMatSection.releasePointerCapture(event.pointerId);
+    }
+    endGesture();
   }
 
-  setupCutCursor();
+  papers.forEach(preparePaper);
 
-  cutMatSection.addEventListener("pointerenter", handlePointerEnter);
-  cutMatSection.addEventListener("pointermove", handlePointerMove);
-  cutMatSection.addEventListener("pointerleave", handlePointerLeave);
-  cutMatSection.addEventListener("pointerdown", handlePointerDown);
-  cutMatSection.addEventListener("pointerup", handlePointerUp);
-  cutMatSection.addEventListener("pointercancel", handlePointerUp);
-}
-
-async function setupMatStickers() {
-  const hosts = [
-    document.querySelector("#matStickerA"),
-    document.querySelector("#matStickerB")
-  ].filter(Boolean);
-
-  if (!hosts.length) return;
-
-  const stickerPool = [
-    {
-      text: "9PRA",
-      color: "#1a1a1a",
-      material: { type: "holographic", intensity: 0.7, scale: 1.1 },
-      tilt: -6
-    },
-    {
-      text: "CUT",
-      color: "#8b1e1e",
-      material: { type: "glitter", intensity: 0.75, scale: 0.9 },
-      tilt: 8
-    },
-    {
-      text: "MAT",
-      color: "#111827",
-      material: { type: "reflective", intensity: 0.65, scale: 1 },
-      tilt: -3
-    },
-    {
-      text: "PRACTICE",
-      color: "#1f2937",
-      material: { type: "holographic", intensity: 0.8, scale: 0.85 },
-      tilt: 5
-    }
-  ];
-
-  const shuffled = [...stickerPool].sort(() => Math.random() - 0.5).slice(0, 2);
-  let createSticker;
-
-  try {
-    // public/ assets cannot be imported via Vite module graph; load as a blob URL instead.
-    const moduleUrl = resolvePublicAssetPath("/vendor/sticker-forge.es.js");
-    const response = await fetch(moduleUrl);
-    if (!response.ok) {
-      throw new Error(`sticker-forge fetch failed: ${response.status}`);
-    }
-    const blobUrl = URL.createObjectURL(
-      new Blob([await response.text()], { type: "text/javascript" })
-    );
-    const stickerModule = await import(/* @vite-ignore */ blobUrl);
-    URL.revokeObjectURL(blobUrl);
-    createSticker = stickerModule.createSticker;
-  } catch (error) {
-    console.warn("sticker-forge bundle failed to load", error);
+  let resizeFrame = 0;
+  function handleResize() {
+    cancelAnimationFrame(resizeFrame);
+    resizeFrame = requestAnimationFrame(() => {
+      papers.forEach((paper) => {
+        if (paper.ready) syncCanvasSize(paper);
+      });
+    });
   }
 
-  await Promise.all(
-    hosts.map(async (host, index) => {
-      const pick = shuffled[index] || stickerPool[index];
-      if (!createSticker) {
-        host.textContent = pick.text;
-        host.classList.add("is-fallback");
-        return;
-      }
+  setupDrawCursor();
 
-      try {
-        await createSticker(host, {
-          source: {
-            type: "text",
-            text: pick.text,
-            color: pick.color,
-            fontFamily: "Arial Black, Arial Rounded MT Bold, sans-serif",
-            fontWeight: 900
-          },
-          outline: { width: 14, color: "#ffffff" },
-          shadow: {
-            color: "#1a1520",
-            opacity: 0.28,
-            blur: 22,
-            distance: 12,
-            angle: 90
-          },
-          peel: {
-            radius: 0.14,
-            stiffness: 0.7,
-            maxAngle: 3.4,
-            release: "reset"
-          },
-          sound: { enabled: true, volume: 0.55 },
-          back: { color: "#f4f1ec", gloss: 0.75, roughness: 0.25 },
-          material: pick.material,
-          tilt: pick.tilt,
-          quality: "medium"
-        });
-      } catch (error) {
-        console.warn("sticker-forge init failed", error);
-        host.textContent = pick.text;
-        host.classList.add("is-fallback");
-      }
-    })
-  );
+  drawMatSection.addEventListener("pointerenter", handlePointerEnter);
+  drawMatSection.addEventListener("pointermove", handlePointerMove);
+  drawMatSection.addEventListener("pointerleave", handlePointerLeave);
+  drawMatSection.addEventListener("pointerdown", handlePointerDown);
+  drawMatSection.addEventListener("pointerup", handlePointerUp);
+  drawMatSection.addEventListener("pointercancel", handlePointerUp);
+  window.addEventListener("resize", handleResize);
+  window.addEventListener("orientationchange", handleResize);
 }
 
 function ensureNoiseGraph() {
@@ -903,8 +910,7 @@ updateNoiseUiState();
 setBagUiState();
 setupDirectionalMatHero();
 setupScratchPanel();
-setupCutMatPanel();
-void setupMatStickers();
+setupDrawMatPanel();
 
 function raf(time) {
   lenis.raf(time);

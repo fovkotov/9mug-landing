@@ -2,6 +2,7 @@ import Lenis from "lenis";
 import { play } from "cuelume";
 import { ensureDeviceOrientationOnEntry } from "./device-orientation-permission.js";
 import "./product.css";
+import { setupMobileMenu } from "./mobile-menu.js";
 import "./components/ProductViewer.css";
 import { HERO_INTERACTION_MODE } from "./hero/hero-mode.js";
 import { setupLegacySlidesHero } from "./hero/legacy-slides-hero.js";
@@ -603,6 +604,7 @@ window.addEventListener("keydown", primeScrollVideo, { once: true });
 setRadioUiState();
 updateNoiseUiState();
 setBagUiState();
+setupMobileMenu();
 setupProductHero();
 setupScratchPanel();
 

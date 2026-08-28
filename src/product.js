@@ -11,6 +11,7 @@ import {
   preloadMugFrameImages
 } from "./components/ProductViewer.js";
 import { setupScratchRevealVideo } from "./scratch-reveal-video.js";
+import { setupMobileMenu } from "./mobile-menu.js";
 
 // Silent motion-permission check as soon as the product page opens.
 ensureDeviceOrientationOnEntry();
@@ -605,6 +606,7 @@ window.addEventListener("keydown", primeScrollVideo, { once: true });
 setRadioUiState();
 updateNoiseUiState();
 setBagUiState();
+setupMobileMenu();
 setupProductHero();
 setupScratchPanel();
 

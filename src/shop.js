@@ -2,6 +2,7 @@ import Lenis from "lenis";
 import { play } from "cuelume";
 import { bindProductOrientationHandoff } from "./device-orientation-permission.js";
 import "./shop.css";
+import { setupMobileMenu } from "./mobile-menu.js";
 
 const baseUrl = import.meta.env.BASE_URL ?? "/";
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -232,6 +233,7 @@ priceToggle?.addEventListener("keydown", (event) => {
 setRadioUiState();
 updateNoiseUiState();
 setBagUiState();
+setupMobileMenu();
 
 const sectionLinks = [...document.querySelectorAll("[data-section-link]")];
 const homeSections = sectionLinks

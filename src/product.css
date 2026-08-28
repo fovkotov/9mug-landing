@@ -343,6 +343,7 @@ a {
 
 .panel {
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   position: relative;
   width: 100%;
@@ -455,6 +456,7 @@ a {
 
 .scroll-video-sticky {
   height: 100vh;
+  height: 100dvh;
   inset: 0;
   overflow: hidden;
   position: sticky;

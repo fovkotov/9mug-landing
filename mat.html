@@ -105,14 +105,16 @@
         data-contrast-type="media"
         aria-label="Scratch to reveal"
       >
-        <img
+        <video
+          id="scratchReveal"
           class="scratch-reveal"
-          src="/media/mat/scratch-reveal.png"
-          alt=""
-          decoding="async"
-          loading="lazy"
-          draggable="false"
-        />
+          src="/media/scratch/reveal.mp4"
+          muted
+          playsinline
+          loop
+          autoplay
+          preload="auto"
+        ></video>
         <canvas id="scratchCanvas" class="scratch-canvas" aria-hidden="true"></canvas>
       </section>
 

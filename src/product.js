@@ -10,6 +10,7 @@ import {
   createProductViewer,
   preloadMugFrameImages
 } from "./components/ProductViewer.js";
+import { setupScratchRevealVideo } from "./scratch-reveal-video.js";
 
 // Silent motion-permission check as soon as the product page opens.
 ensureDeviceOrientationOnEntry();
@@ -76,6 +77,8 @@ let brownNoiseLastOut = 0;
 let scrollVideoPrimed = false;
 const scratchSection = document.querySelector("#scratchSection");
 const scratchCanvas = document.querySelector("#scratchCanvas");
+const scratchReveal = document.querySelector("#scratchReveal");
+const primeScratchReveal = setupScratchRevealVideo(scratchReveal, resolvePublicAssetPath);
 const scratchCursorSource = resolvePublicAssetPath("/media/scratch/cursor.png");
 const scratchCoverSources = {
   desktop: {
@@ -494,6 +497,7 @@ function disableBrownNoise() {
 }
 
 function primeScrollVideo() {
+  primeScratchReveal();
   if (scrollVideoPrimed || !scrollVideo) return;
   scrollVideoPrimed = true;
 

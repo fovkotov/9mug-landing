@@ -8,6 +8,7 @@ import {
   createProductViewer,
   preloadMugFrameImages
 } from "./components/ProductViewer.js";
+import { setupScratchRevealVideo } from "./scratch-reveal-video.js";
 
 // Silent motion-permission check as soon as the mat page opens.
 ensureDeviceOrientationOnEntry();
@@ -64,6 +65,8 @@ let brownNoiseLastOut = 0;
 
 const scratchSection = document.querySelector("#scratchSection");
 const scratchCanvas = document.querySelector("#scratchCanvas");
+const scratchReveal = document.querySelector("#scratchReveal");
+const primeScratchReveal = setupScratchRevealVideo(scratchReveal, resolvePublicAssetPath);
 const scratchCursorSource = resolvePublicAssetPath("/media/scratch/cursor.png");
 const scratchCoverSources = {
   desktop: {
@@ -926,6 +929,11 @@ function toggleBagState() {
 addToCartBtn?.addEventListener("click", () => {
   toggleBagState();
 });
+
+window.addEventListener("pointerdown", primeScratchReveal, { once: true });
+window.addEventListener("touchstart", primeScratchReveal, { once: true, passive: true });
+window.addEventListener("wheel", primeScratchReveal, { once: true, passive: true });
+window.addEventListener("keydown", primeScratchReveal, { once: true });
 
 setRadioUiState();
 updateNoiseUiState();

@@ -79,9 +79,9 @@ const scratchCoverSources = {
   }
 };
 
-const drawMatSection = document.querySelector("#drawMatSection");
-const drawMatStage = document.querySelector("#drawMatStage");
-const drawCursorSource = resolvePublicAssetPath("/media/mat/draw-cursor.png");
+const scrollVideoSection = document.querySelector("#scrollVideoSection");
+const scrollVideo = document.querySelector("#scrollVideo");
+let scrollVideoPrimed = false;
 
 function playButtonTick() {
   play("tick");
@@ -374,434 +374,59 @@ function setupScratchPanel() {
   }
 }
 
-function setupDrawMatPanel() {
-  if (!drawMatSection || !drawMatStage) return;
+function prepareScrollVideo() {
+  if (!scrollVideo) return;
 
-  const paperNodes = [...drawMatStage.querySelectorAll(".draw-paper")];
-  if (!paperNodes.length) return;
-
-  const supportsFinePointer = () =>
-    window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-
-  let drawCursor = null;
-  let zCounter = 10;
-  let activePointerId = null;
-  let gestureMode = "idle"; // idle | pending | draw | drag
-  let activePaper = null;
-  let lastDrawPoint = null;
-  let pendingTimer = 0;
-  let pointerOrigin = null;
-  let lastClient = { x: 0, y: 0 };
-  let dragOffset = { x: 0, y: 0 };
-
-  const papers = paperNodes.map((el, index) => {
-    const img = el.querySelector(".draw-paper-bg");
-    const canvas = el.querySelector(".draw-paper-canvas");
-    const rotateVar = getComputedStyle(el).getPropertyValue("--paper-rotate").trim();
-    const rotation = Number.parseFloat(rotateVar) || 0;
-    el.style.zIndex = String(index + 3);
-
-    return {
-      el,
-      img,
-      canvas,
-      ctx: canvas?.getContext("2d", { alpha: true }) || null,
-      drawable: el.dataset.drawable !== "false",
-      flipY: el.dataset.flip === "y",
-      rotation,
-      hitCanvas: null,
-      hitCtx: null,
-      hitWidth: 0,
-      hitHeight: 0,
-      naturalWidth: 0,
-      naturalHeight: 0,
-      ready: false
-    };
-  });
-
-  function getStageSize() {
-    return {
-      width: drawMatStage.clientWidth,
-      height: drawMatStage.clientHeight
-    };
+  const rawSrc = scrollVideo.getAttribute("src") ?? "";
+  const resolvedSrc = resolvePublicAssetPath(rawSrc);
+  if (resolvedSrc && scrollVideo.getAttribute("src") !== resolvedSrc) {
+    scrollVideo.setAttribute("src", resolvedSrc);
   }
 
-  function readPaperLayout(paper) {
-    const stage = getStageSize();
-    const left = paper.el.offsetLeft;
-    const top = paper.el.offsetTop;
-    const width = paper.el.offsetWidth;
-    const height = paper.el.offsetHeight || width;
-    return {
-      left,
-      top,
-      width,
-      height,
-      stageWidth: stage.width,
-      stageHeight: stage.height
-    };
-  }
-
-  function setPaperPosition(paper, left, top) {
-    const layout = readPaperLayout(paper);
-    const maxLeft = Math.max(0, layout.stageWidth - layout.width * 0.35);
-    const maxTop = Math.max(0, layout.stageHeight - layout.height * 0.35);
-    const minLeft = -layout.width * 0.35;
-    const minTop = -layout.height * 0.35;
-    const nextLeft = clamp(left, minLeft, maxLeft);
-    const nextTop = clamp(top, minTop, maxTop);
-    paper.el.style.left = `${nextLeft}px`;
-    paper.el.style.top = `${nextTop}px`;
-  }
-
-  function bringToFront(paper) {
-    zCounter += 1;
-    paper.el.style.zIndex = String(zCounter);
-  }
-
-  function syncPaperBuffers(paper) {
-    if (!paper.ready || !paper.img) return;
-    const width = paper.el.clientWidth;
-    const height = paper.img.clientHeight || paper.el.clientHeight;
-    if (width <= 0 || height <= 0) return;
-
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const nextW = Math.round(width * dpr);
-    const nextH = Math.round(height * dpr);
-
-    if (!paper.hitCanvas) {
-      paper.hitCanvas = document.createElement("canvas");
-      paper.hitCtx = paper.hitCanvas.getContext("2d", { willReadFrequently: true });
-    }
-
-    if (paper.hitWidth !== nextW || paper.hitHeight !== nextH) {
-      paper.hitCanvas.width = nextW;
-      paper.hitCanvas.height = nextH;
-      paper.hitWidth = nextW;
-      paper.hitHeight = nextH;
-      paper.hitCtx.clearRect(0, 0, nextW, nextH);
-      paper.hitCtx.drawImage(paper.img, 0, 0, nextW, nextH);
-    }
-
-    if (!paper.drawable || !paper.canvas || !paper.ctx) return;
-    if (paper.canvas.width === nextW && paper.canvas.height === nextH) return;
-
-    const prev = document.createElement("canvas");
-    prev.width = paper.canvas.width;
-    prev.height = paper.canvas.height;
-    const prevCtx = prev.getContext("2d");
-    if (prevCtx && paper.canvas.width && paper.canvas.height) {
-      prevCtx.drawImage(paper.canvas, 0, 0);
-    }
-
-    paper.canvas.width = nextW;
-    paper.canvas.height = nextH;
-    paper.canvas.style.width = `${width}px`;
-    paper.canvas.style.height = `${height}px`;
-    paper.ctx.setTransform(1, 0, 0, 1, 0, 0);
-    paper.ctx.clearRect(0, 0, nextW, nextH);
-    if (prev.width && prev.height) {
-      paper.ctx.drawImage(prev, 0, 0, nextW, nextH);
-    }
-  }
-
-  function preparePaper(paper) {
-    if (!paper.img) return;
-
-    const arm = () => {
-      paper.naturalWidth = paper.img.naturalWidth || paper.img.width;
-      paper.naturalHeight = paper.img.naturalHeight || paper.img.height;
-      paper.ready = true;
-      syncPaperBuffers(paper);
-    };
-
-    if (paper.img.complete && paper.img.naturalWidth) {
-      arm();
-      return;
-    }
-
-    paper.img.addEventListener("load", arm, { once: true });
-  }
-
-  function clientToPaperPoint(paper, clientX, clientY) {
-    syncPaperBuffers(paper);
-    const layout = readPaperLayout(paper);
-    const stageRect = drawMatStage.getBoundingClientRect();
-    if (layout.width <= 0 || layout.height <= 0 || !paper.hitWidth || !paper.hitHeight) return null;
-
-    const stageX = clientX - stageRect.left;
-    const stageY = clientY - stageRect.top;
-    const originX = layout.left + layout.width / 2;
-    const originY = layout.top + layout.height / 2;
-    const dx = stageX - originX;
-    const dy = stageY - originY;
-    // Inverse of: scaleY(±1) then rotate(R)
-    const rad = (-paper.rotation * Math.PI) / 180;
-    const cos = Math.cos(rad);
-    const sin = Math.sin(rad);
-    let ux = dx * cos - dy * sin;
-    let uy = dx * sin + dy * cos;
-    if (paper.flipY) uy = -uy;
-    const localX = ux + layout.width / 2;
-    const localY = uy + layout.height / 2;
-
-    if (localX < -2 || localY < -2 || localX > layout.width + 2 || localY > layout.height + 2) {
-      return null;
-    }
-
-    const scaleX = paper.hitWidth / layout.width;
-    const scaleY = paper.hitHeight / layout.height;
-    return {
-      x: localX * scaleX,
-      y: localY * scaleY,
-      localX,
-      localY,
-      layout
-    };
-  }
-
-  function alphaAt(paper, point) {
-    if (!paper.hitCtx || !point || !paper.hitWidth) return 0;
-    const x = clamp(Math.floor(point.x), 0, paper.hitWidth - 1);
-    const y = clamp(Math.floor(point.y), 0, paper.hitHeight - 1);
-    try {
-      return paper.hitCtx.getImageData(x, y, 1, 1).data[3];
-    } catch {
-      return 0;
-    }
-  }
-
-  function hitPaper(clientX, clientY) {
-    const ordered = [...papers].sort(
-      (a, b) => Number(b.el.style.zIndex || 0) - Number(a.el.style.zIndex || 0)
-    );
-
-    for (const paper of ordered) {
-      if (!paper.ready) continue;
-      const point = clientToPaperPoint(paper, clientX, clientY);
-      if (!point) continue;
-      if (alphaAt(paper, point) > 18) {
-        return { paper, point };
-      }
-    }
-    return null;
-  }
-
-  function strokeWidthFor(paper) {
-    const base = isMobileViewport() ? 3.2 : 2.6;
-    const dpr = paper.hitWidth / Math.max(1, paper.el.clientWidth);
-    return base * dpr;
-  }
-
-  function drawStroke(paper, from, to) {
-    if (!paper.drawable || !paper.ctx || !to) return;
-    if (alphaAt(paper, to) <= 18) return;
-
-    paper.ctx.save();
-    paper.ctx.lineCap = "round";
-    paper.ctx.lineJoin = "round";
-    paper.ctx.strokeStyle = "rgba(22, 20, 18, 0.9)";
-    paper.ctx.lineWidth = strokeWidthFor(paper);
-    paper.ctx.beginPath();
-    if (from && alphaAt(paper, from) > 18) {
-      paper.ctx.moveTo(from.x, from.y);
-      paper.ctx.lineTo(to.x, to.y);
-    } else {
-      paper.ctx.moveTo(to.x, to.y);
-      paper.ctx.lineTo(to.x + 0.01, to.y + 0.01);
-    }
-    paper.ctx.stroke();
-    paper.ctx.restore();
-  }
-
-  function setupDrawCursor() {
-    if (drawCursor || !supportsFinePointer()) return;
-    drawCursor = document.createElement("span");
-    drawCursor.className = "draw-mat-cursor";
-    drawCursor.setAttribute("aria-hidden", "true");
-    const img = document.createElement("img");
-    img.alt = "";
-    img.src = drawCursorSource;
-    img.draggable = false;
-    drawCursor.append(img);
-    drawMatSection.append(drawCursor);
-  }
-
-  function setDrawCursorVisibility(visible) {
-    if (!drawCursor) return;
-    drawMatSection.classList.toggle("has-draw-cursor", visible);
-  }
-
-  function updateDrawCursorPosition(clientX, clientY) {
-    if (!drawCursor) return;
-    const rect = drawMatSection.getBoundingClientRect();
-    drawCursor.style.setProperty("--cursor-x", `${clamp(clientX - rect.left, 0, rect.width)}px`);
-    drawCursor.style.setProperty("--cursor-y", `${clamp(clientY - rect.top, 0, rect.height)}px`);
-  }
-
-  function clearPendingTimer() {
-    if (pendingTimer) {
-      window.clearTimeout(pendingTimer);
-      pendingTimer = 0;
-    }
-  }
-
-  function beginDrag(paper, clientX, clientY) {
-    const layout = readPaperLayout(paper);
-    const stageRect = drawMatStage.getBoundingClientRect();
-    gestureMode = "drag";
-    activePaper = paper;
-    lastDrawPoint = null;
-    bringToFront(paper);
-    paper.el.classList.add("is-dragging");
-    dragOffset = {
-      x: clientX - stageRect.left - layout.left,
-      y: clientY - stageRect.top - layout.top
-    };
-    playButtonTick();
-  }
-
-  function endGesture() {
-    clearPendingTimer();
-    if (activePaper) {
-      activePaper.el.classList.remove("is-dragging");
-    }
-    gestureMode = "idle";
-    activePaper = null;
-    lastDrawPoint = null;
-    pointerOrigin = null;
-    activePointerId = null;
-  }
-
-  function handlePointerEnter(event) {
-    setupDrawCursor();
-    updateDrawCursorPosition(event.clientX, event.clientY);
-    setDrawCursorVisibility(Boolean(drawCursor));
-  }
-
-  function handlePointerMove(event) {
-    lastClient = { x: event.clientX, y: event.clientY };
-    setupDrawCursor();
-    updateDrawCursorPosition(event.clientX, event.clientY);
-    if (!drawMatSection.classList.contains("has-draw-cursor") && drawCursor) {
-      setDrawCursorVisibility(true);
-    }
-
-    if (activePointerId !== null && event.pointerId !== activePointerId) return;
-
-    if (gestureMode === "pending" && pointerOrigin && activePaper) {
-      const dx = event.clientX - pointerOrigin.x;
-      const dy = event.clientY - pointerOrigin.y;
-      if (Math.hypot(dx, dy) > 7) {
-        clearPendingTimer();
-        if (!activePaper.drawable) {
-          beginDrag(activePaper, event.clientX, event.clientY);
-        } else {
-          gestureMode = "draw";
-          const point = clientToPaperPoint(activePaper, event.clientX, event.clientY);
-          lastDrawPoint = point;
-          drawStroke(activePaper, null, point);
-        }
-      }
-    }
-
-    if (gestureMode === "draw" && activePaper?.drawable) {
-      const point = clientToPaperPoint(activePaper, event.clientX, event.clientY);
-      if (point && alphaAt(activePaper, point) > 18) {
-        drawStroke(activePaper, lastDrawPoint, point);
-        lastDrawPoint = point;
-      } else {
-        lastDrawPoint = null;
-      }
-      return;
-    }
-
-    if (gestureMode === "drag" && activePaper) {
-      const stageRect = drawMatStage.getBoundingClientRect();
-      setPaperPosition(
-        activePaper,
-        event.clientX - stageRect.left - dragOffset.x,
-        event.clientY - stageRect.top - dragOffset.y
-      );
-    }
-  }
-
-  function handlePointerLeave() {
-    if (gestureMode === "idle") {
-      setDrawCursorVisibility(false);
-    }
-  }
-
-  function handlePointerDown(event) {
-    if (event.pointerType === "mouse" && event.button !== 0) return;
-
-    const hit = hitPaper(event.clientX, event.clientY);
-    if (!hit) return;
-
-    event.preventDefault();
-    drawMatSection.setPointerCapture?.(event.pointerId);
-    activePointerId = event.pointerId;
-    activePaper = hit.paper;
-    pointerOrigin = { x: event.clientX, y: event.clientY };
-    lastClient = { x: event.clientX, y: event.clientY };
-    lastDrawPoint = hit.point;
-    bringToFront(hit.paper);
-    setupDrawCursor();
-    updateDrawCursorPosition(event.clientX, event.clientY);
-    setDrawCursorVisibility(Boolean(drawCursor));
-    clearPendingTimer();
-
-    // Small upper scraps: drag only, no ink.
-    if (!hit.paper.drawable) {
-      beginDrag(hit.paper, event.clientX, event.clientY);
-      return;
-    }
-
-    gestureMode = "pending";
-    pendingTimer = window.setTimeout(() => {
-      if (gestureMode === "pending" && activePaper) {
-        beginDrag(activePaper, lastClient.x, lastClient.y);
-      }
-    }, 220);
-  }
-
-  function handlePointerUp(event) {
-    if (activePointerId !== null && event.pointerId !== activePointerId) return;
-
-    if (gestureMode === "pending" && activePaper?.drawable && lastDrawPoint) {
-      // Tap: leave a small mark
-      drawStroke(activePaper, null, lastDrawPoint);
-    }
-
-    if (drawMatSection.hasPointerCapture?.(event.pointerId)) {
-      drawMatSection.releasePointerCapture(event.pointerId);
-    }
-    endGesture();
-  }
-
-  papers.forEach(preparePaper);
-
-  let resizeFrame = 0;
-  function handleResize() {
-    cancelAnimationFrame(resizeFrame);
-    resizeFrame = requestAnimationFrame(() => {
-      papers.forEach((paper) => {
-        if (paper.ready) syncPaperBuffers(paper);
-      });
-    });
-  }
-
-  setupDrawCursor();
-
-  drawMatSection.addEventListener("pointerenter", handlePointerEnter);
-  drawMatSection.addEventListener("pointermove", handlePointerMove);
-  drawMatSection.addEventListener("pointerleave", handlePointerLeave);
-  drawMatSection.addEventListener("pointerdown", handlePointerDown);
-  drawMatSection.addEventListener("pointerup", handlePointerUp);
-  drawMatSection.addEventListener("pointercancel", handlePointerUp);
-  window.addEventListener("resize", handleResize);
-  window.addEventListener("orientationchange", handleResize);
+  scrollVideo.preload = "auto";
+  scrollVideo.muted = true;
+  scrollVideo.playsInline = true;
+  scrollVideo.loop = false;
+  scrollVideo.load();
+  scrollVideo.pause();
+  scrollVideo.currentTime = 0;
+  scrollVideo.addEventListener("loadedmetadata", syncScrollVideoFrame);
 }
+
+function syncScrollVideoFrame() {
+  if (!scrollVideoSection || !scrollVideo) return;
+  if (!Number.isFinite(scrollVideo.duration) || scrollVideo.duration <= 0) return;
+
+  const rect = scrollVideoSection.getBoundingClientRect();
+  const scrollRange = scrollVideoSection.offsetHeight - window.innerHeight;
+  if (scrollRange <= 0) return;
+
+  const scrolled = clamp(-rect.top, 0, scrollRange);
+  const progress = scrolled / scrollRange;
+  const targetTime = scrollVideo.duration * progress;
+
+  if (Math.abs(scrollVideo.currentTime - targetTime) > 0.033) {
+    scrollVideo.currentTime = targetTime;
+  }
+}
+
+function primeScrollVideo() {
+  primeScratchReveal();
+  if (scrollVideoPrimed || !scrollVideo) return;
+  scrollVideoPrimed = true;
+
+  scrollVideo
+    .play()
+    .then(() => {
+      scrollVideo.pause();
+      syncScrollVideoFrame();
+    })
+    .catch(() => {
+      // ignored - browser may still block without direct gesture.
+    });
+}
+
+prepareScrollVideo();
 
 function ensureNoiseGraph() {
   if (!audioContext) {
@@ -930,20 +555,20 @@ addToCartBtn?.addEventListener("click", () => {
   toggleBagState();
 });
 
-window.addEventListener("pointerdown", primeScratchReveal, { once: true });
-window.addEventListener("touchstart", primeScratchReveal, { once: true, passive: true });
-window.addEventListener("wheel", primeScratchReveal, { once: true, passive: true });
-window.addEventListener("keydown", primeScratchReveal, { once: true });
+window.addEventListener("pointerdown", primeScrollVideo, { once: true });
+window.addEventListener("touchstart", primeScrollVideo, { once: true, passive: true });
+window.addEventListener("wheel", primeScrollVideo, { once: true, passive: true });
+window.addEventListener("keydown", primeScrollVideo, { once: true });
 
 setRadioUiState();
 updateNoiseUiState();
 setBagUiState();
 setupDirectionalMatHero();
 setupScratchPanel();
-setupDrawMatPanel();
 
 function raf(time) {
   lenis.raf(time);
+  syncScrollVideoFrame();
   requestAnimationFrame(raf);
 }
 

@@ -206,6 +206,16 @@ body.is-mobile-menu-open .nav-menu-icon span:last-child {
     pointer-events: auto;
   }
 
+  .nav-mobile-center::before {
+    content: "";
+    height: 44px;
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 44px;
+  }
+
   body.is-mobile-menu-open .product-meta,
   body.is-mobile-menu-open .cart-bar,
   body.is-mobile-menu-open .cart-bar-ui,

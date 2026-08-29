@@ -45,6 +45,7 @@ body.is-mobile-menu-open .nav-menu-icon span:last-child {
   clip-path: inset(0 0 100% 0);
   color: var(--ui-color);
   inset: 0;
+  isolation: isolate;
   pointer-events: none;
   position: fixed;
   transition: clip-path 0.7s cubic-bezier(0.76, 0, 0.24, 1);
@@ -162,6 +163,7 @@ body.is-mobile-menu-open .nav-menu-icon span:last-child {
 .mobile-menu__play img {
   display: block;
   height: 14px;
+  mix-blend-mode: difference;
   object-fit: contain;
   width: 16px;
 }
@@ -177,6 +179,7 @@ body.is-mobile-menu-open .nav-menu-icon span:last-child {
 .mobile-menu__online img {
   display: block;
   height: 32px;
+  mix-blend-mode: difference;
   object-fit: cover;
   width: 29px;
 }

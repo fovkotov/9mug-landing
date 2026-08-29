@@ -48,20 +48,16 @@ function ensureOverlay() {
   menu.innerHTML = `
     <div class="mobile-menu__panel">
       <a class="mobile-menu__about" href="#">About</a>
+      <button type="button" class="mobile-menu__play" data-menu-play aria-label="Play or pause">
+        <img alt="" src="${playSrc}" width="32" height="28" />
+      </button>
+      <button type="button" class="mobile-menu__audio-label" data-menu-radio>Radio</button>
+      <button type="button" class="mobile-menu__audio-label" data-menu-noise>Noise</button>
       <p class="mobile-menu__aside">Everything is practice.</p>
-      <div class="mobile-menu__footer">
-        <div class="mobile-menu__audio">
-          <button type="button" class="mobile-menu__audio-label" data-menu-radio>Radio</button>
-          <button type="button" class="mobile-menu__play" data-menu-play aria-label="Play or pause">
-            <img alt="" src="${playSrc}" width="16" height="14" />
-          </button>
-          <button type="button" class="mobile-menu__audio-label" data-menu-noise>Noise</button>
-        </div>
-        <a class="mobile-menu__online" href="${shopHref}" aria-label="Open shop">
-          <span>${online}</span>
-          <img alt="" src="${horse}" width="29" height="32" />
-        </a>
-      </div>
+      <a class="mobile-menu__online" href="${shopHref}" aria-label="Open shop">
+        <span>${online}</span>
+        <img alt="" src="${horse}" width="29" height="32" />
+      </a>
     </div>
   `;
   document.body.append(menu);

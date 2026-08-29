@@ -75,8 +75,8 @@ body.is-mobile-menu-open .nav-menu-icon span:last-child {
   line-height: 1;
   opacity: 0;
   position: absolute;
-  top: 50%;
-  transform: translate(-50%, calc(-50% + 18px));
+  top: 36%;
+  transform: translate(-50%, 18px);
   transition:
     opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.18s,
     transform 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.18s;
@@ -84,7 +84,78 @@ body.is-mobile-menu-open .nav-menu-icon span:last-child {
 
 .mobile-menu.is-open .mobile-menu__about {
   opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.mobile-menu__play {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  height: 44px;
+  left: 50%;
+  opacity: 0;
+  padding: 0;
+  position: absolute;
+  top: 52%;
+  transform: translate(-50%, 16px);
+  transition:
+    opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.24s,
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.24s;
+  width: 44px;
+}
+
+.mobile-menu.is-open .mobile-menu__play {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.mobile-menu__play img {
+  display: block;
+  height: 28px;
+  left: 50%;
+  mix-blend-mode: difference;
+  object-fit: contain;
+  position: absolute;
+  top: 50%;
   transform: translate(-50%, -50%);
+  width: 32px;
+}
+
+.mobile-menu__audio-label {
+  background: none;
+  border: 0;
+  bottom: 22%;
+  color: inherit;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-feature-settings: "lnum" 1, "pnum" 1;
+  font-size: 17px;
+  letter-spacing: 0.34px;
+  line-height: 1;
+  opacity: 0;
+  padding: 0;
+  position: absolute;
+  transform: translateY(12px);
+  transition:
+    opacity 0.4s ease 0.3s,
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.3s;
+}
+
+.mobile-menu__audio-label[data-menu-radio] {
+  left: 16px;
+}
+
+.mobile-menu__audio-label[data-menu-noise] {
+  right: 16px;
+}
+
+.mobile-menu.is-open .mobile-menu__audio-label {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.mobile-menu__audio-label.is-muted {
+  color: var(--ui-muted);
 }
 
 .mobile-menu__aside {
@@ -97,8 +168,8 @@ body.is-mobile-menu-open .nav-menu-icon span:last-child {
   opacity: 0;
   position: absolute;
   right: 16px;
-  top: 50%;
-  transform: translateY(calc(-50% + 12px));
+  top: 96px;
+  transform: translateY(12px);
   transition:
     opacity 0.4s ease 0.28s,
     transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.28s;
@@ -107,15 +178,17 @@ body.is-mobile-menu-open .nav-menu-icon span:last-child {
 
 .mobile-menu.is-open .mobile-menu__aside {
   opacity: 1;
-  transform: translateY(-50%);
+  transform: translateY(0);
 }
 
-.mobile-menu__footer {
-  align-items: flex-end;
+.mobile-menu__online {
+  align-items: center;
   bottom: 16px;
+  color: inherit;
   display: flex;
-  justify-content: space-between;
-  left: 16px;
+  flex-direction: column;
+  gap: 8px;
+  line-height: 1;
   opacity: 0;
   position: absolute;
   right: 16px;
@@ -125,55 +198,13 @@ body.is-mobile-menu-open .nav-menu-icon span:last-child {
     transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.32s;
 }
 
-.mobile-menu.is-open .mobile-menu__footer {
+.mobile-menu.is-open .mobile-menu__online {
   opacity: 1;
   transform: translateY(0);
 }
 
-.mobile-menu__audio {
-  align-items: center;
-  display: flex;
-  gap: 12px;
-}
-
-.mobile-menu__audio-label,
-.mobile-menu__play {
-  background: none;
-  border: 0;
-  color: inherit;
-  cursor: pointer;
-  font-family: var(--font-ui);
-  font-feature-settings: "lnum" 1, "pnum" 1;
-  font-size: 17px;
-  letter-spacing: 0.34px;
-  line-height: 1;
-  padding: 0;
-}
-
-.mobile-menu__audio-label.is-muted {
-  color: var(--ui-muted);
-}
-
-.mobile-menu__play {
-  display: block;
-  height: 14px;
-  width: 16px;
-}
-
-.mobile-menu__play img {
-  display: block;
-  height: 14px;
-  mix-blend-mode: difference;
-  object-fit: contain;
-  width: 16px;
-}
-
-.mobile-menu__online {
-  align-items: center;
-  color: inherit;
-  display: flex;
-  gap: 8px;
-  line-height: 1;
+.mobile-menu__online span {
+  writing-mode: vertical-rl;
 }
 
 .mobile-menu__online img {
@@ -196,7 +227,9 @@ body.is-mobile-menu-open .nav-menu-icon span:last-child {
   .nav-menu-icon span,
   .mobile-menu__about,
   .mobile-menu__aside,
-  .mobile-menu__footer {
+  .mobile-menu__play,
+  .mobile-menu__audio-label,
+  .mobile-menu__online {
     transition: none;
   }
 }
@@ -214,6 +247,10 @@ body.is-mobile-menu-open .nav-menu-icon span:last-child {
     top: 50%;
     transform: translate(-50%, -50%);
     width: 44px;
+  }
+
+  .nav-link-bag {
+    text-transform: capitalize;
   }
 
   body.is-mobile-menu-open .product-meta,

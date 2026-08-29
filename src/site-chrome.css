@@ -6,19 +6,24 @@
 
 a,
 button,
+img,
 [role="button"],
 summary {
+  -webkit-focus-ring-color: transparent;
   -webkit-tap-highlight-color: transparent;
 }
 
 a:focus,
 button:focus,
+img:focus,
 [role="button"]:focus,
 summary:focus,
 a:focus-visible,
 button:focus-visible,
+img:focus-visible,
 [role="button"]:focus-visible,
 summary:focus-visible {
+  box-shadow: none;
   outline: none;
 }
 

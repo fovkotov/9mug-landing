@@ -49,7 +49,7 @@ function ensureOverlay() {
     <div class="mobile-menu__panel">
       <a class="mobile-menu__about" href="#">About</a>
       <button type="button" class="mobile-menu__play" data-menu-play aria-label="Play or pause">
-        <img alt="" src="${playSrc}" width="32" height="28" />
+        <img alt="" src="${playSrc}" width="68" height="70" />
       </button>
       <button type="button" class="mobile-menu__audio-label" data-menu-radio>Radio</button>
       <button type="button" class="mobile-menu__audio-label" data-menu-noise>Noise</button>

@@ -249,10 +249,6 @@ body.is-mobile-menu-open .nav-menu-icon span:last-child {
     width: 44px;
   }
 
-  .nav-link-bag {
-    text-transform: capitalize;
-  }
-
   body.is-mobile-menu-open .product-meta,
   body.is-mobile-menu-open .cart-bar,
   body.is-mobile-menu-open .cart-bar-ui,

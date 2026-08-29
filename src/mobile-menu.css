@@ -1,9 +1,11 @@
 .nav-mobile-center {
+  -webkit-tap-highlight-color: transparent;
   appearance: none;
   background: none;
   border: 0;
   color: inherit;
   cursor: pointer;
+  outline: none;
   padding: 0;
 }
 

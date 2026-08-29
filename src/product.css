@@ -11,6 +11,7 @@
 }
 
 * {
+  -webkit-tap-highlight-color: transparent;
   box-sizing: border-box;
 }
 
@@ -472,6 +473,18 @@ a {
 
 .panel-hero.is-directional-hero {
   background: #eceae6;
+}
+
+@media (max-width: 900px) {
+  /* Same mobile crop/zoom as mat: fill width, then 1.5× the product. */
+  .panel-hero.is-directional-hero .product-viewer__frame {
+    object-fit: contain;
+  }
+
+  .panel-hero.is-directional-hero .product-viewer__stage {
+    transform: scale(1.5);
+    transform-origin: center center;
+  }
 }
 
 .product-viewer-root,

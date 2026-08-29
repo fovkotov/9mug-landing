@@ -1,3 +1,31 @@
+*,
+*::before,
+*::after {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a,
+button,
+[role="button"],
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a:focus,
+button:focus,
+[role="button"]:focus,
+summary:focus,
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+summary:focus-visible {
+  outline: none;
+}
+
+button::-moz-focus-inner {
+  border: 0;
+}
+
 .nav-practice {
   font-family: var(--font-ui);
   font-feature-settings: "lnum" 1, "pnum" 1;

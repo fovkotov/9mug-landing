@@ -1,0 +1,19 @@
+.nav-practice {
+  font-family: var(--font-ui);
+  font-feature-settings: "lnum" 1, "pnum" 1;
+  font-size: 17px;
+  grid-column: 1 / span 2;
+  height: 17px;
+  letter-spacing: 0.34px;
+  line-height: 1;
+  margin: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  width: 163px;
+}
+
+@media (max-width: 900px) {
+  .nav-practice {
+    display: none;
+  }
+}

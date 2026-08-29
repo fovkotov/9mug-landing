@@ -1,5 +1,6 @@
 import { play } from "cuelume";
 import "./mobile-menu.css";
+import "./site-chrome.js";
 
 function playTick() {
   try {

@@ -53,7 +53,7 @@ function ensureOverlay() {
       </button>
       <button type="button" class="mobile-menu__audio-label" data-menu-radio>Radio</button>
       <button type="button" class="mobile-menu__audio-label" data-menu-noise>Noise</button>
-      <p class="mobile-menu__aside">Everything is practice.</p>
+      <p class="mobile-menu__aside">Everything is&nbsp;practice</p>
       <a class="mobile-menu__online" href="${shopHref}" aria-label="Open shop">
         <span>${online}</span>
         <img alt="" src="${horse}" width="29" height="32" />

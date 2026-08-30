@@ -139,7 +139,7 @@ body.is-mobile-menu-open .nav-menu-icon span:last-child {
   outline: none;
   padding: 0;
   position: absolute;
-  top: calc(100% * 671 / 874);
+  bottom: 133px;
   transform: translate(-50%, 16px);
   transition:
     opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.24s,
@@ -180,7 +180,7 @@ body.is-mobile-menu-open .nav-menu-icon span:last-child {
   outline: none;
   padding: 0;
   position: absolute;
-  top: calc(100% * 697 / 874);
+  bottom: 160px;
   transform: translateY(12px);
   transition:
     opacity 0.4s ease 0.3s,
@@ -219,9 +219,12 @@ body.is-mobile-menu-open .nav-menu-icon span:last-child {
   font-size: 17px;
   letter-spacing: 0.34px;
   line-height: 1;
+  height: 257px;
   margin: 0;
+  max-height: calc(100% - 67px - 177px - 8px);
   mix-blend-mode: difference;
   opacity: 0;
+  overflow: hidden;
   position: absolute;
   right: 14px;
   top: 67px;
@@ -229,6 +232,7 @@ body.is-mobile-menu-open .nav-menu-icon span:last-child {
   transition:
     opacity 0.4s ease 0.28s,
     transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.28s;
+  white-space: nowrap;
   width: 17px;
   writing-mode: vertical-rl;
 }

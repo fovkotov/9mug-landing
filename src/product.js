@@ -166,15 +166,16 @@ function setupDirectionalProductHero() {
   createProductViewer(productViewerRoot, {
     images: mugFrameImages,
     transitionDuration: 0,
-    // 5×5 unique frames: each overlay cell → its own H/V mug pose (±30°, step 15°).
+    // Same 5×5 segment layout as mat; H ±90° step 45°, V ±30° step 15° (milder pitch).
     deadZoneHalfWidth: 0.28,
     deadZoneHalfHeight: 0.19,
     sideFarBoundary: 0.7,
     horizontalSensitivity: 1.05,
     verticalSensitivity: 0.95,
     maxGamma: 20,
-    // Slightly wider pitch so strong phone tilt reliably hits outer rows.
     maxBeta: 16,
+    // Match mat: grid authored top→bottom (no vertical frame flip).
+    flipVerticalFrames: false,
     showZones: false
   });
 

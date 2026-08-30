@@ -12,6 +12,7 @@ import {
 } from "./components/ProductViewer.js";
 import { setupScratchRevealVideo } from "./scratch-reveal-video.js";
 import { setupMobileMenu } from "./mobile-menu.js";
+import { isInCart, subscribeCart, toggleItem } from "./cart.js";
 
 // Silent motion-permission check as soon as the product page opens.
 ensureDeviceOrientationOnEntry();
@@ -68,7 +69,7 @@ const radioTracks = ["/audio/track-1.mp3", "/audio/track-2.mp3", "/audio/track-3
 let currentTrackIndex = 0;
 let radioEnabled = false;
 let activeAudioControl = "radio";
-let bagSelected = false;
+const CART_PRODUCT_ID = "mug";
 
 let noiseEnabled = false;
 let audioContext = null;
@@ -136,6 +137,7 @@ function updateNoiseUiState() {
 }
 
 function setBagUiState() {
+  const bagSelected = isInCart(CART_PRODUCT_ID);
   if (bagStatusText) {
     bagStatusText.classList.toggle("is-visible", bagSelected);
   }
@@ -591,9 +593,10 @@ noiseBtn.addEventListener("click", () => {
 
 function toggleBagState() {
   playButtonTick();
-  bagSelected = !bagSelected;
-  setBagUiState();
+  toggleItem(CART_PRODUCT_ID);
 }
+
+subscribeCart(setBagUiState);
 
 addToCartBtn?.addEventListener("click", () => {
   toggleBagState();

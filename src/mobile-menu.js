@@ -1,6 +1,7 @@
 import { play } from "cuelume";
 import "./mobile-menu.css";
 import "./site-chrome.js";
+import { setupMobileBag } from "./mobile-bag.js";
 
 function playTick() {
   try {
@@ -85,44 +86,96 @@ export function setupMobileMenu() {
   if (!btn || !menu) return;
 
   let open = false;
+  let bagApi = null;
 
   const blockPageScroll = (event) => {
+    if (event.target.closest?.(".mobile-bag__items")) return;
     event.preventDefault();
   };
 
-  function setOpen(next) {
-    if (open === next) return;
-    open = next;
+  function isBagOpen() {
+    return Boolean(bagApi?.isOpen());
+  }
 
-    btn.setAttribute("aria-expanded", String(next));
-    btn.setAttribute("aria-label", next ? "Close menu" : "Open menu");
-    document.body.classList.toggle("is-mobile-menu-open", next);
-    document.documentElement.style.overflow = next ? "hidden" : "";
-    document.body.style.overflow = next ? "hidden" : "";
-    if (next) {
+  function syncScrollLock() {
+    const locked = open || isBagOpen();
+    document.documentElement.style.overflow = locked ? "hidden" : "";
+    document.body.style.overflow = locked ? "hidden" : "";
+    document.removeEventListener("touchmove", blockPageScroll);
+    document.removeEventListener("wheel", blockPageScroll);
+    if (locked) {
       document.addEventListener("touchmove", blockPageScroll, { passive: false });
       document.addEventListener("wheel", blockPageScroll, { passive: false });
-    } else {
-      document.removeEventListener("touchmove", blockPageScroll);
-      document.removeEventListener("wheel", blockPageScroll);
-    }
-
-    if (next) {
-      menu.inert = false;
-      menu.setAttribute("aria-hidden", "false");
-      requestAnimationFrame(() => {
-        menu.classList.add("is-open");
-      });
-      syncAudioUi(menu);
-    } else {
-      menu.classList.remove("is-open");
-      menu.inert = true;
-      menu.setAttribute("aria-hidden", "true");
     }
   }
 
+  function applyOpenClass(el, next, instant) {
+    if (next) {
+      el.inert = false;
+      el.setAttribute("aria-hidden", "false");
+      if (instant) {
+        const prev = el.style.transition;
+        el.style.transition = "none";
+        el.classList.add("is-open");
+        void el.offsetHeight;
+        el.style.transition = prev;
+      } else {
+        requestAnimationFrame(() => {
+          el.classList.add("is-open");
+        });
+      }
+      return;
+    }
+
+    if (instant) {
+      const prev = el.style.transition;
+      el.style.transition = "none";
+      el.classList.remove("is-open");
+      void el.offsetHeight;
+      el.style.transition = prev;
+    } else {
+      el.classList.remove("is-open");
+    }
+    el.inert = true;
+    el.setAttribute("aria-hidden", "true");
+  }
+
+  function syncToggleUi() {
+    const anyOpen = open || isBagOpen();
+    btn.setAttribute("aria-expanded", String(anyOpen));
+    btn.setAttribute(
+      "aria-label",
+      open ? "Close menu" : isBagOpen() ? "Close bag" : "Open menu"
+    );
+  }
+
+  function setOpen(next, { instant = false } = {}) {
+    if (open === next) return;
+    open = next;
+
+    document.body.classList.toggle("is-mobile-menu-open", next);
+    applyOpenClass(menu, next, instant);
+    syncToggleUi();
+    syncScrollLock();
+
+    if (next) syncAudioUi(menu);
+  }
+
+  bagApi = setupMobileBag({
+    isMenuOpen: () => open,
+    closeMenu: (opts) => setOpen(false, opts),
+    onChange: () => {
+      syncToggleUi();
+      syncScrollLock();
+    }
+  });
+
   btn.addEventListener("click", () => {
     playTick();
+    if (isBagOpen()) {
+      bagApi.close();
+      return;
+    }
     setOpen(!open);
   });
 
@@ -140,15 +193,18 @@ export function setupMobileMenu() {
   });
 
   window.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && open) {
-      setOpen(false);
+    if (event.key !== "Escape") return;
+    if (isBagOpen()) {
+      bagApi.close();
+      return;
     }
+    if (open) setOpen(false);
   });
 
   window.matchMedia("(max-width: 900px)").addEventListener("change", (event) => {
-    if (!event.matches && open) {
-      setOpen(false);
-    }
+    if (event.matches) return;
+    if (open) setOpen(false, { instant: true });
+    bagApi?.close({ instant: true });
   });
 
   const radioIcon = document.querySelector("#radioIcon");

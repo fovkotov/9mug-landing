@@ -174,8 +174,8 @@ function setupDirectionalProductHero() {
     verticalSensitivity: 0.95,
     maxGamma: 20,
     maxBeta: 16,
-    // Match mat: grid authored top→bottom (no vertical frame flip).
-    flipVerticalFrames: false,
+    // Invert look-up / look-down: top row ↔ underside, center (cell_13) stays.
+    flipVerticalFrames: true,
     showZones: false
   });
 

@@ -476,14 +476,13 @@ a {
 }
 
 @media (max-width: 900px) {
-  /* Same mobile crop/zoom as mat: fill width, then 1.5× the product. */
+  /* Fill the hero block on phones (square frames would otherwise letterbox). */
   .panel-hero.is-directional-hero .product-viewer__frame {
-    object-fit: contain;
+    object-fit: cover;
   }
 
   .panel-hero.is-directional-hero .product-viewer__stage {
-    transform: scale(1.5);
-    transform-origin: center center;
+    transform: none;
   }
 }
 

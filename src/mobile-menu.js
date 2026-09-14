@@ -204,7 +204,6 @@ export function setupMobileMenu() {
   window.matchMedia("(max-width: 900px)").addEventListener("change", (event) => {
     if (event.matches) return;
     if (open) setOpen(false, { instant: true });
-    bagApi?.close({ instant: true });
   });
 
   const radioIcon = document.querySelector("#radioIcon");

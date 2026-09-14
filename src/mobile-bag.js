@@ -3,6 +3,7 @@ import { addQty, getCart, subscribeCart } from "./cart.js";
 import "./mobile-bag.css";
 
 const baseUrl = import.meta.env.BASE_URL ?? "/";
+const CLOSE_MS = 460;
 
 function resolvePublicAssetPath(path) {
   if (!path) return "";
@@ -24,35 +25,8 @@ function formatMoney(value) {
   return `$${value}`;
 }
 
-function applyOpenClass(el, next, instant) {
-  if (next) {
-    el.inert = false;
-    el.setAttribute("aria-hidden", "false");
-    if (instant) {
-      const prev = el.style.transition;
-      el.style.transition = "none";
-      el.classList.add("is-open");
-      void el.offsetHeight;
-      el.style.transition = prev;
-    } else {
-      requestAnimationFrame(() => {
-        el.classList.add("is-open");
-      });
-    }
-    return;
-  }
-
-  if (instant) {
-    const prev = el.style.transition;
-    el.style.transition = "none";
-    el.classList.remove("is-open");
-    void el.offsetHeight;
-    el.style.transition = prev;
-  } else {
-    el.classList.remove("is-open");
-  }
-  el.inert = true;
-  el.setAttribute("aria-hidden", "true");
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 function renderItems(bag) {
@@ -109,6 +83,12 @@ function ensureOverlay() {
   bag.inert = true;
   bag.innerHTML = `
     <div class="mobile-bag__panel">
+      <button type="button" class="mobile-bag__close" data-bag-close aria-label="Close bag">
+        <span class="mobile-bag__close-icon" aria-hidden="true">
+          <span></span>
+          <span></span>
+        </span>
+      </button>
       <div class="mobile-bag__items" data-bag-items></div>
       <button type="button" class="mobile-bag__checkout" data-bag-checkout aria-label="Checkout">
         <img class="mobile-bag__checkout-shape" src="${checkoutSrc}" alt="" aria-hidden="true" draggable="false" />
@@ -134,25 +114,69 @@ export function setupMobileBag({ isMenuOpen, closeMenu, onChange } = {}) {
   }
 
   let open = false;
+  let animTimer = 0;
+  const closeBtn = bag.querySelector("[data-bag-close]");
 
-  function setOpen(next, { instant = false } = {}) {
-    if (open === next) return;
-    open = next;
-    document.body.classList.toggle("is-mobile-bag-open", next);
-    applyOpenClass(bag, next, instant);
-    if (next) renderItems(bag);
-    onChange?.();
+  function syncBagLink() {
+    bagLink.setAttribute("aria-expanded", String(open));
+    bagLink.setAttribute("aria-controls", "mobileBag");
   }
 
-  function isMobile() {
-    return window.matchMedia("(max-width: 900px)").matches;
+  function finishClose() {
+    bag.classList.remove("is-closing");
+    bag.inert = true;
+    bag.setAttribute("aria-hidden", "true");
+  }
+
+  function setOpen(next, { instant = false } = {}) {
+    const closing = bag.classList.contains("is-closing");
+    if (open === next && !closing) return;
+
+    window.clearTimeout(animTimer);
+    open = next;
+    document.body.classList.toggle("is-mobile-bag-open", next);
+    syncBagLink();
+
+    if (next) {
+      bag.classList.remove("is-closing");
+      bag.inert = false;
+      bag.setAttribute("aria-hidden", "false");
+      renderItems(bag);
+
+      if (instant || prefersReducedMotion()) {
+        bag.classList.add("is-open", "is-instant");
+      } else {
+        bag.classList.remove("is-instant");
+        bag.classList.add("is-open");
+      }
+
+      closeBtn?.focus({ preventScroll: true });
+      onChange?.();
+      return;
+    }
+
+    bag.classList.remove("is-instant");
+
+    if (instant || prefersReducedMotion()) {
+      bag.classList.remove("is-open");
+      finishClose();
+      bagLink.focus({ preventScroll: true });
+      onChange?.();
+      return;
+    }
+
+    bag.classList.add("is-closing");
+    bag.classList.remove("is-open");
+    onChange?.();
+    animTimer = window.setTimeout(() => {
+      finishClose();
+      bagLink.focus({ preventScroll: true });
+    }, CLOSE_MS);
   }
 
   function openBag() {
-    if (!isMobile()) return;
-    const switching = Boolean(isMenuOpen?.());
-    if (switching) closeMenu?.({ instant: true });
-    setOpen(true, { instant: switching });
+    if (isMenuOpen?.()) closeMenu?.({ instant: true });
+    setOpen(true);
   }
 
   function closeBag(opts) {
@@ -160,7 +184,6 @@ export function setupMobileBag({ isMenuOpen, closeMenu, onChange } = {}) {
   }
 
   bagLink.addEventListener("click", (event) => {
-    if (!isMobile()) return;
     event.preventDefault();
     playTick();
     if (open) {
@@ -168,6 +191,11 @@ export function setupMobileBag({ isMenuOpen, closeMenu, onChange } = {}) {
       return;
     }
     openBag();
+  });
+
+  closeBtn?.addEventListener("click", () => {
+    playTick();
+    closeBag();
   });
 
   bag.querySelector("[data-bag-items]")?.addEventListener("click", (event) => {
@@ -188,6 +216,8 @@ export function setupMobileBag({ isMenuOpen, closeMenu, onChange } = {}) {
   subscribeCart(() => {
     if (open) renderItems(bag);
   });
+
+  syncBagLink();
 
   return {
     isOpen: () => open,

@@ -82,6 +82,7 @@ function ensureOverlay() {
   bag.setAttribute("aria-hidden", "true");
   bag.inert = true;
   bag.innerHTML = `
+    <div class="mobile-bag__scrim" aria-hidden="true"></div>
     <div class="mobile-bag__panel">
       <button type="button" class="mobile-bag__close" data-bag-close aria-label="Close bag">
         <span class="mobile-bag__close-icon" aria-hidden="true">

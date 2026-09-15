@@ -18,6 +18,33 @@
   visibility: visible;
 }
 
+.mobile-bag__scrim {
+  background: rgba(0, 0, 0, 0.16);
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+}
+
+.mobile-bag.is-open .mobile-bag__scrim {
+  animation: bag-scrim-in 0.5s ease-in both;
+}
+
+.mobile-bag.is-closing .mobile-bag__scrim {
+  animation: bag-scrim-out 0.5s ease-in both;
+}
+
+.mobile-bag.is-open.is-instant .mobile-bag__scrim {
+  animation: none;
+  opacity: 1;
+}
+
+.mobile-bag.is-closing.is-instant .mobile-bag__scrim {
+  animation: none;
+  opacity: 0;
+}
+
 .mobile-bag__panel {
   background: var(--bg-base);
   height: 100%;
@@ -25,6 +52,7 @@
   transform: translateY(-110%) rotate(5deg);
   transform-origin: 50% 50%;
   width: 100%;
+  z-index: 1;
 }
 
 .mobile-bag.is-open .mobile-bag__panel {
@@ -381,6 +409,30 @@
   }
 }
 
+@keyframes bag-scrim-in {
+  0% {
+    opacity: 0;
+  }
+
+  45% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes bag-scrim-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
 @media (min-width: 901px) {
   .mobile-bag__items {
     max-width: 520px;
@@ -394,5 +446,13 @@
 
   .mobile-bag.is-closing .mobile-bag__panel {
     animation: bag-fade-out 0.2s ease both;
+  }
+
+  .mobile-bag.is-open .mobile-bag__scrim {
+    animation: bag-scrim-in 0.2s ease both;
+  }
+
+  .mobile-bag.is-closing .mobile-bag__scrim {
+    animation: bag-scrim-out 0.2s ease both;
   }
 }

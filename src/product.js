@@ -168,7 +168,7 @@ function setupDirectionalProductHero() {
   createProductViewer(productViewerRoot, {
     images: mugFrameImages,
     transitionDuration: 0,
-    // Same 5×5 segment layout as mat; H ±90° step 45°, V ±30° step 15° (milder pitch).
+    // Same 5×5 segment layout as mat; H ±202.5° step 101.25° (405° span), V ±30° step 15°.
     deadZoneHalfWidth: 0.28,
     deadZoneHalfHeight: 0.19,
     sideFarBoundary: 0.7,

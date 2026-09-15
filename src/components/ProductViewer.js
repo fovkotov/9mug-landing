@@ -22,9 +22,9 @@ const DIRECTION_KEYS = Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, i) => {
   return `c${String(i + 1).padStart(2, "0")}`;
 });
 
-/** Mug yaw/pitch degrees for each cell (col → H, row → V; bottom row = −30°). */
+/** Mug yaw/pitch degrees for each cell (col → H ±202.5° / 405° span, row → V ±30° milder pitch). */
 const CELL_ANGLES = (() => {
-  const hVals = [-30, -15, 0, 15, 30];
+  const hVals = [-202.5, -101.25, 0, 101.25, 202.5];
   const vVals = [30, 15, 0, -15, -30];
   const map = {};
   let n = 0;
@@ -801,7 +801,7 @@ export function createProductViewer(root, options = {}) {
 
 /**
  * 5×5 unique frame map — cell_01…cell_25 (row-major).
- * Angles: H −30…+30, V +30…−30 (bottom row shows underside).
+ * Angles: H −202.5…+202.5 (405° span), V +30…−30 (mild pitch).
  */
 export function createMugFrameImages(
   resolvePath,

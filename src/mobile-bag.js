@@ -3,7 +3,7 @@ import { addQty, getCart, subscribeCart } from "./cart.js";
 import "./mobile-bag.css";
 
 const baseUrl = import.meta.env.BASE_URL ?? "/";
-const CLOSE_MS = 460;
+const CLOSE_MS = 500;
 
 function resolvePublicAssetPath(path) {
   if (!path) return "";
@@ -143,21 +143,17 @@ export function setupMobileBag({ isMenuOpen, closeMenu, onChange } = {}) {
       bag.setAttribute("aria-hidden", "false");
       renderItems(bag);
 
-      if (instant || prefersReducedMotion()) {
-        bag.classList.add("is-open", "is-instant");
-      } else {
-        bag.classList.remove("is-instant");
-        bag.classList.add("is-open");
-      }
+      bag.classList.toggle("is-instant", instant);
+      bag.classList.add("is-open");
 
       closeBtn?.focus({ preventScroll: true });
       onChange?.();
       return;
     }
 
-    bag.classList.remove("is-instant");
+    bag.classList.toggle("is-instant", instant);
 
-    if (instant || prefersReducedMotion()) {
+    if (instant) {
       bag.classList.remove("is-open");
       finishClose();
       bagLink.focus({ preventScroll: true });
@@ -171,7 +167,7 @@ export function setupMobileBag({ isMenuOpen, closeMenu, onChange } = {}) {
     animTimer = window.setTimeout(() => {
       finishClose();
       bagLink.focus({ preventScroll: true });
-    }, CLOSE_MS);
+    }, prefersReducedMotion() ? 200 : CLOSE_MS);
   }
 
   function openBag() {

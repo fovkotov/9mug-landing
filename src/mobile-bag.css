@@ -22,17 +22,17 @@
   background: var(--bg-base);
   height: 100%;
   position: relative;
-  transform: translate3d(0, -110%, 0);
+  transform: translateY(-110%) rotate(5deg);
   transform-origin: 50% 50%;
   width: 100%;
 }
 
 .mobile-bag.is-open .mobile-bag__panel {
-  animation: bag-fall-in 0.86s cubic-bezier(0.2, 0.72, 0.18, 1) both;
+  animation: bag-fall-in 0.5s ease-in both;
 }
 
 .mobile-bag.is-closing .mobile-bag__panel {
-  animation: bag-fall-out 0.46s cubic-bezier(0.55, 0.08, 0.72, 0.2) both;
+  animation: bag-fall-out 0.5s ease-in both;
 }
 
 .mobile-bag.is-open.is-instant .mobile-bag__panel,
@@ -331,45 +331,53 @@
 
 @keyframes bag-fall-in {
   0% {
-    transform: translate3d(0, -110%, 0) rotate(0deg);
+    transform: translateY(-110%) rotate(5deg);
   }
 
-  36% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
+  60% {
+    transform: translateY(-20%) rotate(20deg);
   }
 
-  52% {
-    transform: translate3d(-32px, 0, 0) rotate(-2.6deg);
-  }
-
-  68% {
-    transform: translate3d(24px, -8px, 0) rotate(2deg);
-  }
-
-  82% {
-    transform: translate3d(-12px, 3px, 0) rotate(-0.9deg);
+  80% {
+    transform: translateY(-10%) rotate(-5deg);
   }
 
   100% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
+    transform: translateY(0) rotate(0deg);
   }
 }
 
 @keyframes bag-fall-out {
   0% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
-  }
-
-  22% {
-    transform: translate3d(14px, 0, 0) rotate(1.3deg);
-  }
-
-  38% {
-    transform: translate3d(-8px, 3px, 0) rotate(-0.7deg);
+    transform: translateY(0) rotate(0deg);
   }
 
   100% {
-    transform: translate3d(0, 112%, 0) rotate(0.3deg);
+    transform: translateY(110%) rotate(10deg);
+  }
+}
+
+@keyframes bag-fade-in {
+  from {
+    opacity: 0;
+    transform: none;
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes bag-fade-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+
+  to {
+    opacity: 0;
+    transform: none;
   }
 }
 
@@ -380,9 +388,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mobile-bag.is-open .mobile-bag__panel,
+  .mobile-bag.is-open .mobile-bag__panel {
+    animation: bag-fade-in 0.2s ease both;
+  }
+
   .mobile-bag.is-closing .mobile-bag__panel {
-    animation: none;
-    transform: none;
+    animation: bag-fade-out 0.2s ease both;
   }
 }

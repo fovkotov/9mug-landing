@@ -82,10 +82,9 @@ a {
 
 .nav-left {
   align-items: center;
-  column-gap: var(--layout-gutter);
-  display: grid;
-  grid-column: 3 / span 2;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  grid-column: 1 / span 2;
+  justify-content: space-between;
   min-width: 0;
 }
 
@@ -113,19 +112,20 @@ a {
 }
 
 .nav-right {
-  align-items: center;
-  column-gap: 72px;
-  display: flex;
+  align-items: start;
+  column-gap: var(--layout-gutter);
+  display: grid;
   grid-column: 6 / -1;
-  justify-content: flex-end;
-  justify-self: end;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   min-width: 0;
+  width: 100%;
 }
 
 .audio-controls {
-  align-items: center;
+  align-items: start;
   display: flex;
-  gap: 16px;
+  gap: 17px;
+  justify-self: start;
 }
 
 .audio-icon {
@@ -138,7 +138,7 @@ a {
 .audio-toggle-group {
   align-items: center;
   display: flex;
-  gap: 6px;
+  gap: 5px;
 }
 
 .control-btn {
@@ -159,11 +159,12 @@ a {
 }
 
 .nav-status {
-  align-items: center;
+  align-items: start;
   color: inherit;
   cursor: pointer;
   display: flex;
   gap: 9px;
+  justify-self: end;
 }
 
 .horse-icon {
@@ -337,6 +338,11 @@ a {
   }
 
   .nav-right {
+    display: contents;
+  }
+
+  .audio-controls,
+  .nav-status {
     display: none;
   }
 

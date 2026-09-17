@@ -30,7 +30,10 @@ function resolvePublicAssetPath(path) {
 }
 
 // Kick off mug-frame download + decode immediately on product page entry.
-const mugFrameImages = createMugFrameImages(resolvePublicAssetPath, "/media/mug_frames");
+const mugFrameImages = createMugFrameImages(resolvePublicAssetPath, "/media/mug_frames", {
+  cols: 10,
+  rows: 5
+});
 const mugFramesWarmup = preloadMugFrameImages(mugFrameImages);
 
 const radioBtn = document.querySelector("#radioBtn");
@@ -168,15 +171,18 @@ function setupDirectionalProductHero() {
   createProductViewer(productViewerRoot, {
     images: mugFrameImages,
     transitionDuration: 0,
-    // Same 5×5 segment layout as mat; H ±202.5° step 101.25° (405° span), V ±30° step 15°.
-    deadZoneHalfWidth: 0.28,
+    // 10×5 look-around: H ±202.5° step 45°, V ±20° step 10°.
+    deadZoneHalfWidth: 0.14,
     deadZoneHalfHeight: 0.19,
     sideFarBoundary: 0.7,
     horizontalSensitivity: 1.05,
     verticalSensitivity: 0.95,
     maxGamma: 20,
     maxBeta: 16,
-    // Invert look-up / look-down: top row ↔ underside, center (cell_13) stays.
+    gridCols: 10,
+    gridRows: 5,
+    centerKey: "c26",
+    // Invert look-up / look-down: top row ↔ underside, center stays.
     flipVerticalFrames: true,
     showZones: false
   });

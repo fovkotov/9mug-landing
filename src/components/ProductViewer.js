@@ -13,44 +13,60 @@ import {
   orientationApiAvailable
 } from "../device-orientation-permission.js";
 
-/** 5×5 look-around grid — one unique frame / angle pair per cell. */
-const GRID_SIZE = 5;
+const DEFAULT_GRID_COLS = 5;
+const DEFAULT_GRID_ROWS = 5;
 const CENTER_KEY = "c13";
 
-/** Keys c01…c25 in row-major order (1 = top-left, 13 = center, 25 = bottom-right). */
-const DIRECTION_KEYS = Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, i) => {
-  return `c${String(i + 1).padStart(2, "0")}`;
-});
+function makeDirectionKeys(cols, rows) {
+  return Array.from({ length: cols * rows }, (_, i) => {
+    return `c${String(i + 1).padStart(2, "0")}`;
+  });
+}
 
-/** Mug yaw/pitch degrees for each cell (col → H ±202.5° / 405° span, row → V ±30° milder pitch). */
-const CELL_ANGLES = (() => {
-  const hVals = [-202.5, -101.25, 0, 101.25, 202.5];
-  const vVals = [30, 15, 0, -15, -30];
+/** Keys c01…c25 in row-major order — default 5×5 used by the mat hero. */
+const DIRECTION_KEYS = makeDirectionKeys(DEFAULT_GRID_COLS, DEFAULT_GRID_ROWS);
+
+function makeCellAngles(cols, rows, hVals, vVals) {
   const map = {};
   let n = 0;
-  for (let row = 0; row < GRID_SIZE; row += 1) {
-    for (let col = 0; col < GRID_SIZE; col += 1) {
+  for (let row = 0; row < rows; row += 1) {
+    for (let col = 0; col < cols; col += 1) {
       n += 1;
-      map[`c${String(n).padStart(2, "0")}`] = { col, row, h: hVals[col], v: vVals[row] };
+      map[`c${String(n).padStart(2, "0")}`] = {
+        col,
+        row,
+        h: hVals[col],
+        v: vVals[row]
+      };
     }
   }
   return map;
-})();
+}
 
-function cellKey(col, row) {
-  return `c${String(row * GRID_SIZE + col + 1).padStart(2, "0")}`;
+/** Default 5×5 angles (mat). Mug passes its own grid via createProductViewer options. */
+const CELL_ANGLES = makeCellAngles(
+  DEFAULT_GRID_COLS,
+  DEFAULT_GRID_ROWS,
+  [-90, -45, 0, 45, 90],
+  [90, 45, 0, -45, -90]
+);
+
+function cellKey(col, row, cols = DEFAULT_GRID_COLS) {
+  return `c${String(row * cols + col + 1).padStart(2, "0")}`;
 }
 
 /** Screen top/bottom swapped; middle row (center) stays. */
-function frameRowForScreenRow(row, flipVertical = true) {
-  return flipVertical ? GRID_SIZE - 1 - row : row;
+function frameRowForScreenRow(row, flipVertical = true, rows = DEFAULT_GRID_ROWS) {
+  return flipVertical ? rows - 1 - row : row;
 }
 
-function zoneColorForKey(key) {
-  const meta = CELL_ANGLES[key];
-  if (!meta) return [200, 200, 200];
-  const t = meta.col / (GRID_SIZE - 1);
-  const u = meta.row / (GRID_SIZE - 1);
+function zoneColorForKey(key, cols = DEFAULT_GRID_COLS, rows = DEFAULT_GRID_ROWS) {
+  const n = Number.parseInt(String(key).slice(1), 10);
+  if (!Number.isFinite(n) || n < 1) return [200, 200, 200];
+  const col = (n - 1) % cols;
+  const row = Math.floor((n - 1) / cols);
+  const t = cols > 1 ? col / (cols - 1) : 0;
+  const u = rows > 1 ? row / (rows - 1) : 0;
   return [
     Math.round(40 + t * 200),
     Math.round(100 + (1 - Math.abs(t - 0.5) * 2) * 100),
@@ -86,8 +102,8 @@ function isMobileInteraction() {
 
 function normalizeImages(images = {}) {
   const normalized = {};
-  for (const key of DIRECTION_KEYS) {
-    if (images[key]) normalized[key] = images[key];
+  for (const [key, src] of Object.entries(images)) {
+    if (src) normalized[key] = src;
   }
   return normalized;
 }
@@ -129,7 +145,7 @@ async function decodeImageSource(src) {
  */
 export function preloadMugFrameImages(images = {}) {
   const normalized = normalizeImages(images);
-  const sources = DIRECTION_KEYS.map((key) => normalized[key]).filter(Boolean);
+  const sources = Object.values(normalized).filter(Boolean);
 
   for (const src of sources) {
     injectPreloadLink(src);
@@ -167,7 +183,10 @@ async function waitForFramePainted(img) {
  *   showZones?: boolean,
  *   maxGamma?: number,
  *   maxBeta?: number,
- *   flipVerticalFrames?: boolean
+ *   flipVerticalFrames?: boolean,
+ *   gridCols?: number,
+ *   gridRows?: number,
+ *   centerKey?: string
  * }} options
  */
 export function createProductViewer(root, options = {}) {
@@ -176,6 +195,12 @@ export function createProductViewer(root, options = {}) {
   }
 
   const images = normalizeImages(options.images);
+  const gridCols = Math.max(1, Math.round(options.gridCols ?? DEFAULT_GRID_COLS));
+  const gridRows = Math.max(1, Math.round(options.gridRows ?? DEFAULT_GRID_ROWS));
+  const directionKeys = makeDirectionKeys(gridCols, gridRows);
+  const centerCol = Math.floor(gridCols / 2);
+  const centerRow = Math.floor(gridRows / 2);
+  const centerKey = options.centerKey || cellKey(centerCol, centerRow, gridCols);
   const legacyRadius = options.deadZoneRadius ?? 0.14;
   const deadZoneHalfWidth = options.deadZoneHalfWidth ?? legacyRadius * 2;
   const deadZoneHalfHeight = options.deadZoneHalfHeight ?? legacyRadius * 1.35;
@@ -196,7 +221,7 @@ export function createProductViewer(root, options = {}) {
 
   let destroyed = false;
   let ready = false;
-  let activeKey = CENTER_KEY;
+  let activeKey = centerKey;
   let zoneCanvas = null;
   let zoneCtx = null;
   let zoneLabelLayer = null;
@@ -239,7 +264,7 @@ export function createProductViewer(root, options = {}) {
   let intersectionObserver = null;
 
   const layerNodes = new Map();
-  const availableKeys = DIRECTION_KEYS.filter((key) => Boolean(images[key]));
+  const availableKeys = directionKeys.filter((key) => Boolean(images[key]));
 
   root.classList.add("product-viewer");
   root.classList.toggle("has-zones", showZones);
@@ -251,7 +276,7 @@ export function createProductViewer(root, options = {}) {
   stage.className = "product-viewer__stage";
   root.append(stage);
 
-  for (const key of DIRECTION_KEYS) {
+  for (const key of directionKeys) {
     const src = images[key];
     if (!src) continue;
 
@@ -266,28 +291,23 @@ export function createProductViewer(root, options = {}) {
     img.fetchPriority = "high";
     img.src = src;
     img.dataset.direction = key;
-    const isCenter = key === CENTER_KEY;
+    const isCenter = key === centerKey;
     img.classList.toggle("is-active", isCenter);
     img.setAttribute("aria-hidden", isCenter ? "false" : "true");
     stage.append(img);
     layerNodes.set(key, img);
   }
 
+  function evenEdges(min, max, count) {
+    if (count <= 1) return [min, max];
+    const step = (max - min) / count;
+    return Array.from({ length: count + 1 }, (_, i) => min + i * step);
+  }
+
   function gridEdges() {
-    const nyTop = -verticalSensitivity;
-    const nyBottom = verticalSensitivity;
-    const upHalfNy = (nyTop - deadZoneHalfHeight) / 2;
-    const downHalfNy = (nyBottom + deadZoneHalfHeight) / 2;
     return {
-      xEdges: [
-        -horizontalSensitivity,
-        -sideFarBoundary,
-        -deadZoneHalfWidth,
-        deadZoneHalfWidth,
-        sideFarBoundary,
-        horizontalSensitivity
-      ],
-      yEdges: [nyTop, upHalfNy, -deadZoneHalfHeight, deadZoneHalfHeight, downHalfNy, nyBottom]
+      xEdges: evenEdges(-horizontalSensitivity, horizontalSensitivity, gridCols),
+      yEdges: evenEdges(-verticalSensitivity, verticalSensitivity, gridRows)
     };
   }
 
@@ -305,20 +325,20 @@ export function createProductViewer(root, options = {}) {
     return edges.length - 2;
   }
 
-  /** Map normalized pointer → unique 5×5 cell key (c01…c25). */
+  /** Map normalized pointer → unique grid cell key. */
   function pickDirection(nx, ny) {
     const { xEdges, yEdges } = gridEdges();
     const col = binIndex(nx, xEdges);
     const row = binIndex(ny, yEdges);
-    const key = cellKey(col, frameRowForScreenRow(row, flipVerticalFrames));
-    return availableKeys.includes(key) ? key : firstAvailable(CENTER_KEY, availableKeys[0]);
+    const key = cellKey(col, frameRowForScreenRow(row, flipVerticalFrames, gridRows), gridCols);
+    return availableKeys.includes(key) ? key : firstAvailable(centerKey, availableKeys[0]);
   }
 
   function firstAvailable(...keys) {
     for (const key of keys) {
       if (key && availableKeys.includes(key)) return key;
     }
-    return availableKeys.includes(CENTER_KEY) ? CENTER_KEY : availableKeys[0];
+    return availableKeys.includes(centerKey) ? centerKey : availableKeys[0];
   }
 
   function computeNormalizedFromLocal(localX, localY, width, height) {
@@ -332,7 +352,7 @@ export function createProductViewer(root, options = {}) {
 
   /** Map a 5×5 overlay cell to its unique frame key. */
   function cellDirection(col, row) {
-    return cellKey(col, frameRowForScreenRow(row, flipVerticalFrames));
+    return cellKey(col, frameRowForScreenRow(row, flipVerticalFrames, gridRows), gridCols);
   }
 
   function computeNormalizedPointer(clientX, clientY) {
@@ -468,12 +488,12 @@ export function createProductViewer(root, options = {}) {
           height
         );
         const key = pickDirection(nx, ny);
-        const color = zoneColorForKey(key);
+        const color = zoneColorForKey(key, gridCols, gridRows);
         const index = (row * cols + col) * 4;
         data[index] = color[0];
         data[index + 1] = color[1];
         data[index + 2] = color[2];
-        data[index + 3] = key === CENTER_KEY ? 48 : 78;
+        data[index + 3] = key === centerKey ? 48 : 78;
       }
     }
 
@@ -488,8 +508,8 @@ export function createProductViewer(root, options = {}) {
       ((ny / verticalSensitivity) * 0.5 + 0.5) * 100;
 
     let section = 1;
-    for (let row = 0; row < 5; row += 1) {
-      for (let col = 0; col < 5; col += 1) {
+    for (let row = 0; row < gridRows; row += 1) {
+      for (let col = 0; col < gridCols; col += 1) {
         const key = cellDirection(col, row);
         if (!availableKeys.includes(key)) {
           section += 1;
@@ -800,18 +820,18 @@ export function createProductViewer(root, options = {}) {
 }
 
 /**
- * 5×5 unique frame map — cell_01…cell_25 (row-major).
- * Angles: H −202.5…+202.5 (405° span), V +30…−30 (mild pitch).
+ * Unique frame map — cell_01…cell_N (row-major).
+ * Default 5×5 for the mat. Mug uses 10×5.
  */
 export function createMugFrameImages(
   resolvePath,
   basePath = "/media/mug_frames",
-  { extension = "webp" } = {}
+  { extension = "webp", cols = DEFAULT_GRID_COLS, rows = DEFAULT_GRID_ROWS } = {}
 ) {
   const root = basePath.replace(/\/$/, "");
   const ext = String(extension || "webp").replace(/^\./, "");
   const images = {};
-  for (const key of DIRECTION_KEYS) {
+  for (const key of makeDirectionKeys(cols, rows)) {
     const absolute = `${root}/cell_${key.slice(1)}.${ext}`;
     images[key] = typeof resolvePath === "function" ? resolvePath(absolute) : absolute;
   }

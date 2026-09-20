@@ -1,3 +1,5 @@
+@import "./svg-bar-appear.css";
+
 .mobile-bag {
   color: var(--ui-color);
   height: 100%;
@@ -328,11 +330,11 @@
 }
 
 .mobile-bag.is-open:not(.is-empty) .mobile-bag__checkout-shape {
-  animation: bag-checkout-grow 0.4s ease-out 0.5s both;
+  animation: bag-checkout-grow 0.4s linear 0.5s both;
 }
 
 .mobile-bag.is-closing:not(.is-empty) .mobile-bag__checkout-shape {
-  animation: bag-checkout-shrink 0.4s ease-in both;
+  animation: bag-checkout-shrink 0.4s linear both;
 }
 
 .mobile-bag.is-open.is-instant:not(.is-empty) .mobile-bag__checkout-shape {
@@ -362,12 +364,12 @@
 
 .mobile-bag.is-open:not(.is-empty) .mobile-bag__total,
 .mobile-bag.is-open:not(.is-empty) .mobile-bag__checkout-label {
-  animation: bag-checkout-label-in 0.4s ease-out 0.5s both;
+  animation: bag-checkout-label-in 0.4s linear 0.5s both;
 }
 
 .mobile-bag.is-closing:not(.is-empty) .mobile-bag__total,
 .mobile-bag.is-closing:not(.is-empty) .mobile-bag__checkout-label {
-  animation: bag-checkout-label-out 0.4s ease-in both;
+  animation: bag-checkout-label-out 0.4s linear both;
 }
 
 .mobile-bag.is-open.is-instant:not(.is-empty) .mobile-bag__total,
@@ -396,28 +398,20 @@
     transform: translateX(100%);
   }
 
-  14% {
-    transform: translateX(68%);
+  20% {
+    transform: translateX(70%);
   }
 
-  28% {
-    transform: translateX(42%);
+  40% {
+    transform: translateX(38%);
   }
 
-  42% {
-    transform: translateX(24%);
+  60% {
+    transform: translateX(14%);
   }
 
-  56% {
-    transform: translateX(12%);
-  }
-
-  70% {
-    transform: translateX(5%);
-  }
-
-  84% {
-    transform: translateX(1.5%);
+  80% {
+    transform: translateX(3%);
   }
 
   100% {
@@ -430,28 +424,20 @@
     transform: translateX(0);
   }
 
-  14% {
-    transform: translateX(1.5%);
+  20% {
+    transform: translateX(3%);
   }
 
-  28% {
-    transform: translateX(5%);
+  40% {
+    transform: translateX(14%);
   }
 
-  42% {
-    transform: translateX(12%);
+  60% {
+    transform: translateX(38%);
   }
 
-  56% {
-    transform: translateX(24%);
-  }
-
-  70% {
-    transform: translateX(42%);
-  }
-
-  84% {
-    transform: translateX(68%);
+  80% {
+    transform: translateX(70%);
   }
 
   100% {
@@ -483,73 +469,25 @@
   }
 }
 
-@keyframes bag-checkout-grow {
-  from {
-    transform: scaleY(0);
-  }
-
-  to {
-    transform: scaleY(1);
-  }
-}
-
-@keyframes bag-checkout-shrink {
-  from {
-    transform: scaleY(1);
-  }
-
-  to {
-    transform: scaleY(0);
-  }
-}
-
-@keyframes bag-checkout-label-in {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes bag-checkout-label-out {
-  from {
-    opacity: 1;
-  }
-
-  to {
-    opacity: 0;
-  }
-}
-
 @keyframes bag-scrim-in {
   0% {
     opacity: 0;
   }
 
-  14% {
-    opacity: 0.28;
+  20% {
+    opacity: 0.4;
   }
 
-  28% {
-    opacity: 0.5;
+  40% {
+    opacity: 0.7;
   }
 
-  42% {
-    opacity: 0.68;
+  60% {
+    opacity: 0.9;
   }
 
-  56% {
-    opacity: 0.82;
-  }
-
-  70% {
-    opacity: 0.92;
-  }
-
-  84% {
-    opacity: 0.97;
+  80% {
+    opacity: 1;
   }
 
   100% {
@@ -562,28 +500,20 @@
     opacity: 1;
   }
 
-  14% {
-    opacity: 0.97;
+  20% {
+    opacity: 0.9;
   }
 
-  28% {
-    opacity: 0.92;
+  40% {
+    opacity: 0.7;
   }
 
-  42% {
-    opacity: 0.82;
+  60% {
+    opacity: 0.4;
   }
 
-  56% {
-    opacity: 0.68;
-  }
-
-  70% {
-    opacity: 0.5;
-  }
-
-  84% {
-    opacity: 0.28;
+  80% {
+    opacity: 0;
   }
 
   100% {

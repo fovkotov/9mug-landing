@@ -330,11 +330,11 @@
 }
 
 .mobile-bag.is-open:not(.is-empty) .mobile-bag__checkout-shape {
-  animation: bag-checkout-grow 0.4s linear 0.5s both;
+  animation: bag-checkout-grow 0.4s ease-out 0.5s both;
 }
 
 .mobile-bag.is-closing:not(.is-empty) .mobile-bag__checkout-shape {
-  animation: bag-checkout-shrink 0.4s linear both;
+  animation: bag-checkout-shrink 0.4s ease-out both;
 }
 
 .mobile-bag.is-open.is-instant:not(.is-empty) .mobile-bag__checkout-shape {
@@ -364,12 +364,12 @@
 
 .mobile-bag.is-open:not(.is-empty) .mobile-bag__total,
 .mobile-bag.is-open:not(.is-empty) .mobile-bag__checkout-label {
-  animation: bag-checkout-label-in 0.4s linear 0.5s both;
+  animation: bag-checkout-label-in 0.4s ease-out 0.5s both;
 }
 
 .mobile-bag.is-closing:not(.is-empty) .mobile-bag__total,
 .mobile-bag.is-closing:not(.is-empty) .mobile-bag__checkout-label {
-  animation: bag-checkout-label-out 0.4s linear both;
+  animation: bag-checkout-label-out 0.4s ease-out both;
 }
 
 .mobile-bag.is-open.is-instant:not(.is-empty) .mobile-bag__total,

@@ -322,7 +322,27 @@
   object-fit: fill;
   pointer-events: none;
   position: absolute;
+  transform: scaleY(0);
+  transform-origin: 50% 100%;
   width: 100%;
+}
+
+.mobile-bag.is-open:not(.is-empty) .mobile-bag__checkout-shape {
+  animation: bag-checkout-grow 0.4s ease-out 0.5s both;
+}
+
+.mobile-bag.is-closing:not(.is-empty) .mobile-bag__checkout-shape {
+  animation: bag-checkout-shrink 0.4s ease-in both;
+}
+
+.mobile-bag.is-open.is-instant:not(.is-empty) .mobile-bag__checkout-shape {
+  animation: none;
+  transform: scaleY(1);
+}
+
+.mobile-bag.is-closing.is-instant .mobile-bag__checkout-shape {
+  animation: none;
+  transform: scaleY(0);
 }
 
 .mobile-bag__total,
@@ -333,10 +353,33 @@
   font-size: 17px;
   letter-spacing: 0.34px;
   line-height: normal;
+  opacity: 0;
   pointer-events: none;
   position: absolute;
   top: 12px;
   white-space: nowrap;
+}
+
+.mobile-bag.is-open:not(.is-empty) .mobile-bag__total,
+.mobile-bag.is-open:not(.is-empty) .mobile-bag__checkout-label {
+  animation: bag-checkout-label-in 0.4s ease-out 0.5s both;
+}
+
+.mobile-bag.is-closing:not(.is-empty) .mobile-bag__total,
+.mobile-bag.is-closing:not(.is-empty) .mobile-bag__checkout-label {
+  animation: bag-checkout-label-out 0.4s ease-in both;
+}
+
+.mobile-bag.is-open.is-instant:not(.is-empty) .mobile-bag__total,
+.mobile-bag.is-open.is-instant:not(.is-empty) .mobile-bag__checkout-label {
+  animation: none;
+  opacity: 1;
+}
+
+.mobile-bag.is-closing.is-instant .mobile-bag__total,
+.mobile-bag.is-closing.is-instant .mobile-bag__checkout-label {
+  animation: none;
+  opacity: 0;
 }
 
 .mobile-bag__total {
@@ -440,6 +483,46 @@
   }
 }
 
+@keyframes bag-checkout-grow {
+  from {
+    transform: scaleY(0);
+  }
+
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes bag-checkout-shrink {
+  from {
+    transform: scaleY(1);
+  }
+
+  to {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes bag-checkout-label-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes bag-checkout-label-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
 @keyframes bag-scrim-in {
   0% {
     opacity: 0;
@@ -509,8 +592,13 @@
 }
 
 @media (min-width: 901px) {
+  .mobile-bag__panel {
+    margin-left: auto;
+    width: 360px;
+  }
+
   .mobile-bag__items {
-    max-width: 402px;
+    max-width: 360px;
   }
 }
 
@@ -529,5 +617,17 @@
 
   .mobile-bag.is-closing .mobile-bag__scrim {
     animation: bag-scrim-out 0.2s ease both;
+  }
+
+  .mobile-bag.is-open:not(.is-empty) .mobile-bag__checkout-shape,
+  .mobile-bag.is-open:not(.is-empty) .mobile-bag__total,
+  .mobile-bag.is-open:not(.is-empty) .mobile-bag__checkout-label {
+    animation: bag-fade-in 0.2s ease 0.2s both;
+  }
+
+  .mobile-bag.is-closing:not(.is-empty) .mobile-bag__checkout-shape,
+  .mobile-bag.is-closing:not(.is-empty) .mobile-bag__total,
+  .mobile-bag.is-closing:not(.is-empty) .mobile-bag__checkout-label {
+    animation: bag-fade-out 0.2s ease both;
   }
 }

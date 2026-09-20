@@ -29,6 +29,9 @@ function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+const minusIconSrc = resolvePublicAssetPath("/media/bag/minus.svg");
+const plusIconSrc = resolvePublicAssetPath("/media/bag/plus.svg");
+
 function renderItems(bag) {
   const items = bag.querySelector("[data-bag-items]");
   const total = bag.querySelector("[data-bag-total]");
@@ -54,10 +57,12 @@ function renderItems(bag) {
             <span class="mobile-bag__name">${line.name}</span>
           </div>
           <div class="mobile-bag__qty">
-            <button type="button" class="mobile-bag__qty-btn" data-bag-minus data-id="${line.id}" aria-label="Decrease quantity"></button>
+            <button type="button" class="mobile-bag__qty-btn" data-bag-minus data-id="${line.id}" aria-label="Decrease quantity">
+              <img class="mobile-bag__qty-icon" src="${minusIconSrc}" alt="" width="10" height="1" draggable="false" />
+            </button>
             <span class="mobile-bag__qty-value">${line.qty}</span>
             <button type="button" class="mobile-bag__qty-btn" data-bag-plus data-id="${line.id}" aria-label="Increase quantity">
-              <span class="mobile-bag__plus-bar" aria-hidden="true"></span>
+              <img class="mobile-bag__qty-icon" src="${plusIconSrc}" alt="" width="10" height="10" draggable="false" />
             </button>
           </div>
         </div>

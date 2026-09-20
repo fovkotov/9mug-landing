@@ -14,13 +14,13 @@ export const CATALOG = {
     id: "mug",
     name: "SHAPE 01",
     price: 300,
-    image: resolvePublicAssetPath("/media/hero-desktop.png")
+    image: resolvePublicAssetPath("/media/bag/shape-01.png")
   },
   mat: {
     id: "mat",
-    name: "MAT9",
+    name: "SHAPE 02",
     price: 300,
-    image: resolvePublicAssetPath("/media/mat/hero.png")
+    image: resolvePublicAssetPath("/media/bag/shape-02.png")
   }
 };
 

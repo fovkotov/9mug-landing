@@ -101,13 +101,13 @@
   border: 0;
   box-shadow: none;
   cursor: pointer;
-  height: 32px;
+  height: 44px;
   outline: none;
   padding: 0;
   position: absolute;
-  right: 4px;
-  top: 8px;
-  width: 46px;
+  right: 5px;
+  top: 2px;
+  width: 44px;
   z-index: 2;
 }
 
@@ -143,31 +143,32 @@
   bottom: 42px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
   left: 50%;
   max-width: 402px;
   overflow: auto;
   overscroll-behavior: contain;
-  padding: 16px;
+  padding: 24px 16px 0;
   position: absolute;
-  top: 57px;
+  top: 0;
   transform: translateX(-50%);
   width: 100%;
 }
 
 .mobile-bag__item {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  aspect-ratio: 1;
+  position: relative;
   width: 100%;
 }
 
 .mobile-bag__image {
-  aspect-ratio: 1;
   display: block;
+  height: 100%;
+  inset: 0;
   object-fit: cover;
   object-position: bottom;
   pointer-events: none;
+  position: absolute;
   width: 100%;
 }
 
@@ -175,7 +176,12 @@
   align-items: center;
   display: flex;
   gap: 12px;
+  left: 0;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
   width: 100%;
+  z-index: 1;
 }
 
 .mobile-bag__meta {
@@ -195,9 +201,11 @@
 .mobile-bag__price,
 .mobile-bag__name,
 .mobile-bag__qty-value,
+.mobile-bag__qty-icon,
 .mobile-bag__empty,
 .mobile-bag__total,
-.mobile-bag__checkout-label {
+.mobile-bag__checkout-label,
+.mobile-bag__close-icon span {
   mix-blend-mode: difference;
 }
 
@@ -223,10 +231,8 @@
   background: none;
   border: 0;
   box-shadow: none;
-  color: var(--ui-overlay);
   cursor: pointer;
   display: block;
-  mix-blend-mode: difference;
   outline: none;
   padding: 0;
   position: relative;
@@ -234,22 +240,16 @@
 
 .mobile-bag__qty-btn::before {
   content: "";
-  inset: -14px;
+  height: 44px;
+  left: 50%;
   position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
 }
 
 .mobile-bag__qty-btn[data-bag-minus] {
   height: 1px;
-  width: 10px;
-}
-
-.mobile-bag__qty-btn[data-bag-minus]::after {
-  background: currentColor;
-  content: "";
-  height: 1px;
-  left: 0;
-  position: absolute;
-  top: 0;
   width: 10px;
 }
 
@@ -258,23 +258,18 @@
   width: 10px;
 }
 
-.mobile-bag__qty-btn[data-bag-plus]::after {
-  background: currentColor;
-  content: "";
-  height: 10px;
-  left: 4.5px;
-  position: absolute;
-  top: 0;
-  width: 1px;
+.mobile-bag__qty-icon {
+  display: block;
+  pointer-events: none;
 }
 
-.mobile-bag__qty-btn[data-bag-plus] .mobile-bag__plus-bar {
-  background: currentColor;
+.mobile-bag__qty-btn[data-bag-minus] .mobile-bag__qty-icon {
   height: 1px;
-  left: 0;
-  pointer-events: none;
-  position: absolute;
-  top: 4.5px;
+  width: 10px;
+}
+
+.mobile-bag__qty-btn[data-bag-plus] .mobile-bag__qty-icon {
+  height: 10px;
   width: 10px;
 }
 
@@ -435,7 +430,7 @@
 
 @media (min-width: 901px) {
   .mobile-bag__items {
-    max-width: 520px;
+    max-width: 402px;
   }
 }
 

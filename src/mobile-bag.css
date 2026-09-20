@@ -144,19 +144,22 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  left: 50%;
+  left: 0;
+  margin: 0 auto;
   max-width: 402px;
   overflow: auto;
   overscroll-behavior: contain;
   padding: 24px 16px 0;
   position: absolute;
+  right: 0;
   top: 0;
-  transform: translateX(-50%);
   width: 100%;
 }
 
 .mobile-bag__item {
+  align-items: center;
   aspect-ratio: 1;
+  display: flex;
   position: relative;
   width: 100%;
 }
@@ -174,19 +177,18 @@
 
 .mobile-bag__row {
   align-items: center;
+  color: var(--ui-overlay);
   display: flex;
   gap: 12px;
-  left: 0;
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  mix-blend-mode: difference;
+  position: relative;
   width: 100%;
   z-index: 1;
 }
 
 .mobile-bag__meta {
   align-items: center;
-  color: var(--ui-overlay);
+  color: inherit;
   display: flex;
   flex: 1 0 0;
   font-family: var(--font-ui);
@@ -198,10 +200,6 @@
   min-width: 0;
 }
 
-.mobile-bag__price,
-.mobile-bag__name,
-.mobile-bag__qty-value,
-.mobile-bag__qty-icon,
 .mobile-bag__empty,
 .mobile-bag__total,
 .mobile-bag__checkout-label,
@@ -274,7 +272,7 @@
 }
 
 .mobile-bag__qty-value {
-  color: var(--ui-overlay);
+  color: inherit;
   font-family: var(--font-ui);
   font-feature-settings: "lnum" 1, "pnum" 1;
   font-size: 17px;

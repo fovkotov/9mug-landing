@@ -140,18 +140,25 @@ async function decodeImageSource(src) {
 }
 
 /**
- * Start fetching + decoding every frame as early as possible (page entry).
+ * Start fetching + decoding frames as early as possible (page entry).
+ * Pass `keys` to warm only part of the grid, e.g. the center frame alone.
  * Safe to call before mounting ProductViewer.
  */
-export function preloadMugFrameImages(images = {}) {
+export function preloadMugFrameImages(images = {}, { keys } = {}) {
   const normalized = normalizeImages(images);
-  const sources = Object.values(normalized).filter(Boolean);
+  const sources = (keys ? keys.map((key) => normalized[key]) : Object.values(normalized)).filter(
+    Boolean
+  );
 
   for (const src of sources) {
     injectPreloadLink(src);
   }
 
   return Promise.all(sources.map(decodeImageSource));
+}
+
+function isFramePainted(img) {
+  return Boolean(img) && img.complete && img.naturalWidth > 0;
 }
 
 async function waitForFramePainted(img) {
@@ -280,18 +287,21 @@ export function createProductViewer(root, options = {}) {
     const src = images[key];
     if (!src) continue;
 
-    injectPreloadLink(src);
+    const isCenter = key === centerKey;
+    if (isCenter) injectPreloadLink(src);
 
     const img = document.createElement("img");
     img.className = "product-viewer__frame";
     img.alt = "";
     img.draggable = false;
-    img.decoding = "sync";
+    img.decoding = isCenter ? "sync" : "async";
     img.loading = "eager";
-    img.fetchPriority = "high";
-    img.src = src;
+    img.fetchPriority = isCenter ? "high" : "low";
+    // Off-center frames stay parked until the center frame is on screen,
+    // so the first paint never queues behind the rest of the grid.
+    if (isCenter) img.src = src;
+    else img.dataset.src = src;
     img.dataset.direction = key;
-    const isCenter = key === centerKey;
     img.classList.toggle("is-active", isCenter);
     img.setAttribute("aria-hidden", isCenter ? "false" : "true");
     stage.append(img);
@@ -382,6 +392,8 @@ export function createProductViewer(root, options = {}) {
 
   function setActiveDirection(nextKey) {
     if (!layerNodes.has(nextKey) || nextKey === activeKey) return;
+    // Hold the current frame instead of flashing a cell that is still streaming.
+    if (!isFramePainted(layerNodes.get(nextKey))) return;
 
     for (const [key, node] of layerNodes) {
       const on = key === nextKey;
@@ -753,11 +765,43 @@ export function createProductViewer(root, options = {}) {
     document.addEventListener("visibilitychange", handleVisibilityChange);
   }
 
+  /** Nearest cells first, so the grid fills out around wherever the user looks. */
+  function streamRemainingFrames() {
+    const centerIndex = directionKeys.indexOf(activeKey);
+    const centerCell = {
+      col: centerIndex >= 0 ? centerIndex % gridCols : centerCol,
+      row: centerIndex >= 0 ? Math.floor(centerIndex / gridCols) : centerRow
+    };
+
+    const pending = [...layerNodes]
+      .filter(([, img]) => Boolean(img.dataset.src))
+      .sort(([a], [b]) => {
+        const distance = (key) => {
+          const index = directionKeys.indexOf(key);
+          const col = index % gridCols;
+          const row = Math.floor(index / gridCols);
+          return Math.abs(col - centerCell.col) + Math.abs(row - centerCell.row);
+        };
+        return distance(a) - distance(b);
+      });
+
+    for (const [, img] of pending) {
+      const src = img.dataset.src;
+      delete img.dataset.src;
+      img.src = src;
+      // A landed frame can unblock a cell the pointer is already resting on.
+      void waitForFramePainted(img).then(() => {
+        if (!destroyed) ensureLoop();
+      });
+    }
+  }
+
   async function preload() {
-    await preloadMugFrameImages(images);
+    const primaryKey = firstAvailable(centerKey);
+    await preloadMugFrameImages(images, { keys: [primaryKey] });
     if (destroyed) return;
 
-    await Promise.all([...layerNodes.values()].map(waitForFramePainted));
+    await waitForFramePainted(layerNodes.get(primaryKey));
     if (destroyed) return;
 
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
@@ -773,6 +817,7 @@ export function createProductViewer(root, options = {}) {
       void bootstrapMobileOrientation();
     }
     ensureLoop();
+    streamRemainingFrames();
   }
 
   setupZoneOverlay();

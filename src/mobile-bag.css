@@ -96,12 +96,16 @@
 }
 
 .mobile-bag__close {
+  align-items: center;
   appearance: none;
   background: none;
   border: 0;
   box-shadow: none;
   cursor: pointer;
+  display: flex;
   height: 44px;
+  justify-content: center;
+  mix-blend-mode: difference;
   outline: none;
   padding: 0;
   position: absolute;
@@ -114,10 +118,7 @@
 .mobile-bag__close-icon {
   display: block;
   height: 8px;
-  left: 50%;
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  position: relative;
   width: 46px;
 }
 
@@ -125,7 +126,6 @@
   background: var(--ui-overlay);
   height: 1px;
   left: 7.5px;
-  mix-blend-mode: difference;
   position: absolute;
   top: 3.5px;
   width: 31px;
@@ -202,8 +202,7 @@
 
 .mobile-bag__empty,
 .mobile-bag__total,
-.mobile-bag__checkout-label,
-.mobile-bag__close-icon span {
+.mobile-bag__checkout-label {
   mix-blend-mode: difference;
 }
 

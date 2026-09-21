@@ -1,6 +1,7 @@
 import { play } from "cuelume";
 import "./mobile-menu.css";
 import "./site-chrome.js";
+import "./page-prefetch.js";
 import { setupMobileBag } from "./mobile-bag.js";
 
 function playTick() {

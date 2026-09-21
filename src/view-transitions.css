@@ -1,0 +1,56 @@
+/*
+ * Cross-document view transitions for the five static pages.
+ *
+ * Only the root is ever snapshotted. `.top-nav` and the bag overlay rely on
+ * mix-blend-mode: difference against the page artwork; giving them their own
+ * view-transition-name would lift them into separate snapshots and they would
+ * render flat white for the length of the transition. One root snapshot bakes
+ * the blend into the image.
+ *
+ * For the same reason the animation lives exclusively on the
+ * ::view-transition-old/new pseudo-elements. A transform, opacity or filter on
+ * a real wrapper would open a stacking context and silently kill the blend.
+ */
+@view-transition {
+  navigation: auto;
+}
+
+:root {
+  view-transition-name: root;
+}
+
+@keyframes view-transition-root-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes view-transition-root-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    /* Keeps the two snapshots from dipping to grey through the crossfade. */
+    mix-blend-mode: plus-lighter;
+  }
+
+  ::view-transition-old(root) {
+    animation: view-transition-root-out 240ms ease both;
+  }
+
+  ::view-transition-new(root) {
+    animation: view-transition-root-in 240ms ease both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

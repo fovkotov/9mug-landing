@@ -13,7 +13,8 @@ export default defineConfig({
         shop: "shop.html",
         product: "product.html",
         productClassic: "product-classic.html",
-        mat: "mat.html"
+        mat: "mat.html",
+        checkout: "checkout.html"
       }
     }
   }

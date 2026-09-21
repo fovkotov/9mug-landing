@@ -87,6 +87,14 @@ export function toggleItem(id) {
   else setQty(id, 1);
 }
 
+const CHECKOUT_HREF = "./checkout.html";
+
+export function goToCheckout() {
+  const next = new URL(CHECKOUT_HREF, document.baseURI);
+  if (next.pathname === window.location.pathname) return;
+  window.location.assign(CHECKOUT_HREF);
+}
+
 export function subscribeCart(fn) {
   listeners.add(fn);
   return () => listeners.delete(fn);

@@ -1,12 +1,12 @@
 import "./view-transitions.css";
 
-// Pages the chrome actually links to. product-classic.html is an unlinked
-// variant, so it is left out.
+// Pages worth warming. product-classic.html is an unlinked variant, so it is
+// left out. checkout.html is the cart destination.
 //
 // prefetch, never prerender: prerendering mat.html would run src/mat.js, whose
 // top-level preloadMugFrameImages() pulls all 25 mat frames before anyone asks
 // for that page.
-const PAGES = ["./index.html", "./shop.html", "./product.html", "./mat.html"];
+const PAGES = ["./index.html", "./shop.html", "./product.html", "./mat.html", "./checkout.html"];
 
 function currentPath() {
   const { pathname } = window.location;

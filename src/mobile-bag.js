@@ -1,5 +1,5 @@
 import { play } from "cuelume";
-import { addQty, getCart, subscribeCart } from "./cart.js";
+import { addQty, getCart, goToCheckout, subscribeCart } from "./cart.js";
 import "./mobile-bag.css";
 
 const baseUrl = import.meta.env.BASE_URL ?? "/";
@@ -213,6 +213,7 @@ export function setupMobileBag({ isMenuOpen, closeMenu, onChange } = {}) {
 
   bag.querySelector("[data-bag-checkout]")?.addEventListener("click", () => {
     playTick();
+    goToCheckout();
   });
 
   subscribeCart(() => {

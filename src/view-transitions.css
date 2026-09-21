@@ -1,5 +1,5 @@
 /*
- * Cross-document view transitions for the five static pages.
+ * Cross-document view transitions for the static pages.
  *
  * Only the root is ever snapshotted. `.top-nav` and the bag overlay rely on
  * mix-blend-mode: difference against the page artwork; giving them their own

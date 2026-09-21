@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>9PRA — Checkout</title>
+  </head>
+  <body class="page-checkout">
+    <header class="top-nav">
+      <div class="nav-left">
+        <a href="./index.html" class="nav-link">9PRA</a>
+      </div>
+
+      <div class="nav-mobile-center" aria-hidden="true">
+        <img src="/media/menu-mobile.svg" alt="" />
+      </div>
+
+      <div class="nav-right">
+        <div class="bag-group">
+          <a href="#" class="nav-link nav-link-bag">Cart</a>
+        </div>
+        <div class="audio-controls" aria-label="Audio controls">
+          <img id="radioIcon" class="audio-icon" src="/media/radio-icon-play.png" alt="" />
+          <div class="audio-toggle-group">
+            <button id="radioBtn" class="control-btn" type="button">Radio</button>
+            <button id="noiseBtn" class="control-btn is-muted" type="button">Noise</button>
+          </div>
+        </div>
+        <a class="nav-status" href="./shop.html" aria-label="Open shop">
+          <span class="nav-online">9 Online</span>
+          <img class="horse-icon" src="/media/online-icon-figma.png" alt="" />
+        </a>
+      </div>
+    </header>
+
+    <main class="checkout">
+      <h1 class="checkout__title">Checkout</h1>
+      <div class="checkout__table" id="checkoutTable">
+        <div class="checkout__head">
+          <span>Name</span>
+          <span>Qty</span>
+          <span>Price</span>
+        </div>
+        <div id="checkoutLines"></div>
+      </div>
+      <p class="checkout__empty" id="checkoutEmpty" hidden>Cart is empty</p>
+      <p class="checkout__total">Total <span id="checkoutTotal">$0</span></p>
+    </main>
+
+    <script type="module" src="/src/checkout.js"></script>
+  </body>
+</html>

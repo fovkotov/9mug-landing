@@ -12,7 +12,7 @@ import {
 } from "./components/ProductViewer.js";
 import { setupScratchRevealVideo } from "./scratch-reveal-video.js";
 import { setupMobileMenu } from "./mobile-menu.js";
-import { isInCart, subscribeCart, toggleItem } from "./cart.js";
+import { goToCheckout, isInCart, subscribeCart, toggleItem } from "./cart.js";
 
 // Silent motion-permission check as soon as the product page opens.
 ensureDeviceOrientationOnEntry();
@@ -149,17 +149,19 @@ function setBagUiState() {
   }
   if (addToCartBtn) {
     addToCartBtn.classList.toggle("is-added", bagSelected);
-    addToCartBtn.setAttribute("aria-pressed", String(bagSelected));
-    addToCartBtn.setAttribute(
-      "aria-label",
-      bagSelected ? "In cart, $300" : "Add to cart, $300"
-    );
+    if (bagSelected) {
+      addToCartBtn.removeAttribute("aria-pressed");
+      addToCartBtn.setAttribute("aria-label", "Checkout, $300");
+    } else {
+      addToCartBtn.setAttribute("aria-pressed", "false");
+      addToCartBtn.setAttribute("aria-label", "Add to cart, $300");
+    }
   }
   const cartBarUi = document.querySelector(".cart-bar-ui");
   cartBarUi?.classList.toggle("is-added", bagSelected);
   const label = document.querySelector(".cart-label");
   if (label) {
-    label.textContent = bagSelected ? "In cart" : "Add to cart";
+    label.textContent = bagSelected ? "Checkout" : "Add to cart";
   }
 }
 
@@ -604,6 +606,10 @@ noiseBtn.addEventListener("click", () => {
 
 function toggleBagState() {
   playButtonTick();
+  if (isInCart(CART_PRODUCT_ID)) {
+    goToCheckout();
+    return;
+  }
   toggleItem(CART_PRODUCT_ID);
 }
 

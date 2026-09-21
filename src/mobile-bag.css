@@ -1,7 +1,7 @@
 @import "./svg-bar-appear.css";
 
 .mobile-bag {
-  color: var(--ui-color);
+  color: var(--ui-overlay);
   height: 100%;
   height: 100dvh;
   inset: 0;
@@ -48,7 +48,7 @@
 }
 
 .mobile-bag__panel {
-  background: var(--bg-base);
+  background: #000000;
   height: 100%;
   position: relative;
   transform: translateX(100%);

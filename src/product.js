@@ -31,12 +31,13 @@ function resolvePublicAssetPath(path) {
 
 const MUG_CENTER_KEY = "c26";
 
-// Kick off the resting frame immediately on page entry; the viewer streams the rest.
+// Kick off every look-around frame on page entry; the hero waits until all are ready.
 const mugFrameImages = createMugFrameImages(resolvePublicAssetPath, "/media/mug_frames", {
   cols: 10,
   rows: 5
 });
-const mugFramesWarmup = preloadMugFrameImages(mugFrameImages, { keys: [MUG_CENTER_KEY] });
+const mugFramesWarmup = preloadMugFrameImages(mugFrameImages);
+const mugHeroLoaderSrc = resolvePublicAssetPath("/media/hero-loader.png");
 
 const radioBtn = document.querySelector("#radioBtn");
 const radioIcon = document.querySelector("#radioIcon");
@@ -186,7 +187,9 @@ function setupDirectionalProductHero() {
     centerKey: MUG_CENTER_KEY,
     // Invert look-up / look-down: top row ↔ underside, center stays.
     flipVerticalFrames: true,
-    showZones: false
+    showZones: false,
+    waitForAllFrames: true,
+    loaderSrc: mugHeroLoaderSrc
   });
 
   // Ensure the page-entry warmup stays referenced / in flight.

@@ -193,7 +193,9 @@ async function waitForFramePainted(img) {
  *   flipVerticalFrames?: boolean,
  *   gridCols?: number,
  *   gridRows?: number,
- *   centerKey?: string
+ *   centerKey?: string,
+ *   waitForAllFrames?: boolean,
+ *   loaderSrc?: string
  * }} options
  */
 export function createProductViewer(root, options = {}) {
@@ -222,6 +224,8 @@ export function createProductViewer(root, options = {}) {
   const maxBeta = options.maxBeta ?? MAX_BETA_DEG;
   // Mug frames are authored with screen Y flipped; mat frames are not.
   const flipVerticalFrames = options.flipVerticalFrames !== false;
+  const loaderSrc = typeof options.loaderSrc === "string" ? options.loaderSrc.trim() : "";
+  const waitForAllFrames = Boolean(options.waitForAllFrames) || Boolean(loaderSrc);
 
   const prefersMouse = supportsFinePointer() && !isMobileInteraction();
   const mobileInput = !prefersMouse;
@@ -272,16 +276,34 @@ export function createProductViewer(root, options = {}) {
 
   const layerNodes = new Map();
   const availableKeys = directionKeys.filter((key) => Boolean(images[key]));
+  let loaderEl = null;
 
   root.classList.add("product-viewer");
   root.classList.toggle("has-zones", showZones);
   root.classList.toggle("is-mobile-input", mobileInput);
+  root.classList.toggle("has-loader", Boolean(loaderSrc));
   root.setAttribute("data-ready", "false");
   root.setAttribute("data-input", prefersMouse ? "mouse" : "pending");
 
   const stage = document.createElement("div");
   stage.className = "product-viewer__stage";
   root.append(stage);
+
+  if (loaderSrc) {
+    loaderEl = document.createElement("div");
+    loaderEl.className = "product-viewer__loader";
+    loaderEl.setAttribute("aria-hidden", "true");
+
+    const loaderImg = document.createElement("img");
+    loaderImg.className = "product-viewer__loader-image";
+    loaderImg.src = loaderSrc;
+    loaderImg.alt = "";
+    loaderImg.draggable = false;
+    loaderImg.decoding = "sync";
+    loaderImg.fetchPriority = "high";
+    loaderEl.append(loaderImg);
+    root.append(loaderEl);
+  }
 
   for (const key of directionKeys) {
     const src = images[key];
@@ -296,10 +318,10 @@ export function createProductViewer(root, options = {}) {
     img.draggable = false;
     img.decoding = isCenter ? "sync" : "async";
     img.loading = "eager";
-    img.fetchPriority = isCenter ? "high" : "low";
-    // Off-center frames stay parked until the center frame is on screen,
-    // so the first paint never queues behind the rest of the grid.
-    if (isCenter) img.src = src;
+    img.fetchPriority = isCenter ? "high" : waitForAllFrames ? "auto" : "low";
+    // Streaming callers park off-center frames until the center paints.
+    // Mug hero sets every src immediately and waits for the full grid.
+    if (waitForAllFrames || isCenter) img.src = src;
     else img.dataset.src = src;
     img.dataset.direction = key;
     img.classList.toggle("is-active", isCenter);
@@ -796,12 +818,29 @@ export function createProductViewer(root, options = {}) {
     }
   }
 
+  function hideLoader() {
+    if (!loaderEl) return;
+    const el = loaderEl;
+    loaderEl = null;
+    el.classList.add("is-hidden");
+    const remove = () => {
+      el.remove();
+    };
+    el.addEventListener("transitionend", remove, { once: true });
+    window.setTimeout(remove, 450);
+  }
+
   async function preload() {
     const primaryKey = firstAvailable(centerKey);
-    await preloadMugFrameImages(images, { keys: [primaryKey] });
-    if (destroyed) return;
-
-    await waitForFramePainted(layerNodes.get(primaryKey));
+    if (waitForAllFrames) {
+      await preloadMugFrameImages(images);
+      if (destroyed) return;
+      await Promise.all([...layerNodes.values()].map((img) => waitForFramePainted(img)));
+    } else {
+      await preloadMugFrameImages(images, { keys: [primaryKey] });
+      if (destroyed) return;
+      await waitForFramePainted(layerNodes.get(primaryKey));
+    }
     if (destroyed) return;
 
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
@@ -810,6 +849,7 @@ export function createProductViewer(root, options = {}) {
     ready = true;
     root.setAttribute("data-ready", "true");
     root.classList.add("is-ready");
+    hideLoader();
     paintZoneOverlay();
 
     if (mobileInput) {
@@ -817,7 +857,7 @@ export function createProductViewer(root, options = {}) {
       void bootstrapMobileOrientation();
     }
     ensureLoop();
-    streamRemainingFrames();
+    if (!waitForAllFrames) streamRemainingFrames();
   }
 
   setupZoneOverlay();

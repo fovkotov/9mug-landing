@@ -90,7 +90,7 @@
 .cart-bar-ui {
   animation: bag-checkout-label-in 0.4s ease-out both;
   bottom: 0;
-  color: rgba(255, 255, 255, 0.8);
+  color: #fff;
   font-family: var(--font-ui);
   font-feature-settings: "lnum" 1, "pnum" 1;
   font-size: 17px;
@@ -104,10 +104,6 @@
   right: 0;
   width: 360px;
   z-index: 31;
-}
-
-.cart-bar-ui.is-added .cart-label {
-  opacity: 0.55;
 }
 
 .cart-price,

@@ -360,7 +360,7 @@
 
 .mobile-bag__total,
 .mobile-bag__checkout-label {
-  color: var(--ui-overlay);
+  color: #fff;
   font-family: var(--font-ui);
   font-feature-settings: "lnum" 1, "pnum" 1;
   font-size: 17px;

@@ -146,7 +146,7 @@ export function setupMobileMenu() {
     btn.setAttribute("aria-expanded", String(anyOpen));
     btn.setAttribute(
       "aria-label",
-      open ? "Close menu" : isBagOpen() ? "Close bag" : "Open menu"
+      open ? "Close menu" : isBagOpen() ? "Close cart" : "Open menu"
     );
   }
 

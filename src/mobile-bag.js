@@ -42,7 +42,7 @@ function renderItems(bag) {
   total.textContent = formatMoney(cart.total);
 
   if (!cart.lines.length) {
-    items.innerHTML = `<p class="mobile-bag__empty">Bag is empty</p>`;
+    items.innerHTML = `<p class="mobile-bag__empty">Cart is empty</p>`;
     return;
   }
 
@@ -83,13 +83,13 @@ function ensureOverlay() {
   bag.className = "mobile-bag is-empty";
   bag.setAttribute("role", "dialog");
   bag.setAttribute("aria-modal", "true");
-  bag.setAttribute("aria-label", "Bag");
+  bag.setAttribute("aria-label", "Cart");
   bag.setAttribute("aria-hidden", "true");
   bag.inert = true;
   bag.innerHTML = `
     <div class="mobile-bag__scrim" aria-hidden="true"></div>
     <div class="mobile-bag__panel">
-      <button type="button" class="mobile-bag__close" data-bag-close aria-label="Close bag">
+      <button type="button" class="mobile-bag__close" data-bag-close aria-label="Close cart">
         <span class="mobile-bag__close-icon" aria-hidden="true">
           <span></span>
           <span></span>

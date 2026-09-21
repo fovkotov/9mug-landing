@@ -1,50 +1,50 @@
-import "./styles.css";
 import "./checkout.css";
-import { setupMobileMenu } from "./mobile-menu.js";
 import { getCart, subscribeCart } from "./cart.js";
-
-const linesEl = document.querySelector("#checkoutLines");
-const totalEl = document.querySelector("#checkoutTotal");
-const tableEl = document.querySelector("#checkoutTable");
-const emptyEl = document.querySelector("#checkoutEmpty");
 
 function formatMoney(value) {
   return `$${value}`;
 }
 
-function renderCheckout() {
-  if (!linesEl || !totalEl || !tableEl || !emptyEl) return;
+export function init(root) {
+  const linesEl = root.querySelector("#checkoutLines");
+  const totalEl = root.querySelector("#checkoutTotal");
+  const tableEl = root.querySelector("#checkoutTable");
+  const emptyEl = root.querySelector("#checkoutEmpty");
 
-  const cart = getCart();
-  totalEl.textContent = formatMoney(cart.total);
-  linesEl.replaceChildren();
+  function renderCheckout() {
+    if (!linesEl || !totalEl || !tableEl || !emptyEl) return;
 
-  const isEmpty = cart.lines.length === 0;
-  tableEl.hidden = isEmpty;
-  emptyEl.hidden = !isEmpty;
-  if (isEmpty) return;
+    const cart = getCart();
+    totalEl.textContent = formatMoney(cart.total);
+    linesEl.replaceChildren();
 
-  for (const line of cart.lines) {
-    const row = document.createElement("article");
-    row.className = "checkout__line";
+    const isEmpty = cart.lines.length === 0;
+    tableEl.hidden = isEmpty;
+    emptyEl.hidden = !isEmpty;
+    if (isEmpty) return;
 
-    const name = document.createElement("span");
-    name.className = "checkout__name";
-    name.textContent = line.name;
+    for (const line of cart.lines) {
+      const row = document.createElement("article");
+      row.className = "checkout__line";
 
-    const qty = document.createElement("span");
-    qty.className = "checkout__qty";
-    qty.textContent = String(line.qty);
+      const name = document.createElement("span");
+      name.className = "checkout__name";
+      name.textContent = line.name;
 
-    const price = document.createElement("span");
-    price.className = "checkout__price";
-    price.textContent = formatMoney(line.lineTotal);
+      const qty = document.createElement("span");
+      qty.className = "checkout__qty";
+      qty.textContent = String(line.qty);
 
-    row.append(name, qty, price);
-    linesEl.append(row);
+      const price = document.createElement("span");
+      price.className = "checkout__price";
+      price.textContent = formatMoney(line.lineTotal);
+
+      row.append(name, qty, price);
+      linesEl.append(row);
+    }
   }
-}
 
-renderCheckout();
-subscribeCart(renderCheckout);
-setupMobileMenu();
+  renderCheckout();
+  const unsubscribe = subscribeCart(renderCheckout);
+  return () => unsubscribe();
+}

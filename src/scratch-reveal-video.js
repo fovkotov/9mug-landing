@@ -1,5 +1,5 @@
 export function setupScratchRevealVideo(video, resolvePublicAssetPath) {
-  if (!video) return () => {};
+  if (!video) return { prime() {}, destroy() {} };
 
   const rawSrc = video.getAttribute("src") ?? "";
   const resolvedSrc = resolvePublicAssetPath(rawSrc);
@@ -22,8 +22,9 @@ export function setupScratchRevealVideo(video, resolvePublicAssetPath) {
   };
 
   const section = video.closest("#scratchSection") || video;
+  let observer = null;
   if ("IntersectionObserver" in window) {
-    const observer = new IntersectionObserver(
+    observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) {
           tryPlay();
@@ -38,5 +39,14 @@ export function setupScratchRevealVideo(video, resolvePublicAssetPath) {
     tryPlay();
   }
 
-  return tryPlay;
+  return {
+    prime: tryPlay,
+    destroy() {
+      observer?.disconnect();
+      observer = null;
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+    }
+  };
 }

@@ -82,6 +82,9 @@ function syncAudioUi(menu) {
 }
 
 export function setupMobileMenu() {
+  if (document.documentElement.dataset.chromeBound === "1") return;
+  document.documentElement.dataset.chromeBound = "1";
+
   const btn = upgradeToggle();
   const menu = ensureOverlay();
   if (!btn || !menu) return;

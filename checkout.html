@@ -19,6 +19,7 @@
       <div class="nav-right">
         <div class="bag-group">
           <a href="#" class="nav-link nav-link-bag">Cart</a>
+          <span id="bagStatusText" class="bag-status" aria-live="polite">(1) $300</span>
         </div>
         <div class="audio-controls" aria-label="Audio controls">
           <img id="radioIcon" class="audio-icon" src="/media/radio-icon-play.png" alt="" />
@@ -34,6 +35,8 @@
       </div>
     </header>
 
+    <div id="page" data-route="checkout" tabindex="-1">
+
     <main class="checkout">
       <h1 class="checkout__title">Checkout</h1>
       <div class="checkout__table" id="checkoutTable">
@@ -47,7 +50,10 @@
       <p class="checkout__empty" id="checkoutEmpty" hidden>Cart is empty</p>
       <p class="checkout__total">Total <span id="checkoutTotal">$0</span></p>
     </main>
+    </div>
 
-    <script type="module" src="/src/checkout.js"></script>
+    <audio id="radioPlayer" preload="metadata"></audio>
+
+    <script type="module" src="/src/shell.js"></script>
   </body>
 </html>

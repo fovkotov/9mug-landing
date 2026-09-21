@@ -1,4 +1,3 @@
-import Lenis from "lenis";
 import { play } from "cuelume";
 import { ensureDeviceOrientationOnEntry } from "./device-orientation-permission.js";
 import "./mat.css";
@@ -9,11 +8,8 @@ import {
   preloadMugFrameImages
 } from "./components/ProductViewer.js";
 import { setupScratchRevealVideo } from "./scratch-reveal-video.js";
-import { setupMobileMenu } from "./mobile-menu.js";
 import { goToCheckout, isInCart, subscribeCart, toggleItem } from "./cart.js";
-
-// Silent motion-permission check as soon as the mat page opens.
-ensureDeviceOrientationOnEntry();
+import { trackListeners } from "./route-signal.js";
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const isMobileViewport = () => window.matchMedia("(max-width: 900px)").matches;
@@ -27,48 +23,10 @@ function resolvePublicAssetPath(path) {
   return `${normalizedBase}${path}`;
 }
 
+const CART_PRODUCT_ID = "mat";
 const matFrameImages = createMugFrameImages(resolvePublicAssetPath, "/media/mat_frames", {
   extension: "webp"
 });
-const matFramesWarmup = preloadMugFrameImages(matFrameImages);
-
-const radioBtn = document.querySelector("#radioBtn");
-const radioIcon = document.querySelector("#radioIcon");
-const noiseBtn = document.querySelector("#noiseBtn");
-const radioPlayer = document.querySelector("#radioPlayer");
-const radioPlayIconSource = resolvePublicAssetPath("/media/radio-icon-play.png");
-const radioPauseIconSource = resolvePublicAssetPath("/media/radio-icon-pause.png");
-const addToCartBtn = document.querySelector("#addToCart");
-const bagStatusText = document.querySelector("#bagStatusText");
-const heroPanel = document.querySelector(".panel-hero");
-const productViewerRoot = document.querySelector("#productViewerRoot");
-
-const lenis = new Lenis({
-  smoothWheel: true,
-  wheelMultiplier: 1,
-  syncTouch: true,
-  touchMultiplier: 1.1,
-  lerp: 0.09
-});
-
-const radioTracks = ["/audio/track-1.mp3", "/audio/track-2.mp3", "/audio/track-3.mp3"].map(
-  resolvePublicAssetPath
-);
-let currentTrackIndex = 0;
-let radioEnabled = false;
-let activeAudioControl = "radio";
-const CART_PRODUCT_ID = "mat";
-
-let noiseEnabled = false;
-let audioContext = null;
-let noiseNode = null;
-let noiseGain = null;
-let brownNoiseLastOut = 0;
-
-const scratchSection = document.querySelector("#scratchSection");
-const scratchCanvas = document.querySelector("#scratchCanvas");
-const scratchReveal = document.querySelector("#scratchReveal");
-const primeScratchReveal = setupScratchRevealVideo(scratchReveal, resolvePublicAssetPath);
 const scratchCursorSource = resolvePublicAssetPath("/media/scratch/cursor.png");
 const scratchCoverSources = {
   desktop: {
@@ -81,8 +39,18 @@ const scratchCoverSources = {
   }
 };
 
-const scrollVideoSection = document.querySelector("#scrollVideoSection");
-const scrollVideo = document.querySelector("#scrollVideo");
+let matFramesWarmup = null;
+let addToCartBtn = null;
+let bagStatusText = null;
+let heroPanel = null;
+let productViewerRoot = null;
+let pageRoot = document;
+let scratchSection = null;
+let scratchCanvas = null;
+let scratchReveal = null;
+let scratchVideoApi = { prime() {}, destroy() {} };
+let scrollVideoSection = null;
+let scrollVideo = null;
 let scrollVideoPrimed = false;
 
 function playButtonTick() {
@@ -96,7 +64,7 @@ function setupDirectionalMatHero() {
   heroPanel.dataset.heroMode = "directional";
   heroPanel.classList.add("is-directional-hero");
 
-  createProductViewer(productViewerRoot, {
+  const viewer = createProductViewer(productViewerRoot, {
     images: matFrameImages,
     transitionDuration: 0,
     deadZoneHalfWidth: 0.28,
@@ -106,28 +74,13 @@ function setupDirectionalMatHero() {
     verticalSensitivity: 0.95,
     maxGamma: 20,
     maxBeta: 16,
-    // Mat grid is authored top→bottom; swap the mug-style vertical flip.
+    // 5×5 segments; H/V ±90° (180°). Grid authored top→bottom.
     flipVerticalFrames: false,
     showZones: false
   });
 
   void matFramesWarmup;
-}
-
-function setRadioUiState() {
-  const isRadioActive = activeAudioControl === "radio";
-  radioBtn?.classList.toggle("is-active", isRadioActive);
-  radioBtn?.classList.toggle("is-muted", !isRadioActive);
-  if (radioIcon) {
-    const isAnyAudioEnabled = radioEnabled || noiseEnabled;
-    radioIcon.src = isAnyAudioEnabled ? radioPauseIconSource : radioPlayIconSource;
-  }
-}
-
-function updateNoiseUiState() {
-  const isNoiseActive = activeAudioControl === "noise";
-  noiseBtn?.classList.toggle("is-active", isNoiseActive);
-  noiseBtn?.classList.toggle("is-muted", !isNoiseActive);
+  return viewer;
 }
 
 function setBagUiState() {
@@ -145,9 +98,9 @@ function setBagUiState() {
       addToCartBtn.setAttribute("aria-label", "Add to cart, $300");
     }
   }
-  const cartBarUi = document.querySelector(".cart-bar-ui");
+  const cartBarUi = pageRoot.querySelector(".cart-bar-ui");
   cartBarUi?.classList.toggle("is-added", bagSelected);
-  const label = document.querySelector(".cart-label");
+  const label = pageRoot.querySelector(".cart-label");
   if (label) {
     label.textContent = bagSelected ? "Checkout" : "Add to cart";
   }
@@ -364,19 +317,32 @@ function setupScratchPanel() {
 
   setupScratchCursor();
 
+  let scratchObserver = null;
   if ("IntersectionObserver" in window) {
-    const observer = new IntersectionObserver(
+    scratchObserver = new IntersectionObserver(
       (entries) => {
         if (!entries.some((entry) => entry.isIntersecting)) return;
         armScratchAssets();
-        observer.disconnect();
+        scratchObserver?.disconnect();
       },
       { rootMargin: "240px 0px" }
     );
-    observer.observe(scratchSection);
+    scratchObserver.observe(scratchSection);
   } else {
     armScratchAssets();
   }
+
+  return () => {
+    cancelAnimationFrame(resizeFrame);
+    scratchObserver?.disconnect();
+    scratchCursor?.remove();
+    coverImage.onload = null;
+    coverImage.onerror = null;
+    coverImage.src = "";
+    ctx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+    scratchCanvas.width = 0;
+    scratchCanvas.height = 0;
+  };
 }
 
 function prepareScrollVideo() {
@@ -416,7 +382,7 @@ function syncScrollVideoFrame() {
 }
 
 function primeScrollVideo() {
-  primeScratchReveal();
+  scratchVideoApi.prime();
   if (scrollVideoPrimed || !scrollVideo) return;
   scrollVideoPrimed = true;
 
@@ -433,123 +399,6 @@ function primeScrollVideo() {
 
 prepareScrollVideo();
 
-function ensureNoiseGraph() {
-  if (!audioContext) {
-    audioContext = new AudioContext();
-  }
-
-  if (audioContext.state === "suspended") {
-    audioContext.resume();
-  }
-
-  if (!noiseNode) {
-    noiseNode = audioContext.createScriptProcessor(2048, 1, 1);
-    noiseGain = audioContext.createGain();
-    noiseGain.gain.value = 0.2;
-
-    noiseNode.onaudioprocess = (event) => {
-      const output = event.outputBuffer.getChannelData(0);
-      for (let i = 0; i < output.length; i += 1) {
-        const white = Math.random() * 2 - 1;
-        brownNoiseLastOut = (brownNoiseLastOut + 0.02 * white) / 1.02;
-        output[i] = brownNoiseLastOut * 3.5;
-      }
-    };
-
-    noiseNode.connect(noiseGain);
-    noiseGain.connect(audioContext.destination);
-  }
-}
-
-function enableBrownNoise() {
-  ensureNoiseGraph();
-  noiseGain.gain.setTargetAtTime(0.2, audioContext.currentTime, 0.03);
-  noiseEnabled = true;
-  updateNoiseUiState();
-}
-
-function disableBrownNoise() {
-  if (!audioContext || !noiseGain) return;
-  noiseGain.gain.setTargetAtTime(0, audioContext.currentTime, 0.03);
-  noiseEnabled = false;
-  updateNoiseUiState();
-}
-
-function playTrack(index) {
-  radioPlayer.src = radioTracks[index];
-  radioPlayer.volume = 0.39;
-  return radioPlayer.play();
-}
-
-radioPlayer?.addEventListener("ended", async () => {
-  if (!radioEnabled) return;
-  currentTrackIndex = (currentTrackIndex + 1) % radioTracks.length;
-  try {
-    await playTrack(currentTrackIndex);
-  } catch {
-    radioEnabled = false;
-    setRadioUiState();
-  }
-});
-
-async function toggleRadioPlayback() {
-  playButtonTick();
-  activeAudioControl = "radio";
-
-  if (noiseEnabled) {
-    disableBrownNoise();
-  }
-
-  radioEnabled = !radioEnabled;
-
-  if (radioEnabled) {
-    try {
-      await playTrack(currentTrackIndex);
-    } catch {
-      radioEnabled = false;
-    }
-  } else {
-    radioPlayer.pause();
-  }
-
-  setRadioUiState();
-  updateNoiseUiState();
-}
-
-function toggleNoisePlayback() {
-  playButtonTick();
-  activeAudioControl = "noise";
-
-  if (radioEnabled) {
-    radioEnabled = false;
-    radioPlayer.pause();
-  }
-
-  if (!noiseEnabled) {
-    enableBrownNoise();
-  } else {
-    disableBrownNoise();
-  }
-
-  setRadioUiState();
-}
-
-radioBtn?.addEventListener("click", () => {
-  toggleRadioPlayback();
-});
-
-radioIcon?.addEventListener("click", () => {
-  if (activeAudioControl === "noise") {
-    toggleNoisePlayback();
-    return;
-  }
-  toggleRadioPlayback();
-});
-
-noiseBtn?.addEventListener("click", () => {
-  toggleNoisePlayback();
-});
-
 function toggleBagState() {
   playButtonTick();
   if (isInCart(CART_PRODUCT_ID)) {
@@ -559,28 +408,62 @@ function toggleBagState() {
   toggleItem(CART_PRODUCT_ID);
 }
 
-subscribeCart(setBagUiState);
+export function init(root) {
+  pageRoot = root || document;
+  ensureDeviceOrientationOnEntry();
 
-addToCartBtn?.addEventListener("click", () => {
-  toggleBagState();
-});
+  const ac = new AbortController();
+  addToCartBtn = root.querySelector("#addToCart");
+  bagStatusText = document.querySelector("#bagStatusText");
+  heroPanel = root.querySelector(".panel-hero");
+  productViewerRoot = root.querySelector("#productViewerRoot");
+  scratchSection = root.querySelector("#scratchSection");
+  scratchCanvas = root.querySelector("#scratchCanvas");
+  scratchReveal = root.querySelector("#scratchReveal");
+  scrollVideoSection = root.querySelector("#scrollVideoSection");
+  scrollVideo = root.querySelector("#scrollVideo");
+  scrollVideoPrimed = false;
 
-window.addEventListener("pointerdown", primeScrollVideo, { once: true });
-window.addEventListener("touchstart", primeScrollVideo, { once: true, passive: true });
-window.addEventListener("wheel", primeScrollVideo, { once: true, passive: true });
-window.addEventListener("keydown", primeScrollVideo, { once: true });
+  matFramesWarmup = preloadMugFrameImages(matFrameImages, { signal: ac.signal });
+  scratchVideoApi = setupScratchRevealVideo(scratchReveal, resolvePublicAssetPath);
 
-setRadioUiState();
-updateNoiseUiState();
-setBagUiState();
-setupMobileMenu();
-setupDirectionalMatHero();
-setupScratchPanel();
+  let hero = null;
+  let scratchCleanup = () => {};
+  let unsubscribe = () => {};
+  let rafId = 0;
 
-function raf(time) {
-  lenis.raf(time);
-  syncScrollVideoFrame();
-  requestAnimationFrame(raf);
+  trackListeners(ac.signal, () => {
+    prepareScrollVideo();
+    hero = setupDirectionalMatHero();
+    scratchCleanup = setupScratchPanel() || (() => {});
+    setBagUiState();
+    unsubscribe = subscribeCart(setBagUiState);
+    addToCartBtn?.addEventListener("click", () => {
+      toggleBagState();
+    });
+    window.addEventListener("pointerdown", primeScrollVideo, { once: true });
+    window.addEventListener("touchstart", primeScrollVideo, { once: true, passive: true });
+    window.addEventListener("wheel", primeScrollVideo, { once: true, passive: true });
+    window.addEventListener("keydown", primeScrollVideo, { once: true });
+
+    const tick = () => {
+      syncScrollVideoFrame();
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+  });
+
+  return () => {
+    cancelAnimationFrame(rafId);
+    unsubscribe();
+    hero?.destroy?.();
+    scratchCleanup();
+    scratchVideoApi.destroy();
+    if (scrollVideo) {
+      scrollVideo.pause();
+      scrollVideo.removeAttribute("src");
+      scrollVideo.load();
+    }
+    ac.abort();
+  };
 }
-
-requestAnimationFrame(raf);

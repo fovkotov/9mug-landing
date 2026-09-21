@@ -1,0 +1,193 @@
+import { play } from "cuelume";
+
+const baseUrl = import.meta.env.BASE_URL ?? "/";
+
+function resolvePublicAssetPath(path) {
+  if (!path) return "";
+  if (/^(?:[a-z]+:)?\/\//i.test(path) || path.startsWith("data:")) return path;
+  if (!path.startsWith("/")) return path;
+  const normalizedBase = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+  return `${normalizedBase}${path}`;
+}
+
+let started = false;
+let currentTrackIndex = 0;
+let radioEnabled = false;
+let noiseEnabled = false;
+let activeAudioControl = "radio";
+let audioContext = null;
+let noiseNode = null;
+let noiseGain = null;
+let brownNoiseLastOut = 0;
+
+const radioTracks = ["/audio/track-1.mp3", "/audio/track-2.mp3", "/audio/track-3.mp3"].map(
+  resolvePublicAssetPath
+);
+const radioPlayIconSource = resolvePublicAssetPath("/media/radio-icon-play.png");
+const radioPauseIconSource = resolvePublicAssetPath("/media/radio-icon-pause.png");
+
+function playButtonTick() {
+  try {
+    play("tick");
+  } catch {
+    // Sound feedback is optional if the sample is unavailable.
+  }
+}
+
+function setRadioUiState() {
+  const radioBtn = document.querySelector("#radioBtn");
+  const radioIcon = document.querySelector("#radioIcon");
+  const isRadioActive = activeAudioControl === "radio";
+  radioBtn?.classList.toggle("is-active", isRadioActive);
+  radioBtn?.classList.toggle("is-muted", !isRadioActive);
+
+  if (radioIcon) {
+    const isAnyAudioEnabled = radioEnabled || noiseEnabled;
+    radioIcon.src = isAnyAudioEnabled ? radioPauseIconSource : radioPlayIconSource;
+  }
+}
+
+function updateNoiseUiState() {
+  const noiseBtn = document.querySelector("#noiseBtn");
+  const isNoiseActive = activeAudioControl === "noise";
+  noiseBtn?.classList.toggle("is-active", isNoiseActive);
+  noiseBtn?.classList.toggle("is-muted", !isNoiseActive);
+}
+
+function ensureNoiseGraph() {
+  if (!audioContext) {
+    audioContext = new AudioContext();
+  }
+
+  if (audioContext.state === "suspended") {
+    audioContext.resume().catch(() => {
+      // Ignored: user interaction may still be required on some browsers.
+    });
+  }
+
+  if (!noiseNode) {
+    noiseNode = audioContext.createScriptProcessor(2048, 1, 1);
+    noiseGain = audioContext.createGain();
+    noiseGain.gain.value = 0.2;
+
+    noiseNode.onaudioprocess = (event) => {
+      const output = event.outputBuffer.getChannelData(0);
+      for (let i = 0; i < output.length; i += 1) {
+        const white = Math.random() * 2 - 1;
+        brownNoiseLastOut = (brownNoiseLastOut + 0.02 * white) / 1.02;
+        output[i] = brownNoiseLastOut * 3.5;
+      }
+    };
+
+    noiseNode.connect(noiseGain);
+    noiseGain.connect(audioContext.destination);
+  }
+}
+
+function enableBrownNoise() {
+  ensureNoiseGraph();
+  if (!audioContext || !noiseGain) return;
+  noiseGain.gain.setTargetAtTime(0.2, audioContext.currentTime, 0.03);
+  noiseEnabled = true;
+  updateNoiseUiState();
+}
+
+function disableBrownNoise() {
+  if (!audioContext || !noiseGain) return;
+  noiseGain.gain.setTargetAtTime(0, audioContext.currentTime, 0.03);
+  noiseEnabled = false;
+  updateNoiseUiState();
+}
+
+function playTrack(index) {
+  const radioPlayer = document.querySelector("#radioPlayer");
+  if (!radioPlayer) return Promise.reject(new Error("No radio player found"));
+  radioPlayer.src = radioTracks[index];
+  radioPlayer.volume = 0.39;
+  return radioPlayer.play();
+}
+
+async function toggleRadioPlayback() {
+  const radioPlayer = document.querySelector("#radioPlayer");
+  if (!radioPlayer) return;
+  playButtonTick();
+  activeAudioControl = "radio";
+
+  if (noiseEnabled) {
+    disableBrownNoise();
+  }
+
+  radioEnabled = !radioEnabled;
+
+  if (radioEnabled) {
+    try {
+      await playTrack(currentTrackIndex);
+    } catch {
+      radioEnabled = false;
+    }
+  } else {
+    radioPlayer.pause();
+  }
+
+  setRadioUiState();
+  updateNoiseUiState();
+}
+
+function toggleNoisePlayback() {
+  const radioPlayer = document.querySelector("#radioPlayer");
+  playButtonTick();
+  activeAudioControl = "noise";
+
+  if (radioEnabled && radioPlayer) {
+    radioEnabled = false;
+    radioPlayer.pause();
+  }
+
+  if (!noiseEnabled) {
+    enableBrownNoise();
+  } else {
+    disableBrownNoise();
+  }
+
+  setRadioUiState();
+}
+
+export function initRadio() {
+  if (started) return;
+  const radioPlayer = document.querySelector("#radioPlayer");
+  const radioBtn = document.querySelector("#radioBtn");
+  const noiseBtn = document.querySelector("#noiseBtn");
+  const radioIcon = document.querySelector("#radioIcon");
+  if (!radioPlayer || !radioBtn || !noiseBtn) return;
+  started = true;
+
+  radioPlayer.addEventListener("ended", async () => {
+    if (!radioEnabled) return;
+    currentTrackIndex = (currentTrackIndex + 1) % radioTracks.length;
+    try {
+      await playTrack(currentTrackIndex);
+    } catch {
+      radioEnabled = false;
+      setRadioUiState();
+    }
+  });
+
+  radioBtn.addEventListener("click", () => {
+    toggleRadioPlayback();
+  });
+
+  noiseBtn.addEventListener("click", () => {
+    toggleNoisePlayback();
+  });
+
+  radioIcon?.addEventListener("click", () => {
+    if (activeAudioControl === "noise") {
+      toggleNoisePlayback();
+      return;
+    }
+    toggleRadioPlayback();
+  });
+
+  setRadioUiState();
+  updateNoiseUiState();
+}

@@ -92,7 +92,11 @@ const CHECKOUT_HREF = "./checkout.html";
 export function goToCheckout() {
   const next = new URL(CHECKOUT_HREF, document.baseURI);
   if (next.pathname === window.location.pathname) return;
-  window.location.assign(CHECKOUT_HREF);
+  const link = document.createElement("a");
+  link.href = next.href;
+  document.body.append(link);
+  link.click();
+  link.remove();
 }
 
 export function subscribeCart(fn) {

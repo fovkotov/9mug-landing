@@ -1,4 +1,3 @@
-import Lenis from "lenis";
 import { play } from "cuelume";
 import { ensureDeviceOrientationOnEntry } from "./device-orientation-permission.js";
 import "./product.css";
@@ -11,11 +10,8 @@ import {
   preloadMugFrameImages
 } from "./components/ProductViewer.js";
 import { setupScratchRevealVideo } from "./scratch-reveal-video.js";
-import { setupMobileMenu } from "./mobile-menu.js";
 import { goToCheckout, isInCart, subscribeCart, toggleItem } from "./cart.js";
-
-// Silent motion-permission check as soon as the product page opens.
-ensureDeviceOrientationOnEntry();
+import { trackListeners } from "./route-signal.js";
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const isMobileViewport = () => window.matchMedia("(max-width: 900px)").matches;
@@ -30,63 +26,13 @@ function resolvePublicAssetPath(path) {
 }
 
 const MUG_CENTER_KEY = "c26";
+const CART_PRODUCT_ID = "mug";
 
-// Kick off every look-around frame on page entry; the hero waits until all are ready.
 const mugFrameImages = createMugFrameImages(resolvePublicAssetPath, "/media/mug_frames", {
   cols: 10,
   rows: 5
 });
-const mugFramesWarmup = preloadMugFrameImages(mugFrameImages);
 const mugHeroLoaderSrc = resolvePublicAssetPath("/media/hero-loader.png");
-
-const radioBtn = document.querySelector("#radioBtn");
-const radioIcon = document.querySelector("#radioIcon");
-const noiseBtn = document.querySelector("#noiseBtn");
-const radioPlayer = document.querySelector("#radioPlayer");
-const radioPlayIconSource = resolvePublicAssetPath("/media/radio-icon-play.png");
-const radioPauseIconSource = resolvePublicAssetPath("/media/radio-icon-pause.png");
-const addToCartBtn = document.querySelector("#addToCart");
-const bagStatusText = document.querySelector("#bagStatusText");
-
-const scrollVideoSection = document.querySelector("#scrollVideoSection");
-const scrollVideo = document.querySelector("#scrollVideo");
-const heroPanel = document.querySelector(".panel-hero");
-const productViewerRoot = document.querySelector("#productViewerRoot");
-const legacyHeroRoot = document.querySelector("#legacyHeroRoot");
-const heroDesktopImage = document.querySelector("#heroDesktopImage");
-const heroMobileImage = document.querySelector("#heroMobileImage");
-const heroDragSlider = document.querySelector("#heroDragSlider");
-const metaSwitcher = document.querySelector("#metaSwitcher");
-const metaSwitchFirst = document.querySelector("#metaSwitchFirst");
-const metaSwitchSecond = document.querySelector("#metaSwitchSecond");
-const mugSwitchButtons = [...document.querySelectorAll(".mug-switcher-btn")];
-
-const lenis = new Lenis({
-  smoothWheel: true,
-  wheelMultiplier: 1,
-  syncTouch: true,
-  touchMultiplier: 1.1,
-  lerp: 0.09
-});
-
-const radioTracks = ["/audio/track-1.mp3", "/audio/track-2.mp3", "/audio/track-3.mp3"].map(
-  resolvePublicAssetPath
-);
-let currentTrackIndex = 0;
-let radioEnabled = false;
-let activeAudioControl = "radio";
-const CART_PRODUCT_ID = "mug";
-
-let noiseEnabled = false;
-let audioContext = null;
-let noiseNode = null;
-let noiseGain = null;
-let brownNoiseLastOut = 0;
-let scrollVideoPrimed = false;
-const scratchSection = document.querySelector("#scratchSection");
-const scratchCanvas = document.querySelector("#scratchCanvas");
-const scratchReveal = document.querySelector("#scratchReveal");
-const primeScratchReveal = setupScratchRevealVideo(scratchReveal, resolvePublicAssetPath);
 const scratchCursorSource = resolvePublicAssetPath("/media/scratch/cursor.png");
 const scratchCoverSources = {
   desktop: {
@@ -98,6 +44,28 @@ const scratchCoverSources = {
     "2x": resolvePublicAssetPath("/media/scratch/cover-mobile.webp")
   }
 };
+
+let mugFramesWarmup = null;
+let addToCartBtn = null;
+let bagStatusText = null;
+let scrollVideoSection = null;
+let scrollVideo = null;
+let heroPanel = null;
+let productViewerRoot = null;
+let legacyHeroRoot = null;
+let heroDesktopImage = null;
+let heroMobileImage = null;
+let heroDragSlider = null;
+let metaSwitcher = null;
+let metaSwitchFirst = null;
+let metaSwitchSecond = null;
+let mugSwitchButtons = [];
+let scrollVideoPrimed = false;
+let scratchSection = null;
+let scratchCanvas = null;
+let scratchReveal = null;
+let scratchVideoApi = { prime() {}, destroy() {} };
+let pageRoot = document;
 
 function prepareScrollVideo() {
   if (!scrollVideo) return;
@@ -118,30 +86,6 @@ function prepareScrollVideo() {
   scrollVideo.addEventListener("loadedmetadata", syncScrollVideoFrame);
 }
 
-prepareScrollVideo();
-
-function playTrack(index) {
-  radioPlayer.src = radioTracks[index];
-  radioPlayer.volume = 0.39;
-  return radioPlayer.play();
-}
-
-function setRadioUiState() {
-  const isRadioActive = activeAudioControl === "radio";
-  radioBtn.classList.toggle("is-active", isRadioActive);
-  radioBtn.classList.toggle("is-muted", !isRadioActive);
-  if (radioIcon) {
-    const isAnyAudioEnabled = radioEnabled || noiseEnabled;
-    radioIcon.src = isAnyAudioEnabled ? radioPauseIconSource : radioPlayIconSource;
-  }
-}
-
-function updateNoiseUiState() {
-  const isNoiseActive = activeAudioControl === "noise";
-  noiseBtn.classList.toggle("is-active", isNoiseActive);
-  noiseBtn.classList.toggle("is-muted", !isNoiseActive);
-}
-
 function setBagUiState() {
   const bagSelected = isInCart(CART_PRODUCT_ID);
   if (bagStatusText) {
@@ -157,9 +101,9 @@ function setBagUiState() {
       addToCartBtn.setAttribute("aria-label", "Add to cart, $300");
     }
   }
-  const cartBarUi = document.querySelector(".cart-bar-ui");
+  const cartBarUi = pageRoot.querySelector(".cart-bar-ui");
   cartBarUi?.classList.toggle("is-added", bagSelected);
-  const label = document.querySelector(".cart-label");
+  const label = pageRoot.querySelector(".cart-label");
   if (label) {
     label.textContent = bagSelected ? "Checkout" : "Add to cart";
   }
@@ -173,7 +117,7 @@ function setupDirectionalProductHero() {
   heroPanel.dataset.heroMode = "directional";
   heroPanel.classList.add("is-directional-hero");
 
-  createProductViewer(productViewerRoot, {
+  const viewer = createProductViewer(productViewerRoot, {
     images: mugFrameImages,
     transitionDuration: 0,
     // 10×5 look-around: H ±202.5° step 45°, V ±20° step 10°.
@@ -196,6 +140,7 @@ function setupDirectionalProductHero() {
 
   // Ensure the page-entry warmup stays referenced / in flight.
   void mugFramesWarmup;
+  return viewer;
 }
 
 function setupProductHero() {
@@ -207,7 +152,7 @@ function setupProductHero() {
     heroPanel?.classList.remove("is-directional-hero");
     if (heroPanel) heroPanel.dataset.heroMode = "legacy-slides";
 
-    setupLegacySlidesHero({
+    return setupLegacySlidesHero({
       heroPanel,
       heroDesktopImage,
       heroMobileImage,
@@ -220,10 +165,9 @@ function setupProductHero() {
       isMobileViewport,
       playButtonTick
     });
-    return;
   }
 
-  setupDirectionalProductHero();
+  return setupDirectionalProductHero();
 }
 
 function setupScratchPanel() {
@@ -439,19 +383,32 @@ function setupScratchPanel() {
 
   setupScratchCursor();
 
+  let scratchObserver = null;
   if ("IntersectionObserver" in window) {
-    const observer = new IntersectionObserver(
+    scratchObserver = new IntersectionObserver(
       (entries) => {
         if (!entries.some((entry) => entry.isIntersecting)) return;
         armScratchAssets();
-        observer.disconnect();
+        scratchObserver?.disconnect();
       },
       { rootMargin: "240px 0px" }
     );
-    observer.observe(scratchSection);
+    scratchObserver.observe(scratchSection);
   } else {
     armScratchAssets();
   }
+
+  return () => {
+    cancelAnimationFrame(resizeFrame);
+    scratchObserver?.disconnect();
+    scratchCursor?.remove();
+    coverImage.onload = null;
+    coverImage.onerror = null;
+    coverImage.src = "";
+    ctx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+    scratchCanvas.width = 0;
+    scratchCanvas.height = 0;
+  };
 }
 
 function syncScrollVideoFrame() {
@@ -471,50 +428,8 @@ function syncScrollVideoFrame() {
   }
 }
 
-function ensureNoiseGraph() {
-  if (!audioContext) {
-    audioContext = new AudioContext();
-  }
-
-  if (audioContext.state === "suspended") {
-    audioContext.resume();
-  }
-
-  if (!noiseNode) {
-    noiseNode = audioContext.createScriptProcessor(2048, 1, 1);
-    noiseGain = audioContext.createGain();
-    noiseGain.gain.value = 0.2;
-
-    noiseNode.onaudioprocess = (event) => {
-      const output = event.outputBuffer.getChannelData(0);
-      for (let i = 0; i < output.length; i += 1) {
-        const white = Math.random() * 2 - 1;
-        brownNoiseLastOut = (brownNoiseLastOut + 0.02 * white) / 1.02;
-        output[i] = brownNoiseLastOut * 3.5;
-      }
-    };
-
-    noiseNode.connect(noiseGain);
-    noiseGain.connect(audioContext.destination);
-  }
-}
-
-function enableBrownNoise() {
-  ensureNoiseGraph();
-  noiseGain.gain.setTargetAtTime(0.2, audioContext.currentTime, 0.03);
-  noiseEnabled = true;
-  updateNoiseUiState();
-}
-
-function disableBrownNoise() {
-  if (!audioContext || !noiseGain) return;
-  noiseGain.gain.setTargetAtTime(0, audioContext.currentTime, 0.03);
-  noiseEnabled = false;
-  updateNoiseUiState();
-}
-
 function primeScrollVideo() {
-  primeScratchReveal();
+  scratchVideoApi.prime();
   if (scrollVideoPrimed || !scrollVideo) return;
   scrollVideoPrimed = true;
 
@@ -533,77 +448,6 @@ function playButtonTick() {
   play("tick");
 }
 
-radioPlayer.addEventListener("ended", async () => {
-  if (!radioEnabled) return;
-  currentTrackIndex = (currentTrackIndex + 1) % radioTracks.length;
-  try {
-    await playTrack(currentTrackIndex);
-  } catch {
-    radioEnabled = false;
-    setRadioUiState();
-  }
-});
-
-async function toggleRadioPlayback() {
-  playButtonTick();
-  activeAudioControl = "radio";
-
-  // Radio and noise are mutually exclusive.
-  if (noiseEnabled) {
-    disableBrownNoise();
-  }
-
-  radioEnabled = !radioEnabled;
-
-  if (radioEnabled) {
-    try {
-      await playTrack(currentTrackIndex);
-    } catch {
-      radioEnabled = false;
-    }
-  } else {
-    radioPlayer.pause();
-  }
-
-  setRadioUiState();
-  updateNoiseUiState();
-}
-
-function toggleNoisePlayback() {
-  playButtonTick();
-  activeAudioControl = "noise";
-
-  // Radio and noise are mutually exclusive.
-  if (radioEnabled) {
-    radioEnabled = false;
-    radioPlayer.pause();
-  }
-
-  if (!noiseEnabled) {
-    enableBrownNoise();
-  } else {
-    disableBrownNoise();
-  }
-
-  setRadioUiState();
-}
-
-radioBtn.addEventListener("click", () => {
-  toggleRadioPlayback();
-});
-
-radioIcon?.addEventListener("click", () => {
-  if (activeAudioControl === "noise") {
-    toggleNoisePlayback();
-    return;
-  }
-  toggleRadioPlayback();
-});
-
-noiseBtn.addEventListener("click", () => {
-  toggleNoisePlayback();
-});
-
 function toggleBagState() {
   playButtonTick();
   if (isInCart(CART_PRODUCT_ID)) {
@@ -613,28 +457,70 @@ function toggleBagState() {
   toggleItem(CART_PRODUCT_ID);
 }
 
-subscribeCart(setBagUiState);
+export function init(root) {
+  pageRoot = root || document;
+  ensureDeviceOrientationOnEntry();
 
-addToCartBtn?.addEventListener("click", () => {
-  toggleBagState();
-});
+  const ac = new AbortController();
+  addToCartBtn = root.querySelector("#addToCart");
+  bagStatusText = document.querySelector("#bagStatusText");
+  scrollVideoSection = root.querySelector("#scrollVideoSection");
+  scrollVideo = root.querySelector("#scrollVideo");
+  heroPanel = root.querySelector(".panel-hero");
+  productViewerRoot = root.querySelector("#productViewerRoot");
+  legacyHeroRoot = root.querySelector("#legacyHeroRoot");
+  heroDesktopImage = root.querySelector("#heroDesktopImage");
+  heroMobileImage = root.querySelector("#heroMobileImage");
+  heroDragSlider = root.querySelector("#heroDragSlider");
+  metaSwitcher = root.querySelector("#metaSwitcher");
+  metaSwitchFirst = root.querySelector("#metaSwitchFirst");
+  metaSwitchSecond = root.querySelector("#metaSwitchSecond");
+  mugSwitchButtons = [...root.querySelectorAll(".mug-switcher-btn")];
+  scratchSection = root.querySelector("#scratchSection");
+  scratchCanvas = root.querySelector("#scratchCanvas");
+  scratchReveal = root.querySelector("#scratchReveal");
+  scrollVideoPrimed = false;
 
-window.addEventListener("pointerdown", primeScrollVideo, { once: true });
-window.addEventListener("touchstart", primeScrollVideo, { once: true, passive: true });
-window.addEventListener("wheel", primeScrollVideo, { once: true, passive: true });
-window.addEventListener("keydown", primeScrollVideo, { once: true });
+  mugFramesWarmup = preloadMugFrameImages(mugFrameImages, { signal: ac.signal });
+  scratchVideoApi = setupScratchRevealVideo(scratchReveal, resolvePublicAssetPath);
 
-setRadioUiState();
-updateNoiseUiState();
-setBagUiState();
-setupMobileMenu();
-setupProductHero();
-setupScratchPanel();
+  let hero = null;
+  let scratchCleanup = () => {};
+  let unsubscribe = () => {};
+  let rafId = 0;
 
-function raf(time) {
-  lenis.raf(time);
-  syncScrollVideoFrame();
-  requestAnimationFrame(raf);
+  trackListeners(ac.signal, () => {
+    prepareScrollVideo();
+    hero = setupProductHero();
+    scratchCleanup = setupScratchPanel() || (() => {});
+    setBagUiState();
+    unsubscribe = subscribeCart(setBagUiState);
+    addToCartBtn?.addEventListener("click", () => {
+      toggleBagState();
+    });
+    window.addEventListener("pointerdown", primeScrollVideo, { once: true });
+    window.addEventListener("touchstart", primeScrollVideo, { once: true, passive: true });
+    window.addEventListener("wheel", primeScrollVideo, { once: true, passive: true });
+    window.addEventListener("keydown", primeScrollVideo, { once: true });
+
+    const tick = () => {
+      syncScrollVideoFrame();
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+  });
+
+  return () => {
+    cancelAnimationFrame(rafId);
+    unsubscribe();
+    hero?.destroy?.();
+    scratchCleanup();
+    scratchVideoApi.destroy();
+    if (scrollVideo) {
+      scrollVideo.pause();
+      scrollVideo.removeAttribute("src");
+      scrollVideo.load();
+    }
+    ac.abort();
+  };
 }
-
-requestAnimationFrame(raf);

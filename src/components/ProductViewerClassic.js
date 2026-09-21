@@ -88,9 +88,10 @@ function injectPreloadLink(src) {
   document.head.append(link);
 }
 
-async function decodeImageSource(src) {
+async function decodeImageSource(src, bucket) {
   if (!src) return null;
   const image = new Image();
+  bucket?.push(image);
   image.decoding = "async";
   image.src = src;
   try {
@@ -106,19 +107,35 @@ async function decodeImageSource(src) {
   return image;
 }
 
+function dropFramePreload(sources, bucket) {
+  for (const image of bucket) {
+    image.onload = null;
+    image.onerror = null;
+    image.src = "";
+  }
+  const wanted = new Set(sources);
+  document.head?.querySelectorAll('link[data-mug-frame-preload="true"]').forEach((link) => {
+    if (wanted.has(link.getAttribute("href"))) link.remove();
+  });
+}
+
 /**
  * Start fetching + decoding every frame as early as possible (page entry).
  * Safe to call before mounting ProductViewer.
  */
-export function preloadMugFrameImages(images = {}) {
+export function preloadMugFrameImages(images = {}, { signal } = {}) {
   const normalized = normalizeImages(images);
   const sources = DIRECTION_KEYS.map((key) => normalized[key]).filter(Boolean);
+  const bucket = [];
+  const drop = () => dropFramePreload(sources, bucket);
+  if (signal?.aborted) return Promise.resolve([]);
+  signal?.addEventListener("abort", drop, { once: true });
 
   for (const src of sources) {
     injectPreloadLink(src);
   }
 
-  return Promise.all(sources.map(decodeImageSource));
+  return Promise.all(sources.map((src) => decodeImageSource(src, bucket)));
 }
 
 async function waitForFramePainted(img) {

@@ -19,6 +19,7 @@
       <div class="nav-right">
         <div class="bag-group">
           <a href="#" class="nav-link nav-link-bag">Cart</a>
+          <span id="bagStatusText" class="bag-status" aria-live="polite">(1) $300</span>
         </div>
         <div class="audio-controls" aria-label="Audio controls">
           <img id="radioIcon" class="audio-icon" src="/media/radio-icon-play.png" alt="" />
@@ -33,6 +34,8 @@
         </a>
       </div>
     </header>
+
+    <div id="page" data-route="shop" tabindex="-1">
 
     <aside class="meta-left desktop-only" aria-label="Section menu">
       <a class="meta-item is-active" href="#section-mug" data-section-link>9MUG</a>
@@ -67,9 +70,10 @@
         <p class="mobile-panel-title is-light">Cutting Mat</p>
       </section>
     </main>
+    </div>
 
     <audio id="radioPlayer" preload="metadata"></audio>
 
-    <script type="module" src="/src/shop.js"></script>
+    <script type="module" src="/src/shell.js"></script>
   </body>
 </html>

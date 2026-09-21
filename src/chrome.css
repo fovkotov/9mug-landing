@@ -1,0 +1,266 @@
+:root {
+  --ui-color: rgba(0, 0, 0, 0.8);
+  --ui-muted: rgba(0, 0, 0, 0.48);
+  --ui-overlay: rgba(255, 255, 255, 0.8);
+  --ui-overlay-muted: rgba(255, 255, 255, 0.32);
+  --bg-base: #efe8e6;
+  --font-ui: "Wremena", "Wremena Regular", "Times New Roman", serif;
+  --layout-columns: 8;
+  --layout-margin: 16px;
+  --layout-gutter: 16px;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--ui-color);
+  font-family: var(--font-ui);
+  font-feature-settings: "lnum" 1, "pnum" 1;
+  font-size: 17px;
+  font-variant-numeric: lining-nums proportional-nums;
+  letter-spacing: 0.34px;
+  line-height: 1;
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.desktop-only {
+  display: block;
+}
+
+.mobile-only {
+  display: none;
+}
+
+.top-nav,
+.nav-link,
+.control-btn,
+.nav-online,
+.meta-item,
+.mobile-panel-title {
+  color: inherit;
+  font-family: var(--font-ui);
+  font-feature-settings: "lnum" 1, "pnum" 1;
+  font-size: 17px;
+  letter-spacing: 0.34px;
+  line-height: normal;
+}
+
+.top-nav {
+  align-items: start;
+  color: var(--ui-overlay);
+  column-gap: var(--layout-gutter);
+  display: grid;
+  grid-template-columns: repeat(var(--layout-columns), minmax(0, 1fr));
+  left: 0;
+  mix-blend-mode: difference;
+  padding: 16px var(--layout-margin) 0;
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 20;
+}
+
+.top-nav * {
+  pointer-events: auto;
+}
+
+.nav-left {
+  align-items: center;
+  display: flex;
+  grid-column: 1 / span 2;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.bag-group {
+  align-items: center;
+  display: flex;
+  gap: 18px;
+  justify-self: start;
+  white-space: nowrap;
+}
+
+.bag-status {
+  color: #fff;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.bag-status.is-visible {
+  opacity: 1;
+}
+
+.nav-mobile-center {
+  display: none;
+}
+
+.nav-right {
+  align-items: start;
+  column-gap: var(--layout-gutter);
+  display: grid;
+  grid-column: 6 / -1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  min-width: 0;
+  width: 100%;
+}
+
+.audio-controls {
+  align-items: start;
+  display: flex;
+  gap: 17px;
+  justify-self: start;
+}
+
+.audio-icon {
+  cursor: pointer;
+  display: block;
+  height: 14px;
+  object-fit: contain;
+  width: 16px;
+}
+
+.audio-toggle-group {
+  align-items: center;
+  display: flex;
+  gap: 5px;
+}
+
+.control-btn {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.control-btn.is-muted {
+  color: var(--ui-overlay-muted);
+}
+
+.control-btn.is-active {
+  color: var(--ui-overlay);
+}
+
+.nav-status {
+  align-items: start;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  gap: 9px;
+  justify-self: end;
+}
+
+.horse-icon {
+  display: block;
+  height: 32px;
+  object-fit: cover;
+  width: 29.065px;
+}
+
+#page:focus {
+  outline: none;
+}
+
+.visually-hidden {
+  border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+@media (max-width: 900px) {
+  :root {
+    --layout-columns: 4;
+  }
+
+  .desktop-only {
+    display: none;
+  }
+
+  .mobile-only {
+    display: block;
+  }
+
+  .top-nav {
+    align-items: center;
+    display: flex;
+    height: 49px;
+    justify-content: space-between;
+    padding: max(16px, env(safe-area-inset-top)) 16px 16px;
+  }
+
+  .nav-left {
+    display: contents;
+  }
+
+  .nav-left > .nav-link {
+    flex: 0 0 auto;
+  }
+
+  .bag-group {
+    gap: 0;
+    margin-left: auto;
+  }
+
+  .bag-status {
+    display: none;
+  }
+
+  .nav-right {
+    display: contents;
+  }
+
+  .audio-controls,
+  .nav-status {
+    display: none;
+  }
+
+  .nav-mobile-center {
+    display: block;
+    height: 8px;
+    left: 50%;
+    pointer-events: none;
+    position: absolute;
+    top: calc(max(16px, env(safe-area-inset-top)) + 4.5px);
+    transform: translateX(-50%);
+    width: 46px;
+    z-index: 21;
+  }
+
+  .nav-mobile-center img {
+    display: block;
+    height: 8px;
+    width: 46px;
+  }
+}
+
+@media (max-width: 600px) {
+  :root {
+    --layout-margin: 16px;
+    --layout-gutter: 12px;
+  }
+}

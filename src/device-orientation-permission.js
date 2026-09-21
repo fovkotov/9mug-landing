@@ -163,26 +163,22 @@ export function ensureDeviceOrientationOnEntry() {
  * then continue navigation. Required on iOS so DeviceOrientation can start
  * without a second permission gesture on the destination page.
  */
-export function bindProductOrientationHandoff(
-  selector = 'a[href*="product.html"], a[href*="product-classic.html"], a[href*="mat.html"]'
-) {
-  const links = document.querySelectorAll(selector);
-  if (!links.length) return;
+export function bindProductOrientationHandoff() {
+  if (document.documentElement.dataset.orientationHandoff === "1") return;
+  document.documentElement.dataset.orientationHandoff = "1";
 
-  for (const link of links) {
-    if (link.dataset.orientationHandoffBound === "true") continue;
-    link.dataset.orientationHandoffBound = "true";
-
-    link.addEventListener("click", (event) => {
+  // Capture runs in the click gesture, before the router preventDefault.
+  // Permission must start here; navigation itself stays with the router.
+  document.addEventListener(
+    "click",
+    (event) => {
+      const link = event.target?.closest?.(
+        'a[href*="product.html"], a[href*="product-classic.html"], a[href*="mat.html"]'
+      );
+      if (!link) return;
       if (!isMobileInteractionContext() || !orientationApiAvailable()) return;
-
-      event.preventDefault();
-      const href = link.href;
-
-      void (async () => {
-        await requestDeviceOrientationPermission();
-        window.location.href = href;
-      })();
-    });
-  }
+      void requestDeviceOrientationPermission();
+    },
+    true
+  );
 }

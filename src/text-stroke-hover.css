@@ -25,9 +25,10 @@
   letter-spacing: inherit;
   line-height: inherit;
   font: inherit;
-  color: #000;
-  -webkit-text-fill-color: #000;
+  color: #fff;
+  -webkit-text-fill-color: #fff;
   -webkit-text-stroke-width: 0;
+  text-shadow: var(--tsh-shadow);
   pointer-events: none;
   user-select: none;
   filter: var(--tsh-filter);

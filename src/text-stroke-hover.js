@@ -5,6 +5,7 @@ const DESKTOP_QUERY = "(min-width: 901px) and (pointer: fine)";
 const DEFAULTS = { enabled: true, maxStroke: 4, radius: 40, falloff: 1 };
 const SVG_NS = "http://www.w3.org/2000/svg";
 const FIELD_STOPS = 16;
+const SHADOW_DIRECTIONS = 16;
 const FILTER_PAD = 8;
 const SKIP_TAGS = new Set([
   "INPUT",
@@ -86,8 +87,8 @@ function saveSettings() {
 }
 
 /* strength = (1 - distance / radius) ^ falloff — 1 at the pointer, 0 at the radius edge.
-   The field is a radial alpha image; the filter grows the glyph outline by strength * maxStroke / 2,
-   so the edge of the radius adds nothing and no circle shows. */
+   The field is a radial alpha image; a pixel next to a glyph is painted when its distance to the
+   outline is at most strength * maxStroke / 2, so the stroke width follows the pointer continuously. */
 function buildFieldHref(falloff) {
   const stops = [];
   for (let i = 0; i <= FIELD_STOPS; i += 1) {
@@ -102,8 +103,31 @@ function buildFieldHref(falloff) {
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
+function ringCount(outward) {
+  return Math.max(4, Math.ceil(outward * Math.max(1, window.devicePixelRatio || 1) * 2));
+}
+
+/* Rings of text-shadow copies around the glyph; gray encodes closeness to the outline
+   (white on the glyph, black at maxStroke / 2) and nearer rings paint on top.
+   Gray, not a color channel: macOS color management mixes pure channels when converting to P3. */
+function buildDistanceShadows(outward) {
+  if (outward <= 0) return "none";
+  const rings = ringCount(outward);
+  const shadows = [];
+  for (let j = 1; j <= rings; j += 1) {
+    const r = (outward * j) / rings;
+    const gray = Math.round(255 * (1 - j / rings));
+    for (let k = 0; k < SHADOW_DIRECTIONS; k += 1) {
+      const a = (Math.PI * 2 * k) / SHADOW_DIRECTIONS;
+      shadows.push(`${(Math.cos(a) * r).toFixed(3)}px ${(Math.sin(a) * r).toFixed(3)}px 0 rgb(${gray},${gray},${gray})`);
+    }
+  }
+  return shadows.join(",");
+}
+
 function applyGlobals() {
   fieldHref = buildFieldHref(settings.falloff);
+  document.documentElement.style.setProperty("--tsh-shadow", buildDistanceShadows(settings.maxStroke / 2));
   clearAll();
 }
 
@@ -127,12 +151,10 @@ function svgEl(name, attrs) {
   return node;
 }
 
-/* One dilation per device pixel of outward growth; each shows where the field passes its threshold. */
+/* grow = (closeness + strength - 1) sharpened to ~1 device pixel, i.e. distance <= strength * outward. */
 function createFilter() {
   const id = `tsh-f-${(filterSeq += 1)}`;
-  const outward = settings.maxStroke / 2;
-  const unit = 1 / Math.max(1, window.devicePixelRatio || 1);
-  const steps = Math.max(1, Math.round(outward / unit));
+  const rings = ringCount(settings.maxStroke / 2);
   const filter = svgEl("filter", {
     id,
     filterUnits: "userSpaceOnUse",
@@ -141,20 +163,31 @@ function createFilter() {
   });
   const image = svgEl("feImage", { href: fieldHref, preserveAspectRatio: "none", result: "field" });
   filter.append(image);
+  filter.append(
+    svgEl("feColorMatrix", {
+      in: "SourceGraphic",
+      type: "matrix",
+      values: "0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 0 0 0 0",
+      result: "close"
+    })
+  );
+  filter.append(
+    svgEl("feColorMatrix", {
+      in: "SourceGraphic",
+      type: "matrix",
+      values: `0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  ${rings} 0 0 0 ${1 - rings}`,
+      result: "glyph"
+    })
+  );
+  filter.append(
+    svgEl("feComposite", { in: "close", in2: "field", operator: "arithmetic", k1: 0, k2: 1, k3: 1, k4: -1, result: "sum" })
+  );
+  const sharpen = svgEl("feComponentTransfer", { in: "sum", result: "grow" });
+  sharpen.append(svgEl("feFuncA", { type: "linear", slope: rings, intercept: 0 }));
+  filter.append(sharpen);
   const merge = svgEl("feMerge", { result: "shape" });
-  merge.append(svgEl("feMergeNode", { in: "SourceAlpha" }));
-  const slope = steps * 2;
-  for (let i = 1; i <= steps; i += 1) {
-    const threshold = (i - 0.5) / steps;
-    filter.append(
-      svgEl("feMorphology", { in: "SourceAlpha", operator: "dilate", radius: (outward * i) / steps, result: `d${i}` })
-    );
-    const gate = svgEl("feComponentTransfer", { in: "field", result: `t${i}` });
-    gate.append(svgEl("feFuncA", { type: "linear", slope, intercept: 0.5 - slope * threshold }));
-    filter.append(gate);
-    filter.append(svgEl("feComposite", { in: `d${i}`, in2: `t${i}`, operator: "in", result: `l${i}` }));
-    merge.append(svgEl("feMergeNode", { in: `l${i}` }));
-  }
+  merge.append(svgEl("feMergeNode", { in: "glyph" }));
+  merge.append(svgEl("feMergeNode", { in: "grow" }));
   filter.append(merge);
   const flood = svgEl("feFlood", { "flood-color": "#000" });
   filter.append(flood);

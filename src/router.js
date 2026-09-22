@@ -59,6 +59,7 @@ async function mount(file, page, { focus }) {
   currentDestroy = typeof destroy === "function" ? destroy : () => {};
   if (focus) focusPage(page);
   resizeScroll();
+  window.dispatchEvent(new CustomEvent("spa:settled"));
 }
 
 function swapPage(nextPage, doc) {
@@ -141,6 +142,9 @@ async function navigate(url, { pop = false, announcer } = {}) {
       await transition.finished.catch(() => {});
     } else {
       apply();
+    }
+    if (generation === navGeneration) {
+      window.dispatchEvent(new CustomEvent("spa:settled"));
     }
   } finally {
     if (generation === navGeneration) navigating = false;

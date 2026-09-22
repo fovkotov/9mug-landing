@@ -432,35 +432,47 @@
   from {
     column-gap: 0;
     padding-inline: 0;
+    width: 0;
   }
 
   to {
     column-gap: 12px;
     padding-inline: 16px;
+    width: 640px;
+  }
+}
+
+@keyframes bag-desktop-pad-out {
+  from {
+    column-gap: 12px;
+    padding-inline: 16px;
+    width: 640px;
+  }
+
+  to {
+    column-gap: 0;
+    padding-inline: 0;
+    width: 0;
   }
 }
 
 @keyframes bag-desktop-meta {
   from {
     column-gap: 0;
-    line-height: 0.65;
   }
 
   to {
     column-gap: 14.129px;
-    line-height: normal;
   }
 }
 
 @keyframes bag-desktop-qty {
   from {
     gap: 0;
-    line-height: 0.65;
   }
 
   to {
     gap: 10.597px;
-    line-height: normal;
   }
 }
 
@@ -650,12 +662,28 @@
     width: 100%;
   }
 
+  /* Settled Figma cell (640×372). Stay that size while the panel grows from 100px. */
+  .mobile-bag__image {
+    height: 372px;
+    inset: auto;
+    left: 0;
+    top: 0;
+    width: 640px;
+  }
+
   .mobile-bag__row {
+    align-content: flex-start;
     align-items: flex-start;
     column-gap: 12px;
+    flex-shrink: 0;
     flex-wrap: wrap;
+    min-width: 0;
+    overflow: hidden;
+    overflow-wrap: break-word;
     padding-inline: 16px;
     row-gap: 0;
+    white-space: normal;
+    width: 0;
   }
 
   .mobile-bag.is-open .mobile-bag__row,
@@ -663,11 +691,22 @@
     animation: bag-desktop-pad 0.5s ease-out both;
   }
 
+  .mobile-bag.is-closing .mobile-bag__row,
+  .mobile-bag.is-closing .mobile-bag__empty {
+    animation: bag-desktop-pad-out 0.5s ease-in 0.4s both;
+  }
+
+  .mobile-bag.is-closing:not(.is-checkout-ready) .mobile-bag__row,
+  .mobile-bag.is-closing:not(.is-checkout-ready) .mobile-bag__empty {
+    animation-delay: 0s;
+  }
+
   .mobile-bag.is-open.is-instant .mobile-bag__row,
   .mobile-bag.is-open.is-instant .mobile-bag__empty {
     animation: none;
     column-gap: 12px;
     padding-inline: 16px;
+    width: 100%;
   }
 
   .mobile-bag__meta {
@@ -677,7 +716,8 @@
     font-size: 15.012px;
     letter-spacing: 0.3002px;
     line-height: normal;
-    min-width: min-content;
+    max-width: 100%;
+    min-width: 0;
     row-gap: 0;
   }
 
@@ -700,7 +740,9 @@
 
   .mobile-bag__price,
   .mobile-bag__name {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    max-width: 100%;
+    min-width: 0;
     white-space: normal;
   }
 
@@ -709,9 +751,12 @@
   }
 
   .mobile-bag__qty {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    flex-wrap: wrap;
     gap: 10.597px;
     line-height: normal;
+    max-width: 100%;
+    min-width: 0;
   }
 
   .mobile-bag.is-open .mobile-bag__qty {
@@ -823,6 +868,7 @@
   .mobile-bag.is-open .mobile-bag__empty {
     animation: none;
     padding-inline: 16px;
+    width: 100%;
   }
 
   .mobile-bag.is-open .mobile-bag__meta,

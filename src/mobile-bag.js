@@ -1,11 +1,9 @@
 import { play } from "cuelume";
 import { addQty, getCart, goToCheckout, subscribeCart } from "./cart.js";
+import { typewrite } from "./typewriter.js";
 import "./mobile-bag.css";
 
 const baseUrl = import.meta.env.BASE_URL ?? "/";
-const CLOSE_MS = 500;
-const DESKTOP_CLOSE_MS = 900;
-const DESKTOP_MQ = "(min-width: 901px)";
 
 function resolvePublicAssetPath(path) {
   if (!path) return "";
@@ -25,18 +23,6 @@ function playTick() {
 
 function formatMoney(value) {
   return `$${value}`;
-}
-
-function prefersReducedMotion() {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-function closeDuration() {
-  if (prefersReducedMotion()) return 200;
-  const desktop = window.matchMedia(DESKTOP_MQ).matches;
-  const checkoutReady = document.querySelector("#mobileBag")?.classList.contains("is-checkout-ready");
-  if (desktop && checkoutReady) return DESKTOP_CLOSE_MS;
-  return CLOSE_MS;
 }
 
 const minusIconSrc = resolvePublicAssetPath("/media/bag/minus.svg");
@@ -134,8 +120,7 @@ export function setupMobileBag({ isMenuOpen, closeMenu, onChange } = {}) {
   }
 
   let open = false;
-  let animTimer = 0;
-  let checkoutTimer = 0;
+  let stopTyping = () => {};
   const closeBtn = bag.querySelector("[data-bag-close]");
 
   function syncBagLink() {
@@ -144,68 +129,37 @@ export function setupMobileBag({ isMenuOpen, closeMenu, onChange } = {}) {
   }
 
   function finishClose() {
-    bag.classList.remove("is-closing", "is-checkout-ready");
+    bag.classList.remove("is-closing", "is-checkout-ready", "is-instant");
     bag.inert = true;
     bag.setAttribute("aria-hidden", "true");
   }
 
-  function armCheckout() {
-    window.clearTimeout(checkoutTimer);
-    bag.classList.remove("is-checkout-ready");
-    if (bag.classList.contains("is-empty")) return;
-    const desktop = window.matchMedia(DESKTOP_MQ).matches;
-    if (!desktop || bag.classList.contains("is-instant") || prefersReducedMotion()) {
-      bag.classList.add("is-checkout-ready");
-      return;
-    }
-    checkoutTimer = window.setTimeout(() => {
-      if (!open || bag.classList.contains("is-empty")) return;
-      bag.classList.add("is-checkout-ready");
-    }, CLOSE_MS);
-  }
+  function setOpen(next) {
+    if (open === next) return;
 
-  function setOpen(next, { instant = false } = {}) {
-    const closing = bag.classList.contains("is-closing");
-    if (open === next && !closing) return;
-
-    window.clearTimeout(animTimer);
-    window.clearTimeout(checkoutTimer);
+    stopTyping();
+    stopTyping = () => {};
     open = next;
     document.body.classList.toggle("is-mobile-bag-open", next);
     syncBagLink();
 
     if (next) {
-      bag.classList.remove("is-closing");
       bag.inert = false;
       bag.setAttribute("aria-hidden", "false");
       renderItems(bag);
-
-      bag.classList.toggle("is-instant", instant);
       bag.classList.add("is-open");
-      armCheckout();
-
+      stopTyping = typewrite(bag, {
+        skipSelector: ".mobile-bag__close, [aria-hidden='true']"
+      });
       closeBtn?.focus({ preventScroll: true });
       onChange?.();
       return;
     }
 
-    bag.classList.toggle("is-instant", instant);
-
-    if (instant) {
-      bag.classList.remove("is-open");
-      finishClose();
-      bagLink.focus({ preventScroll: true });
-      onChange?.();
-      return;
-    }
-
-    bag.classList.add("is-closing");
     bag.classList.remove("is-open");
+    finishClose();
+    bagLink.focus({ preventScroll: true });
     onChange?.();
-    animTimer = window.setTimeout(() => {
-      finishClose();
-      bagLink.focus({ preventScroll: true });
-    }, closeDuration());
   }
 
   function openBag() {
@@ -249,7 +203,10 @@ export function setupMobileBag({ isMenuOpen, closeMenu, onChange } = {}) {
   });
 
   subscribeCart(() => {
-    if (open) renderItems(bag);
+    if (!open) return;
+    stopTyping();
+    stopTyping = () => {};
+    renderItems(bag);
   });
 
   syncBagLink();

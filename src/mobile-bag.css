@@ -1,5 +1,3 @@
-@import "./svg-bar-appear.css";
-
 .mobile-bag {
   color: var(--ui-overlay);
   height: 100%;
@@ -14,8 +12,7 @@
   z-index: 50;
 }
 
-.mobile-bag.is-open,
-.mobile-bag.is-closing {
+.mobile-bag.is-open {
   pointer-events: auto;
   visibility: visible;
 }
@@ -23,51 +20,20 @@
 .mobile-bag__scrim {
   background: rgba(0, 0, 0, 0.24);
   inset: 0;
-  opacity: 0;
+  opacity: 1;
   pointer-events: none;
   position: absolute;
   z-index: 0;
 }
 
-.mobile-bag.is-open .mobile-bag__scrim {
-  animation: bag-scrim-in 0.5s ease-out both;
-}
-
-.mobile-bag.is-closing .mobile-bag__scrim {
-  animation: bag-scrim-out 0.5s ease-out both;
-}
-
-.mobile-bag.is-open.is-instant .mobile-bag__scrim {
-  animation: none;
-  opacity: 1;
-}
-
-.mobile-bag.is-closing.is-instant .mobile-bag__scrim {
-  animation: none;
-  opacity: 0;
-}
-
 .mobile-bag__panel {
+  animation: none;
   background: #000000;
   height: 100%;
   position: relative;
-  transform: translateX(100%);
+  transition: none;
   width: 100%;
   z-index: 1;
-}
-
-.mobile-bag.is-open .mobile-bag__panel {
-  animation: bag-slide-in 0.5s ease-out both;
-}
-
-.mobile-bag.is-closing .mobile-bag__panel {
-  animation: bag-slide-out 0.5s ease-out both;
-}
-
-.mobile-bag.is-open.is-instant .mobile-bag__panel,
-.mobile-bag.is-closing.is-instant .mobile-bag__panel {
-  animation: none;
-  transform: none;
 }
 
 .mobile-bag a,
@@ -331,31 +297,11 @@
   object-fit: fill;
   pointer-events: none;
   position: absolute;
-  transform: scaleY(0);
-  transform-origin: 50% 100%;
   width: 100%;
 }
 
 .mobile-bag__checkout-shape--desktop {
   display: none;
-}
-
-.mobile-bag.is-open:not(.is-empty) .mobile-bag__checkout-shape {
-  animation: bag-checkout-grow 0.4s ease-out 0.5s both;
-}
-
-.mobile-bag.is-closing:not(.is-empty) .mobile-bag__checkout-shape {
-  animation: bag-checkout-shrink 0.4s ease-out both;
-}
-
-.mobile-bag.is-open.is-instant:not(.is-empty) .mobile-bag__checkout-shape {
-  animation: none;
-  transform: scaleY(1);
-}
-
-.mobile-bag.is-closing.is-instant .mobile-bag__checkout-shape {
-  animation: none;
-  transform: scaleY(0);
 }
 
 .mobile-bag__total,
@@ -366,33 +312,10 @@
   font-size: 17px;
   letter-spacing: 0.34px;
   line-height: normal;
-  opacity: 0;
   pointer-events: none;
   position: absolute;
   top: 12px;
   white-space: nowrap;
-}
-
-.mobile-bag.is-open:not(.is-empty) .mobile-bag__total,
-.mobile-bag.is-open:not(.is-empty) .mobile-bag__checkout-label {
-  animation: bag-checkout-label-in 0.4s ease-out 0.5s both;
-}
-
-.mobile-bag.is-closing:not(.is-empty) .mobile-bag__total,
-.mobile-bag.is-closing:not(.is-empty) .mobile-bag__checkout-label {
-  animation: bag-checkout-label-out 0.4s ease-out both;
-}
-
-.mobile-bag.is-open.is-instant:not(.is-empty) .mobile-bag__total,
-.mobile-bag.is-open.is-instant:not(.is-empty) .mobile-bag__checkout-label {
-  animation: none;
-  opacity: 1;
-}
-
-.mobile-bag.is-closing.is-instant .mobile-bag__total,
-.mobile-bag.is-closing.is-instant .mobile-bag__checkout-label {
-  animation: none;
-  opacity: 0;
 }
 
 .mobile-bag__total {
@@ -404,155 +327,9 @@
   text-align: right;
 }
 
-@keyframes bag-desktop-in {
-  from {
-    transform: none;
-    width: 100px;
-  }
-
-  to {
-    transform: none;
-    width: 640px;
-  }
-}
-
-@keyframes bag-desktop-out {
-  from {
-    transform: translateX(0);
-    width: 640px;
-  }
-
-  to {
-    transform: translateX(100%);
-    width: 100px;
-  }
-}
-
-@keyframes bag-desktop-pad {
-  from {
-    column-gap: 0;
-    padding-inline: 0;
-    width: 0;
-  }
-
-  to {
-    column-gap: 12px;
-    padding-inline: 16px;
-    width: 640px;
-  }
-}
-
-@keyframes bag-desktop-pad-out {
-  from {
-    column-gap: 12px;
-    padding-inline: 16px;
-    width: 640px;
-  }
-
-  to {
-    column-gap: 0;
-    padding-inline: 0;
-    width: 0;
-  }
-}
-
-@keyframes bag-desktop-meta {
-  from {
-    column-gap: 0;
-  }
-
-  to {
-    column-gap: 14.129px;
-  }
-}
-
-@keyframes bag-desktop-qty {
-  from {
-    gap: 0;
-  }
-
-  to {
-    gap: 10.597px;
-  }
-}
-
-@keyframes bag-checkout-enable {
-  to {
-    pointer-events: auto;
-  }
-}
-
-@keyframes bag-slide-in {
-  from {
-    transform: translateX(100%);
-  }
-
-  to {
-    transform: translateX(0);
-  }
-}
-
-@keyframes bag-slide-out {
-  from {
-    transform: translateX(0);
-  }
-
-  to {
-    transform: translateX(100%);
-  }
-}
-
-@keyframes bag-fade-in {
-  from {
-    opacity: 0;
-    transform: none;
-  }
-
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes bag-fade-out {
-  from {
-    opacity: 1;
-    transform: none;
-  }
-
-  to {
-    opacity: 0;
-    transform: none;
-  }
-}
-
-@keyframes bag-scrim-in {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes bag-scrim-out {
-  from {
-    opacity: 1;
-  }
-
-  to {
-    opacity: 0;
-  }
-}
-
 @media (min-width: 901px) {
   .mobile-bag__scrim {
     background: rgba(0, 0, 0, 0.48);
-  }
-
-  .mobile-bag.is-closing .mobile-bag__scrim {
-    animation-duration: 0.9s;
   }
 
   .mobile-bag__panel {
@@ -563,40 +340,6 @@
     position: absolute;
     right: 0;
     top: 0;
-    width: 100px;
-  }
-
-  .mobile-bag.is-open .mobile-bag__panel {
-    animation: bag-desktop-in 0.5s ease-out both;
-  }
-
-  .mobile-bag.is-closing .mobile-bag__panel {
-    animation: bag-desktop-out 0.5s ease-out 0.4s both;
-  }
-
-  .mobile-bag.is-closing:not(.is-checkout-ready) .mobile-bag__panel {
-    animation-delay: 0s;
-  }
-
-  .mobile-bag.is-closing:not(.is-checkout-ready) .mobile-bag__scrim {
-    animation-duration: 0.5s;
-  }
-
-  .mobile-bag.is-closing:not(.is-checkout-ready) .mobile-bag__checkout-shape {
-    animation: none;
-    transform: scaleY(0);
-  }
-
-  .mobile-bag.is-closing:not(.is-checkout-ready) .mobile-bag__total,
-  .mobile-bag.is-closing:not(.is-checkout-ready) .mobile-bag__checkout-label {
-    animation: none;
-    opacity: 0;
-  }
-
-  .mobile-bag.is-open.is-instant .mobile-bag__panel,
-  .mobile-bag.is-closing.is-instant .mobile-bag__panel {
-    animation: none;
-    transform: none;
     width: 640px;
   }
 
@@ -667,7 +410,6 @@
     width: 640px;
   }
 
-  /* Settled panel content box is 640px (640px width, no padding). Stay square while width tweens 100→640. */
   .mobile-bag__image {
     height: 640px;
     inset: auto;
@@ -690,29 +432,6 @@
     padding-inline: 16px;
     row-gap: 0;
     white-space: normal;
-    width: 0;
-  }
-
-  .mobile-bag.is-open .mobile-bag__row,
-  .mobile-bag.is-open .mobile-bag__empty {
-    animation: bag-desktop-pad 0.5s ease-out both;
-  }
-
-  .mobile-bag.is-closing .mobile-bag__row,
-  .mobile-bag.is-closing .mobile-bag__empty {
-    animation: bag-desktop-pad-out 0.5s ease-out 0.4s both;
-  }
-
-  .mobile-bag.is-closing:not(.is-checkout-ready) .mobile-bag__row,
-  .mobile-bag.is-closing:not(.is-checkout-ready) .mobile-bag__empty {
-    animation-delay: 0s;
-  }
-
-  .mobile-bag.is-open.is-instant .mobile-bag__row,
-  .mobile-bag.is-open.is-instant .mobile-bag__empty {
-    animation: none;
-    column-gap: 12px;
-    padding-inline: 16px;
     width: 100%;
   }
 
@@ -726,23 +445,6 @@
     max-width: 100%;
     min-width: 0;
     row-gap: 0;
-  }
-
-  .mobile-bag.is-open .mobile-bag__meta,
-  .mobile-bag.is-open .mobile-bag__empty {
-    animation: bag-desktop-meta 0.5s ease-out both;
-  }
-
-  .mobile-bag.is-open .mobile-bag__empty {
-    animation: bag-desktop-pad 0.5s ease-out both, bag-desktop-meta 0.5s ease-out both;
-  }
-
-  .mobile-bag.is-open.is-instant .mobile-bag__meta,
-  .mobile-bag.is-open.is-instant .mobile-bag__empty {
-    animation: none;
-    column-gap: 14.129px;
-    line-height: normal;
-    padding-inline: 16px;
   }
 
   .mobile-bag__price,
@@ -764,16 +466,6 @@
     line-height: normal;
     max-width: 100%;
     min-width: 0;
-  }
-
-  .mobile-bag.is-open .mobile-bag__qty {
-    animation: bag-desktop-qty 0.5s ease-out both;
-  }
-
-  .mobile-bag.is-open.is-instant .mobile-bag__qty {
-    animation: none;
-    gap: 10.597px;
-    line-height: normal;
   }
 
   .mobile-bag__qty-value {
@@ -799,20 +491,6 @@
 
   .mobile-bag__checkout {
     height: 37px;
-    pointer-events: none;
-  }
-
-  .mobile-bag.is-open:not(.is-empty) .mobile-bag__checkout {
-    animation: bag-checkout-enable 0s linear 0.5s forwards;
-  }
-
-  .mobile-bag.is-open.is-instant:not(.is-empty) .mobile-bag__checkout {
-    animation: none;
-    pointer-events: auto;
-  }
-
-  .mobile-bag.is-closing .mobile-bag__checkout {
-    pointer-events: none;
   }
 
   .mobile-bag__total,
@@ -826,86 +504,5 @@
 
   .mobile-bag__checkout-label {
     right: 10px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .mobile-bag.is-open .mobile-bag__panel {
-    animation: bag-fade-in 0.2s ease both;
-  }
-
-  .mobile-bag.is-closing .mobile-bag__panel {
-    animation: bag-fade-out 0.2s ease both;
-  }
-
-  .mobile-bag.is-open .mobile-bag__scrim {
-    animation: bag-scrim-in 0.2s ease both;
-  }
-
-  .mobile-bag.is-closing .mobile-bag__scrim {
-    animation: bag-scrim-out 0.2s ease both;
-  }
-
-  .mobile-bag.is-open:not(.is-empty) .mobile-bag__checkout-shape,
-  .mobile-bag.is-open:not(.is-empty) .mobile-bag__total,
-  .mobile-bag.is-open:not(.is-empty) .mobile-bag__checkout-label {
-    animation: bag-fade-in 0.2s ease 0.2s both;
-  }
-
-  .mobile-bag.is-closing:not(.is-empty) .mobile-bag__checkout-shape,
-  .mobile-bag.is-closing:not(.is-empty) .mobile-bag__total,
-  .mobile-bag.is-closing:not(.is-empty) .mobile-bag__checkout-label {
-    animation: bag-fade-out 0.2s ease both;
-  }
-}
-
-@media (min-width: 901px) and (prefers-reduced-motion: reduce) {
-  .mobile-bag.is-open .mobile-bag__panel,
-  .mobile-bag.is-closing .mobile-bag__panel {
-    animation: none;
-    transform: none;
-    width: 640px;
-  }
-
-  .mobile-bag.is-closing .mobile-bag__scrim {
-    animation-duration: 0.2s;
-  }
-
-  .mobile-bag.is-open .mobile-bag__row,
-  .mobile-bag.is-open .mobile-bag__empty {
-    animation: none;
-    padding-inline: 16px;
-    width: 100%;
-  }
-
-  .mobile-bag.is-open .mobile-bag__meta,
-  .mobile-bag.is-open .mobile-bag__qty,
-  .mobile-bag.is-open .mobile-bag__empty {
-    animation: none;
-    line-height: normal;
-  }
-
-  .mobile-bag.is-open .mobile-bag__meta {
-    column-gap: 14.129px;
-  }
-
-  .mobile-bag.is-open .mobile-bag__qty {
-    gap: 10.597px;
-  }
-
-  .mobile-bag.is-open:not(.is-empty) .mobile-bag__checkout {
-    animation: none;
-    pointer-events: auto;
-  }
-
-  .mobile-bag.is-open:not(.is-empty) .mobile-bag__checkout-shape {
-    animation: none;
-    transform: scaleY(1);
-  }
-
-  .mobile-bag.is-open:not(.is-empty) .mobile-bag__total,
-  .mobile-bag.is-open:not(.is-empty) .mobile-bag__checkout-label {
-    animation: none;
-    opacity: 1;
   }
 }

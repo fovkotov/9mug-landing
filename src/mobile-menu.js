@@ -1,4 +1,5 @@
 import { play } from "cuelume";
+import { typewrite } from "./typewriter.js";
 import "./mobile-menu.css";
 import "./site-chrome.js";
 import "./page-prefetch.js";
@@ -91,6 +92,7 @@ export function setupMobileMenu() {
 
   let open = false;
   let bagApi = null;
+  let stopTyping = () => {};
 
   const blockPageScroll = (event) => {
     if (event.target.closest?.(".mobile-bag__items")) return;
@@ -113,33 +115,15 @@ export function setupMobileMenu() {
     }
   }
 
-  function applyOpenClass(el, next, instant) {
+  function applyOpenClass(el, next) {
     if (next) {
       el.inert = false;
       el.setAttribute("aria-hidden", "false");
-      if (instant) {
-        const prev = el.style.transition;
-        el.style.transition = "none";
-        el.classList.add("is-open");
-        void el.offsetHeight;
-        el.style.transition = prev;
-      } else {
-        requestAnimationFrame(() => {
-          el.classList.add("is-open");
-        });
-      }
+      el.classList.add("is-open");
       return;
     }
 
-    if (instant) {
-      const prev = el.style.transition;
-      el.style.transition = "none";
-      el.classList.remove("is-open");
-      void el.offsetHeight;
-      el.style.transition = prev;
-    } else {
-      el.classList.remove("is-open");
-    }
+    el.classList.remove("is-open");
     el.inert = true;
     el.setAttribute("aria-hidden", "true");
   }
@@ -153,16 +137,21 @@ export function setupMobileMenu() {
     );
   }
 
-  function setOpen(next, { instant = false } = {}) {
+  function setOpen(next) {
     if (open === next) return;
+
+    stopTyping();
+    stopTyping = () => {};
     open = next;
 
     document.body.classList.toggle("is-mobile-menu-open", next);
-    applyOpenClass(menu, next, instant);
+    applyOpenClass(menu, next);
     syncToggleUi();
     syncScrollLock();
 
-    if (next) syncAudioUi(menu);
+    if (!next) return;
+    syncAudioUi(menu);
+    stopTyping = typewrite(menu);
   }
 
   bagApi = setupMobileBag({

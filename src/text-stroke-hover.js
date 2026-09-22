@@ -5,6 +5,8 @@ const DESKTOP_QUERY = "(min-width: 901px) and (pointer: fine)";
 const DEFAULTS = { enabled: true, maxStroke: 4, radius: 40, falloff: 1 };
 const SVG_NS = "http://www.w3.org/2000/svg";
 const FIELD_STOPS = 16;
+const PRESS_SCALE = 0.5;
+const PRESS_MS = 180;
 const MAX_STROKE = 10;
 const MAX_RINGS = 20;
 const MIN_DIRECTIONS = 16;
@@ -54,6 +56,10 @@ let pointerY = 0;
 let hasPointer = false;
 let framePending = false;
 let panel = null;
+let pressedLink = null;
+let pressFrom = 1;
+let pressTo = 1;
+let pressStart = 0;
 
 function clamp(n, min, max) {
   return Math.min(max, Math.max(min, n));
@@ -182,9 +188,17 @@ function createFilter() {
       result: "glyph"
     })
   );
-  filter.append(
-    svgEl("feComposite", { in: "close", in2: "field", operator: "arithmetic", k1: 0, k2: 1, k3: 1, k4: -1, result: "sum" })
-  );
+  const sum = svgEl("feComposite", {
+    in: "close",
+    in2: "field",
+    operator: "arithmetic",
+    k1: 0,
+    k2: 1,
+    k3: 1,
+    k4: -1,
+    result: "sum"
+  });
+  filter.append(sum);
   const sharpen = svgEl("feComponentTransfer", { in: "sum", result: "grow" });
   sharpen.append(svgEl("feFuncA", { type: "linear", slope: rings, intercept: 0 }));
   filter.append(sharpen);
@@ -196,7 +210,7 @@ function createFilter() {
   filter.append(flood);
   filter.append(svgEl("feComposite", { in2: "shape", operator: "in" }));
   ensureDefs().append(filter);
-  return { id, filter, image, flood };
+  return { id, filter, image, flood, sum, scale: 1 };
 }
 
 function canUseAfter(el) {
@@ -262,10 +276,42 @@ function isFormUnderPointer(x, y) {
   return isFormField(document.elementFromPoint(x, y));
 }
 
+function pressScaleAt(now) {
+  const t = clamp((now - pressStart) / PRESS_MS, 0, 1);
+  const eased = 1 - (1 - t) ** 3;
+  return pressFrom + (pressTo - pressFrom) * eased;
+}
+
+function setPress(link) {
+  const now = performance.now();
+  const current = pressedLink && pressedLink === (link || pressedLink) ? pressScaleAt(now) : 1;
+  if (link) pressedLink = link;
+  pressFrom = current;
+  pressTo = link ? PRESS_SCALE : 1;
+  pressStart = now;
+  schedule();
+}
+
+function onPointerDown(event) {
+  if (event.pointerType === "touch" || event.button !== 0) return;
+  if (!desktopQuery.matches) return;
+  const link = event.target instanceof Element ? event.target.closest("a[href]") : null;
+  if (link) setPress(link);
+}
+
+function onPointerRelease() {
+  if (pressedLink && pressTo !== 1) setPress(null);
+}
+
 function update() {
   framePending = false;
+  const now = performance.now();
+  const scale = pressedLink ? pressScaleAt(now) : 1;
+  const pressAnimating = pressedLink && now - pressStart < PRESS_MS;
+  if (pressedLink && !pressAnimating && pressTo === 1) pressedLink = null;
   if (!canRun() || isFormUnderPointer(pointerX, pointerY)) {
     clearAll();
+    if (pressAnimating) schedule();
     return;
   }
   if (cacheDirty) rebuildCache();
@@ -308,6 +354,11 @@ function update() {
     fx.image.setAttribute("width", r * 2);
     fx.image.setAttribute("height", r * 2);
     fx.flood.setAttribute("flood-color", hit.color);
+    const hostScale = pressedLink?.contains(hit.el) ? scale : 1;
+    if (fx.scale !== hostScale) {
+      fx.scale = hostScale;
+      fx.sum.setAttribute("k3", hostScale);
+    }
     if (hit.el.dataset.tshText !== hit.text) hit.el.dataset.tshText = hit.text;
     if (!active.has(hit.el)) {
       hit.el.style.setProperty("--tsh-filter", `url(#${fx.id})`);
@@ -319,6 +370,7 @@ function update() {
   for (const el of [...active]) {
     if (!keep.has(el)) deactivate(el);
   }
+  if (pressAnimating) schedule();
 }
 
 function schedule() {
@@ -468,7 +520,13 @@ export function initTextStrokeHover() {
       if (panel) panel.hidden = true;
     }
   });
+  document.addEventListener("pointerdown", onPointerDown, { passive: true });
+  window.addEventListener("pointerup", onPointerRelease, { passive: true });
+  window.addEventListener("pointercancel", onPointerRelease, { passive: true });
+  window.addEventListener("blur", onPointerRelease);
   window.addEventListener("spa:settled", () => {
+    pressedLink = null;
+    pressTo = 1;
     cacheDirty = true;
     schedule();
   });

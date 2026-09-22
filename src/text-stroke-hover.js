@@ -1,8 +1,8 @@
 import "./text-stroke-hover.css";
 
-const STORAGE_KEY = "text-stroke-hover:v1";
+const STORAGE_KEY = "text-stroke-hover:v2";
 const DESKTOP_QUERY = "(min-width: 901px) and (pointer: fine)";
-const DEFAULTS = { enabled: true, maxStroke: 4, radius: 6, falloff: 1 };
+const DEFAULTS = { enabled: true, maxStroke: 4, radius: 40, falloff: 1 };
 const SVG_NS = "http://www.w3.org/2000/svg";
 const FIELD_STOPS = 16;
 const FILTER_PAD = 8;

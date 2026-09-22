@@ -45,7 +45,6 @@ const scratchCoverSources = {
 
 let mugFramesWarmup = null;
 let addToCartBtn = null;
-let bagStatusText = null;
 let scrollVideoSection = null;
 let scrollVideo = null;
 let heroPanel = null;
@@ -84,9 +83,6 @@ function prepareScrollVideo() {
 
 function setBagUiState() {
   const bagSelected = isInCart(CART_PRODUCT_ID);
-  if (bagStatusText) {
-    bagStatusText.classList.toggle("is-visible", bagSelected);
-  }
   if (addToCartBtn) {
     addToCartBtn.classList.toggle("is-added", bagSelected);
     if (bagSelected) {
@@ -451,7 +447,6 @@ export function init(root) {
 
   const ac = new AbortController();
   addToCartBtn = root.querySelector("#addToCart");
-  bagStatusText = document.querySelector("#bagStatusText");
   scrollVideoSection = root.querySelector("#scrollVideoSection");
   scrollVideo = root.querySelector("#scrollVideo");
   heroPanel = root.querySelector(".panel-hero");

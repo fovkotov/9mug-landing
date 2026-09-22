@@ -20,7 +20,6 @@ export function init(root) {
 
   const priceToggle = root.querySelector("#priceToggle");
   const priceToggleIcon = root.querySelector("#priceToggleIcon");
-  const bagStatusText = document.querySelector("#bagStatusText");
   const pricePlusIconSource = resolvePublicAssetPath("/media/price-plus.svg");
   const priceCheckIconSource = resolvePublicAssetPath("/media/price-check-crisp.png");
   let bagSelected = false;
@@ -36,7 +35,6 @@ export function init(root) {
   function setBagUiState() {
     priceToggle?.classList.toggle("is-selected", bagSelected);
     priceToggle?.setAttribute("aria-pressed", String(bagSelected));
-    bagStatusText?.classList.toggle("is-visible", bagSelected);
     if (priceToggleIcon) {
       priceToggleIcon.src = bagSelected ? priceCheckIconSource : pricePlusIconSource;
     }

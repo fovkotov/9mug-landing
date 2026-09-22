@@ -41,7 +41,6 @@ const scratchCoverSources = {
 
 let matFramesWarmup = null;
 let addToCartBtn = null;
-let bagStatusText = null;
 let heroPanel = null;
 let productViewerRoot = null;
 let pageRoot = document;
@@ -85,9 +84,6 @@ function setupDirectionalMatHero() {
 
 function setBagUiState() {
   const bagSelected = isInCart(CART_PRODUCT_ID);
-  if (bagStatusText) {
-    bagStatusText.classList.toggle("is-visible", bagSelected);
-  }
   if (addToCartBtn) {
     addToCartBtn.classList.toggle("is-added", bagSelected);
     if (bagSelected) {
@@ -414,7 +410,6 @@ export function init(root) {
 
   const ac = new AbortController();
   addToCartBtn = root.querySelector("#addToCart");
-  bagStatusText = document.querySelector("#bagStatusText");
   heroPanel = root.querySelector(".panel-hero");
   productViewerRoot = root.querySelector("#productViewerRoot");
   scratchSection = root.querySelector("#scratchSection");

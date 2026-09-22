@@ -636,6 +636,9 @@
     margin: auto 0;
     max-height: calc(100% - 37px);
     max-width: none;
+    min-width: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
     padding: 0;
     position: relative;
     right: auto;
@@ -655,18 +658,22 @@
   }
 
   .mobile-bag__item {
-    aspect-ratio: auto;
+    aspect-ratio: 1;
     flex-shrink: 0;
-    height: 372px;
+    height: 640px;
+    min-height: 640px;
+    min-width: 640px;
     overflow: hidden;
-    width: 100%;
+    width: 640px;
   }
 
-  /* Settled Figma cell (640×372). Stay that size while the panel grows from 100px. */
+  /* Settled panel content box is 640px (640px width, no padding). Stay square while width tweens 100→640. */
   .mobile-bag__image {
-    height: 372px;
+    height: 640px;
     inset: auto;
     left: 0;
+    min-height: 640px;
+    min-width: 640px;
     top: 0;
     width: 640px;
   }

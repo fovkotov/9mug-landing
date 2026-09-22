@@ -4,6 +4,7 @@ import "./shop.css";
 import "./product.css";
 import "./mat.css";
 import "./checkout.css";
+import "./footer.css";
 import "./view-transitions.css";
 import { setupMobileMenu } from "./mobile-menu.js";
 import { bindProductOrientationHandoff } from "./device-orientation-permission.js";

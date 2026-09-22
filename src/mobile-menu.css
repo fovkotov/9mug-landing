@@ -217,7 +217,9 @@ body.is-mobile-menu-open .nav-menu-icon span:last-child {
 .mobile-menu__online span {
   letter-spacing: 0.34px;
   line-height: 1;
+  text-orientation: sideways;
   white-space: nowrap;
+  writing-mode: vertical-rl;
 }
 
 .mobile-menu__online img {
@@ -227,6 +229,7 @@ body.is-mobile-menu-open .nav-menu-icon span:last-child {
   object-fit: cover;
   opacity: 0.8;
   pointer-events: none;
+  transform: rotate(90deg);
   width: 29.065px;
 }
 

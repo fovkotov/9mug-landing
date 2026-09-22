@@ -34,7 +34,7 @@
 }
 
 .mobile-bag.is-closing .mobile-bag__scrim {
-  animation: bag-scrim-out 0.5s ease-in both;
+  animation: bag-scrim-out 0.5s ease-out both;
 }
 
 .mobile-bag.is-open.is-instant .mobile-bag__scrim {
@@ -61,7 +61,7 @@
 }
 
 .mobile-bag.is-closing .mobile-bag__panel {
-  animation: bag-slide-out 0.5s ease-in both;
+  animation: bag-slide-out 0.5s ease-out both;
 }
 
 .mobile-bag.is-open.is-instant .mobile-bag__panel,
@@ -571,7 +571,7 @@
   }
 
   .mobile-bag.is-closing .mobile-bag__panel {
-    animation: bag-desktop-out 0.5s ease-in 0.4s both;
+    animation: bag-desktop-out 0.5s ease-out 0.4s both;
   }
 
   .mobile-bag.is-closing:not(.is-checkout-ready) .mobile-bag__panel {
@@ -700,7 +700,7 @@
 
   .mobile-bag.is-closing .mobile-bag__row,
   .mobile-bag.is-closing .mobile-bag__empty {
-    animation: bag-desktop-pad-out 0.5s ease-in 0.4s both;
+    animation: bag-desktop-pad-out 0.5s ease-out 0.4s both;
   }
 
   .mobile-bag.is-closing:not(.is-checkout-ready) .mobile-bag__row,

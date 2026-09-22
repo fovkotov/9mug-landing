@@ -8,7 +8,8 @@
 }
 
 .product-viewer.is-mobile-input {
-  touch-action: none;
+  /* Vertical pans scroll the page. Horizontal drags stay with look-around. */
+  touch-action: pan-y;
   -webkit-user-select: none;
   user-select: none;
 }

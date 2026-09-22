@@ -278,13 +278,15 @@ export function createProductViewer(root, options = {}) {
   let latestBeta = null;
   let latestGamma = null;
 
-  // Touch fallback
+  // Touch fallback. "pending" until the gesture is clearly a look-drag or a page scroll.
   let touchDragging = false;
+  let touchMode = null;
   let touchStartX = 0;
   let touchStartY = 0;
   let touchOriginX = 0;
   let touchOriginY = 0;
   let touchEnabled = mobileInput;
+  const TOUCH_SLOP = 10;
 
   // Visibility gating
   let heroVisible = true;
@@ -734,41 +736,97 @@ export function createProductViewer(root, options = {}) {
   }
 
   // —— Touch fallback ——
+  // Vertical pans must scroll the page. The hero is a full viewport, so capturing
+  // every touch (and preventDefault on pointerdown) traps the user on the gallery.
+  function releaseTouchPointer(event) {
+    if (!event || !root.hasPointerCapture?.(event.pointerId)) return;
+    try {
+      root.releasePointerCapture(event.pointerId);
+    } catch {
+      // Pointer may already be gone.
+    }
+  }
+
+  function endTouchGesture(event) {
+    if (touchMode == null && !touchDragging) return;
+    const wasLook = touchMode === "look";
+    touchMode = null;
+    touchDragging = false;
+    root.classList.remove("is-touch-dragging");
+    root.removeAttribute("data-lenis-prevent-touch");
+    releaseTouchPointer(event);
+    if (wasLook && (!orientationActive || latestBeta == null)) {
+      setTarget(0, 0, TOUCH_RELEASE_LERP);
+    }
+  }
+
+  function pointerOutsideGallery(event) {
+    const rect = root.getBoundingClientRect();
+    return (
+      event.clientX < rect.left ||
+      event.clientX > rect.right ||
+      event.clientY < rect.top ||
+      event.clientY > rect.bottom
+    );
+  }
+
   function handleTouchPointerDown(event) {
     if (prefersMouse || !touchEnabled || !canInteract()) return;
     if (event.pointerType === "mouse") return;
 
-    touchDragging = true;
+    touchMode = "pending";
+    touchDragging = false;
     touchStartX = event.clientX;
     touchStartY = event.clientY;
     touchOriginX = targetX;
     touchOriginY = targetY;
-    root.classList.add("is-touch-dragging");
-    root.setPointerCapture?.(event.pointerId);
-    event.preventDefault();
   }
 
   function handleTouchPointerMove(event) {
-    if (!touchDragging || prefersMouse || !canInteract()) return;
+    if (prefersMouse || touchMode == null || touchMode === "scroll") return;
 
-    const rect = root.getBoundingClientRect();
+    if (pointerOutsideGallery(event)) {
+      endTouchGesture(event);
+      return;
+    }
+
     const dx = event.clientX - touchStartX;
     const dy = event.clientY - touchStartY;
+
+    if (touchMode === "pending") {
+      if (Math.hypot(dx, dy) < TOUCH_SLOP) return;
+      if (Math.abs(dy) >= Math.abs(dx)) {
+        touchMode = "scroll";
+        return;
+      }
+      touchMode = "look";
+      touchDragging = true;
+      root.classList.add("is-touch-dragging");
+      // Keep Lenis from swallowing a look-drag. Vertical pans never set this.
+      root.setAttribute("data-lenis-prevent-touch", "");
+      try {
+        root.setPointerCapture?.(event.pointerId);
+      } catch {
+        // Synthetic or already-released pointers.
+      }
+      event.preventDefault();
+    }
+
+    if (touchMode !== "look" || !canInteract()) return;
+
+    const rect = root.getBoundingClientRect();
     const nx = clamp(touchOriginX + (dx / Math.max(rect.width, 1)) * 2.2, -1.2, 1.2);
     const ny = clamp(touchOriginY + (dy / Math.max(rect.height, 1)) * 1.4, -0.9, 0.9);
     setTarget(nx, ny, ORIENT_LERP);
   }
 
   function handleTouchPointerUp(event) {
-    if (!touchDragging) return;
-    touchDragging = false;
-    root.classList.remove("is-touch-dragging");
-    if (root.hasPointerCapture?.(event.pointerId)) {
-      root.releasePointerCapture(event.pointerId);
-    }
-    if (!orientationActive || latestBeta == null) {
-      setTarget(0, 0, TOUCH_RELEASE_LERP);
-    }
+    endTouchGesture(event);
+  }
+
+  function handleTouchPointerLeave(event) {
+    if (touchMode == null) return;
+    endTouchGesture(event);
   }
 
   // —— Visibility ——
@@ -889,6 +947,7 @@ export function createProductViewer(root, options = {}) {
     root.addEventListener("pointermove", handleTouchPointerMove, { passive: false });
     root.addEventListener("pointerup", handleTouchPointerUp);
     root.addEventListener("pointercancel", handleTouchPointerUp);
+    root.addEventListener("pointerleave", handleTouchPointerLeave);
   }
 
   const preloadPromise = preload();
@@ -915,6 +974,7 @@ export function createProductViewer(root, options = {}) {
       root.removeEventListener("pointermove", handleTouchPointerMove);
       root.removeEventListener("pointerup", handleTouchPointerUp);
       root.removeEventListener("pointercancel", handleTouchPointerUp);
+      root.removeEventListener("pointerleave", handleTouchPointerLeave);
       root.replaceChildren();
       layerNodes.clear();
     }

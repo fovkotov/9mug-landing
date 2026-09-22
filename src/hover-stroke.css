@@ -1,0 +1,120 @@
+.hs-host--rel {
+  position: relative;
+}
+
+.hs-host::after {
+  content: attr(data-hs-text);
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  padding: inherit;
+  display: inherit;
+  align-items: inherit;
+  justify-content: inherit;
+  white-space: inherit;
+  color: rgb(var(--hs-rgb));
+  -webkit-text-stroke: var(--hs-w) rgb(var(--hs-rgb));
+  opacity: var(--hs-a);
+  pointer-events: none;
+  user-select: none;
+  -webkit-mask-image: radial-gradient(circle var(--hs-r) at var(--hs-x) var(--hs-y), var(--hs-stops));
+  mask-image: radial-gradient(circle var(--hs-r) at var(--hs-x) var(--hs-y), var(--hs-stops));
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+.hs-panel {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 10000;
+  width: 264px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  color: rgba(0, 0, 0, 0.8);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  letter-spacing: 0.2px;
+  line-height: 1.2;
+}
+
+.hs-panel[hidden] {
+  display: none;
+}
+
+.hs-panel__head,
+.hs-panel__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hs-panel__head {
+  margin-bottom: 8px;
+}
+
+.hs-panel__title {
+  font-size: 15px;
+}
+
+.hs-panel__row {
+  display: grid;
+  grid-template-columns: 56px 1fr 48px;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  cursor: pointer;
+}
+
+.hs-panel__row--toggle {
+  grid-template-columns: 56px auto;
+  justify-content: start;
+}
+
+.hs-panel__row input[type="range"] {
+  width: 100%;
+  accent-color: #000;
+}
+
+.hs-panel__row input[type="checkbox"] {
+  margin: 0;
+  accent-color: #000;
+}
+
+.hs-panel__value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: rgba(0, 0, 0, 0.56);
+}
+
+.hs-panel__foot {
+  margin-top: 8px;
+}
+
+.hs-panel__hint {
+  color: rgba(0, 0, 0, 0.48);
+}
+
+.hs-panel__close,
+.hs-panel__reset {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.hs-panel__close {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.hs-panel__reset {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

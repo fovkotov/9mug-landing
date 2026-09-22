@@ -11,6 +11,7 @@ import { bindProductOrientationHandoff } from "./device-orientation-permission.j
 import { initRadio } from "./radio.js";
 import { startScroll } from "./scroll.js";
 import { startRouter } from "./router.js";
+import { initHoverStroke } from "./hover-stroke.js";
 
 function ensureAnnouncer() {
   let announcer = document.querySelector("#routeAnnouncer");
@@ -30,6 +31,7 @@ function boot() {
   startScroll();
   setupMobileMenu();
   bindProductOrientationHandoff();
+  initHoverStroke();
   startRouter(ensureAnnouncer());
 }
 

@@ -1,0 +1,124 @@
+/* Stroke lives on a fill-less ::after so the glyph color stays put.
+   No opacity, filter, or transform here — nav and cart use mix-blend-mode. */
+
+.tsh-host--rel {
+  position: relative;
+}
+
+.tsh-host::after {
+  content: attr(data-tsh-text);
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: inherit;
+  display: inherit;
+  align-items: inherit;
+  justify-content: inherit;
+  white-space: inherit;
+  text-align: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  font: inherit;
+  color: var(--tsh-color);
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke-width: var(--tsh-stroke);
+  -webkit-text-stroke-color: currentColor;
+  pointer-events: none;
+  user-select: none;
+  -webkit-mask-image: radial-gradient(circle var(--tsh-radius) at var(--tsh-x) var(--tsh-y), var(--tsh-stops));
+  mask-image: radial-gradient(circle var(--tsh-radius) at var(--tsh-x) var(--tsh-y), var(--tsh-stops));
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-mode: alpha;
+  mask-mode: alpha;
+}
+
+.tsh-panel {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 45;
+  width: 232px;
+  padding: 12px 14px 14px;
+  background: var(--bg-base);
+  color: var(--ui-color);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-feature-settings: "lnum" 1, "pnum" 1;
+  font-variant-numeric: lining-nums proportional-nums;
+  letter-spacing: 0.26px;
+  line-height: 1.25;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+}
+
+.tsh-panel[hidden] {
+  display: none;
+}
+
+@media (max-width: 900px), (pointer: coarse) {
+  .tsh-panel {
+    display: none !important;
+  }
+}
+
+.tsh-panel__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.tsh-panel__title {
+  margin: 0;
+  font-size: 14px;
+}
+
+.tsh-panel__close {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+
+.tsh-panel__row {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) 48px;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  cursor: pointer;
+}
+
+.tsh-panel__row--toggle {
+  grid-template-columns: 58px auto;
+  justify-content: start;
+}
+
+.tsh-panel__row input[type="range"] {
+  width: 100%;
+  margin: 0;
+  accent-color: rgba(0, 0, 0, 0.8);
+}
+
+.tsh-panel__row input[type="checkbox"] {
+  margin: 0;
+  accent-color: rgba(0, 0, 0, 0.8);
+}
+
+.tsh-panel__value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--ui-muted);
+}
+
+.tsh-panel__hint {
+  margin: 10px 0 0;
+  color: var(--ui-muted);
+  font-size: 12px;
+}

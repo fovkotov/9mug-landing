@@ -27,11 +27,22 @@ function resolvePublicAssetPath(path) {
 
 const MUG_CENTER_KEY = "c26";
 const CART_PRODUCT_ID = "mug";
+const MUG_GRID = { cols: 10, rows: 5 };
 
-const mugFrameImages = createMugFrameImages(resolvePublicAssetPath, "/media/mug_frames", {
-  cols: 10,
-  rows: 5
-});
+const mugFrameImagesDesktop = createMugFrameImages(
+  resolvePublicAssetPath,
+  "/media/mug_frames",
+  MUG_GRID
+);
+const mugFrameImagesMobile = createMugFrameImages(
+  resolvePublicAssetPath,
+  "/media/mug_frames_mobile",
+  MUG_GRID
+);
+
+function currentMugFrameImages() {
+  return isMobileViewport() ? mugFrameImagesMobile : mugFrameImagesDesktop;
+}
 const mugHeroLoaderSrc = resolvePublicAssetPath("/media/hero-loader.png");
 const scratchCursorSource = resolvePublicAssetPath("/media/scratch/cursor.png");
 const scratchCoverSources = {
@@ -118,7 +129,7 @@ function setupDirectionalProductHero() {
   heroPanel.classList.add("is-directional-hero");
 
   const viewer = createProductViewer(productViewerRoot, {
-    images: mugFrameImages,
+    images: currentMugFrameImages(),
     transitionDuration: 0,
     // 10×5 look-around: H ±202.5° step 45°, V ±20° step 10°.
     deadZoneHalfWidth: 0.14,
@@ -126,6 +137,8 @@ function setupDirectionalProductHero() {
     sideFarBoundary: 0.7,
     horizontalSensitivity: 1.05,
     verticalSensitivity: 0.95,
+    // Gyro-only: ~0.7 needs more |gamma| (~29°) before outer columns.
+    orientationHorizontalSensitivity: 0.7,
     maxGamma: 20,
     maxBeta: 16,
     gridCols: 10,
@@ -481,13 +494,14 @@ export function init(root) {
   scratchReveal = root.querySelector("#scratchReveal");
   scrollVideoPrimed = false;
 
-  mugFramesWarmup = preloadMugFrameImages(mugFrameImages, { signal: ac.signal });
+  mugFramesWarmup = preloadMugFrameImages(currentMugFrameImages(), { signal: ac.signal });
   scratchVideoApi = setupScratchRevealVideo(scratchReveal, resolvePublicAssetPath);
 
   let hero = null;
   let scratchCleanup = () => {};
   let unsubscribe = () => {};
   let rafId = 0;
+  let heroIsMobile = isMobileViewport();
 
   trackListeners(ac.signal, () => {
     prepareScrollVideo();
@@ -502,6 +516,18 @@ export function init(root) {
     window.addEventListener("touchstart", primeScrollVideo, { once: true, passive: true });
     window.addEventListener("wheel", primeScrollVideo, { once: true, passive: true });
     window.addEventListener("keydown", primeScrollVideo, { once: true });
+
+    const swapHeroFramesIfNeeded = () => {
+      const nextMobile = isMobileViewport();
+      if (nextMobile === heroIsMobile) return;
+      heroIsMobile = nextMobile;
+      hero?.destroy?.();
+      if (productViewerRoot) productViewerRoot.replaceChildren();
+      mugFramesWarmup = preloadMugFrameImages(currentMugFrameImages(), { signal: ac.signal });
+      hero = setupProductHero();
+    };
+    window.addEventListener("resize", swapHeroFramesIfNeeded);
+    window.addEventListener("orientationchange", swapHeroFramesIfNeeded);
 
     const tick = () => {
       syncScrollVideoFrame();

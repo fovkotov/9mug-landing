@@ -204,6 +204,7 @@ async function waitForFramePainted(img) {
  *   deadZoneRadius?: number,
  *   horizontalSensitivity?: number,
  *   verticalSensitivity?: number,
+ *   orientationHorizontalSensitivity?: number,
  *   showZones?: boolean,
  *   maxGamma?: number,
  *   maxBeta?: number,
@@ -236,6 +237,8 @@ export function createProductViewer(root, options = {}) {
   );
   const horizontalSensitivity = options.horizontalSensitivity ?? 1;
   const verticalSensitivity = options.verticalSensitivity ?? 1;
+  // Gyro-only: <1 needs more |gamma| to reach outer columns. Touch/mouse unchanged.
+  const orientationHorizontalSensitivity = options.orientationHorizontalSensitivity ?? 1;
   const showZones = Boolean(options.showZones);
   const maxGamma = options.maxGamma ?? MAX_GAMMA_DEG;
   const maxBeta = options.maxBeta ?? MAX_BETA_DEG;
@@ -422,9 +425,13 @@ export function createProductViewer(root, options = {}) {
 
   /** Map relative degrees → same normalized space as desktop zones. */
   function orientationToNormalized(relGamma, relBeta) {
-    const gx = clamp(relGamma, -maxGamma, maxGamma) / maxGamma;
+    const gyroH = Math.max(orientationHorizontalSensitivity, 0.01);
+    // Lower gyroH expands the gamma span so outer columns need more physical tilt,
+    // while still remaining reachable at full saturation.
+    const gammaSpan = maxGamma / gyroH;
+    const gx = clamp(relGamma, -gammaSpan, gammaSpan) / gammaSpan;
     const by = clamp(relBeta, -maxBeta, maxBeta) / maxBeta;
-    // Full tilt must reach outer 5×5 bands (top/bottom rows need |ny| past mid splits).
+    // Full tilt must reach outer bands (top/bottom rows need |ny| past mid splits).
     return {
       x: gx * horizontalSensitivity,
       y: by * verticalSensitivity

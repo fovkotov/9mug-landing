@@ -5,8 +5,10 @@ const DESKTOP_QUERY = "(min-width: 901px) and (pointer: fine)";
 const DEFAULTS = { enabled: true, maxStroke: 4, radius: 40, falloff: 1 };
 const SVG_NS = "http://www.w3.org/2000/svg";
 const FIELD_STOPS = 16;
-const SHADOW_DIRECTIONS = 16;
-const FILTER_PAD = 8;
+const MAX_STROKE = 10;
+const MAX_RINGS = 20;
+const MIN_DIRECTIONS = 16;
+const DIRECTION_SPACING = 0.8;
 const SKIP_TAGS = new Set([
   "INPUT",
   "TEXTAREA",
@@ -69,7 +71,7 @@ function loadSettings() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
     if (!saved || typeof saved !== "object") return next;
     if (typeof saved.enabled === "boolean") next.enabled = saved.enabled;
-    next.maxStroke = num(saved.maxStroke, DEFAULTS.maxStroke, 0, 4);
+    next.maxStroke = num(saved.maxStroke, DEFAULTS.maxStroke, 0, MAX_STROKE);
     next.radius = num(saved.radius, DEFAULTS.radius, 0, 80);
     next.falloff = num(saved.falloff, DEFAULTS.falloff, 0.4, 4);
   } catch {
@@ -104,7 +106,7 @@ function buildFieldHref(falloff) {
 }
 
 function ringCount(outward) {
-  return Math.max(4, Math.ceil(outward * Math.max(1, window.devicePixelRatio || 1) * 2));
+  return clamp(Math.ceil(outward * Math.max(1, window.devicePixelRatio || 1) * 2), 4, MAX_RINGS);
 }
 
 /* Rings of text-shadow copies around the glyph; gray encodes closeness to the outline
@@ -117,8 +119,9 @@ function buildDistanceShadows(outward) {
   for (let j = 1; j <= rings; j += 1) {
     const r = (outward * j) / rings;
     const gray = Math.round(255 * (1 - j / rings));
-    for (let k = 0; k < SHADOW_DIRECTIONS; k += 1) {
-      const a = (Math.PI * 2 * k) / SHADOW_DIRECTIONS;
+    const directions = Math.max(MIN_DIRECTIONS, Math.ceil((Math.PI * 2 * r) / DIRECTION_SPACING));
+    for (let k = 0; k < directions; k += 1) {
+      const a = (Math.PI * 2 * k) / directions;
       shadows.push(`${(Math.cos(a) * r).toFixed(3)}px ${(Math.sin(a) * r).toFixed(3)}px 0 rgb(${gray},${gray},${gray})`);
     }
   }
@@ -295,10 +298,11 @@ function update() {
       filters.set(hit.el, fx);
     }
     const r = settings.radius;
-    fx.filter.setAttribute("x", -FILTER_PAD);
-    fx.filter.setAttribute("y", -FILTER_PAD);
-    fx.filter.setAttribute("width", hit.width + FILTER_PAD * 2);
-    fx.filter.setAttribute("height", hit.height + FILTER_PAD * 2);
+    const pad = Math.ceil(settings.maxStroke / 2) + 4;
+    fx.filter.setAttribute("x", -pad);
+    fx.filter.setAttribute("y", -pad);
+    fx.filter.setAttribute("width", hit.width + pad * 2);
+    fx.filter.setAttribute("height", hit.height + pad * 2);
     fx.image.setAttribute("x", hit.x - r);
     fx.image.setAttribute("y", hit.y - r);
     fx.image.setAttribute("width", r * 2);
@@ -370,7 +374,7 @@ function buildPanel() {
     </label>
     <label class="tsh-panel__row">
       <span>Stroke</span>
-      <input type="range" data-key="maxStroke" min="0" max="4" step="0.1" />
+      <input type="range" data-key="maxStroke" min="0" max="${MAX_STROKE}" step="0.1" />
       <output class="tsh-panel__value" data-output="maxStroke"></output>
     </label>
     <label class="tsh-panel__row">
@@ -390,7 +394,7 @@ function buildPanel() {
     const key = input?.dataset?.key;
     if (!key || !(key in settings)) return;
     settings[key] = input.type === "checkbox" ? input.checked : Number(input.value);
-    if (key === "maxStroke") settings.maxStroke = clamp(settings.maxStroke, 0, 4);
+    if (key === "maxStroke") settings.maxStroke = clamp(settings.maxStroke, 0, MAX_STROKE);
     if (key === "radius") settings.radius = clamp(settings.radius, 0, 80);
     if (key === "falloff") settings.falloff = clamp(settings.falloff, 0.4, 4);
     syncPanel();

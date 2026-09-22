@@ -211,14 +211,13 @@ body.is-mobile-menu-open .nav-menu-icon span:last-child {
   line-height: 1;
   position: absolute;
   right: 13px;
-  width: 32px;
+  width: max-content;
 }
 
 .mobile-menu__online span {
-  height: 60px;
   letter-spacing: 0.34px;
-  width: 17px;
-  writing-mode: vertical-rl;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .mobile-menu__online img {

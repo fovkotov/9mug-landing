@@ -3,7 +3,9 @@ import "./text-stroke-hover.css";
 const STORAGE_KEY = "text-stroke-hover:v1";
 const DESKTOP_QUERY = "(min-width: 901px) and (pointer: fine)";
 const DEFAULTS = { enabled: true, maxStroke: 4, radius: 6, falloff: 1 };
-const MASK_STEPS = 12;
+const SVG_NS = "http://www.w3.org/2000/svg";
+const FIELD_STOPS = 16;
+const FILTER_PAD = 8;
 const SKIP_TAGS = new Set([
   "INPUT",
   "TEXTAREA",
@@ -35,6 +37,11 @@ const TEXT_INPUT_TYPES = new Set([
 const desktopQuery = window.matchMedia(DESKTOP_QUERY);
 const active = new Set();
 const afterOk = new WeakMap();
+const filters = new Map();
+
+let defs = null;
+let filterSeq = 0;
+let fieldHref = "";
 
 let settings = loadSettings();
 let cache = [];
@@ -78,24 +85,82 @@ function saveSettings() {
   }
 }
 
-/* strength = (1 - distance / radius) ^ falloff
-   1 at the pointer, 0 at the radius edge. The mask alpha follows that curve. */
-function maskStops(falloff) {
+/* strength = (1 - distance / radius) ^ falloff — 1 at the pointer, 0 at the radius edge.
+   The field is a radial alpha image; the filter grows the glyph outline by strength * maxStroke / 2,
+   so the edge of the radius adds nothing and no circle shows. */
+function buildFieldHref(falloff) {
   const stops = [];
-  const curve = clamp(falloff, 0.4, 4);
-  for (let i = 0; i <= MASK_STEPS; i += 1) {
-    const t = i / MASK_STEPS;
-    const alpha = (1 - t) ** curve;
-    stops.push(`rgba(255,255,255,${alpha.toFixed(3)}) ${(t * 100).toFixed(2)}%`);
+  for (let i = 0; i <= FIELD_STOPS; i += 1) {
+    const t = i / FIELD_STOPS;
+    const alpha = (1 - t) ** falloff;
+    stops.push(`<stop offset='${t.toFixed(4)}' stop-color='black' stop-opacity='${alpha.toFixed(4)}'/>`);
   }
-  return stops.join(", ");
+  const svg =
+    "<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'>" +
+    `<defs><radialGradient id='g' cx='100' cy='100' r='100' gradientUnits='userSpaceOnUse'>${stops.join("")}</radialGradient></defs>` +
+    "<rect width='200' height='200' fill='url(#g)'/></svg>";
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
 function applyGlobals() {
-  const root = document.documentElement.style;
-  root.setProperty("--tsh-stroke", `${settings.maxStroke}px`);
-  root.setProperty("--tsh-radius", `${settings.radius}px`);
-  root.setProperty("--tsh-stops", maskStops(settings.falloff));
+  fieldHref = buildFieldHref(settings.falloff);
+  clearAll();
+}
+
+function ensureDefs() {
+  if (defs?.isConnected) return defs;
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("width", "0");
+  svg.setAttribute("height", "0");
+  svg.style.cssText = "position:absolute;width:0;height:0;overflow:hidden;pointer-events:none";
+  svg.dataset.tshIgnore = "";
+  defs = document.createElementNS(SVG_NS, "defs");
+  svg.append(defs);
+  document.body.append(svg);
+  return defs;
+}
+
+function svgEl(name, attrs) {
+  const node = document.createElementNS(SVG_NS, name);
+  for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, String(value));
+  return node;
+}
+
+/* One dilation per device pixel of outward growth; each shows where the field passes its threshold. */
+function createFilter() {
+  const id = `tsh-f-${(filterSeq += 1)}`;
+  const outward = settings.maxStroke / 2;
+  const unit = 1 / Math.max(1, window.devicePixelRatio || 1);
+  const steps = Math.max(1, Math.round(outward / unit));
+  const filter = svgEl("filter", {
+    id,
+    filterUnits: "userSpaceOnUse",
+    primitiveUnits: "userSpaceOnUse",
+    "color-interpolation-filters": "sRGB"
+  });
+  const image = svgEl("feImage", { href: fieldHref, preserveAspectRatio: "none", result: "field" });
+  filter.append(image);
+  const merge = svgEl("feMerge", { result: "shape" });
+  merge.append(svgEl("feMergeNode", { in: "SourceAlpha" }));
+  const slope = steps * 2;
+  for (let i = 1; i <= steps; i += 1) {
+    const threshold = (i - 0.5) / steps;
+    filter.append(
+      svgEl("feMorphology", { in: "SourceAlpha", operator: "dilate", radius: (outward * i) / steps, result: `d${i}` })
+    );
+    const gate = svgEl("feComponentTransfer", { in: "field", result: `t${i}` });
+    gate.append(svgEl("feFuncA", { type: "linear", slope, intercept: 0.5 - slope * threshold }));
+    filter.append(gate);
+    filter.append(svgEl("feComposite", { in: `d${i}`, in2: `t${i}`, operator: "in", result: `l${i}` }));
+    merge.append(svgEl("feMergeNode", { in: `l${i}` }));
+  }
+  filter.append(merge);
+  const flood = svgEl("feFlood", { "flood-color": "#000" });
+  filter.append(flood);
+  filter.append(svgEl("feComposite", { in2: "shape", operator: "in" }));
+  ensureDefs().append(filter);
+  return { id, filter, image, flood };
 }
 
 function canUseAfter(el) {
@@ -136,10 +201,10 @@ function distToRect(x, y, rect) {
 
 function deactivate(el) {
   el.classList.remove("tsh-host", "tsh-host--rel");
-  el.style.removeProperty("--tsh-x");
-  el.style.removeProperty("--tsh-y");
-  el.style.removeProperty("--tsh-color");
+  el.style.removeProperty("--tsh-filter");
   delete el.dataset.tshText;
+  filters.get(el)?.filter.remove();
+  filters.delete(el);
   active.delete(el);
 }
 
@@ -180,6 +245,8 @@ function update() {
       el,
       x: pointerX - rect.left - el.clientLeft,
       y: pointerY - rect.top - el.clientTop,
+      width: el.clientWidth || rect.width,
+      height: el.clientHeight || rect.height,
       color: getComputedStyle(el).color,
       position: active.has(el) ? "" : getComputedStyle(el).position,
       text: el.textContent
@@ -189,15 +256,28 @@ function update() {
   const keep = new Set();
   for (const hit of hits) {
     keep.add(hit.el);
+    let fx = filters.get(hit.el);
+    if (!fx) {
+      fx = createFilter();
+      filters.set(hit.el, fx);
+    }
+    const r = settings.radius;
+    fx.filter.setAttribute("x", -FILTER_PAD);
+    fx.filter.setAttribute("y", -FILTER_PAD);
+    fx.filter.setAttribute("width", hit.width + FILTER_PAD * 2);
+    fx.filter.setAttribute("height", hit.height + FILTER_PAD * 2);
+    fx.image.setAttribute("x", hit.x - r);
+    fx.image.setAttribute("y", hit.y - r);
+    fx.image.setAttribute("width", r * 2);
+    fx.image.setAttribute("height", r * 2);
+    fx.flood.setAttribute("flood-color", hit.color);
+    if (hit.el.dataset.tshText !== hit.text) hit.el.dataset.tshText = hit.text;
     if (!active.has(hit.el)) {
+      hit.el.style.setProperty("--tsh-filter", `url(#${fx.id})`);
       if (hit.position === "static") hit.el.classList.add("tsh-host--rel");
       hit.el.classList.add("tsh-host");
       active.add(hit.el);
     }
-    if (hit.el.dataset.tshText !== hit.text) hit.el.dataset.tshText = hit.text;
-    hit.el.style.setProperty("--tsh-x", `${hit.x}px`);
-    hit.el.style.setProperty("--tsh-y", `${hit.y}px`);
-    hit.el.style.setProperty("--tsh-color", hit.color);
   }
   for (const el of [...active]) {
     if (!keep.has(el)) deactivate(el);

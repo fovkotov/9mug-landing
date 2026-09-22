@@ -1,8 +1,12 @@
-/* Stroke lives on a fill-less ::after so the glyph color stays put.
-   No opacity, filter, or transform here — nav and cart use mix-blend-mode. */
+/* The host's own glyphs hide while ::after redraws them through the stroke filter,
+   so translucent colors never stack. The effect stays inside the host — nav and cart use mix-blend-mode. */
 
 .tsh-host--rel {
   position: relative;
+}
+
+.tsh-host {
+  -webkit-text-fill-color: transparent;
 }
 
 .tsh-host::after {
@@ -21,18 +25,12 @@
   letter-spacing: inherit;
   line-height: inherit;
   font: inherit;
-  color: var(--tsh-color);
-  -webkit-text-fill-color: transparent;
-  -webkit-text-stroke-width: var(--tsh-stroke);
-  -webkit-text-stroke-color: currentColor;
+  color: #000;
+  -webkit-text-fill-color: #000;
+  -webkit-text-stroke-width: 0;
   pointer-events: none;
   user-select: none;
-  -webkit-mask-image: radial-gradient(circle var(--tsh-radius) at var(--tsh-x) var(--tsh-y), var(--tsh-stops));
-  mask-image: radial-gradient(circle var(--tsh-radius) at var(--tsh-x) var(--tsh-y), var(--tsh-stops));
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-mode: alpha;
-  mask-mode: alpha;
+  filter: var(--tsh-filter);
 }
 
 .tsh-panel {

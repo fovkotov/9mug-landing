@@ -10,6 +10,7 @@ import {
   preloadMugFrameImages
 } from "./components/ProductViewer.js";
 import { setupScratchRevealVideo } from "./scratch-reveal-video.js";
+import { createScratchLabelLayer } from "./scratch-label.js";
 import { goToCheckout, isInCart, subscribeCart, toggleItem } from "./cart.js";
 import { trackListeners } from "./route-signal.js";
 
@@ -200,6 +201,7 @@ function setupScratchPanel() {
   const ctx = scratchCanvas.getContext("2d", { alpha: true });
   if (!ctx) return;
 
+  const labelLayer = createScratchLabelLayer(scratchSection, scratchCanvas, ctx);
   const coverImage = new Image();
   coverImage.decoding = "async";
 
@@ -272,10 +274,25 @@ function setupScratchPanel() {
     scratchCanvas.style.height = `${height}px`;
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalCompositeOperation = "source-over";
     ctx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
     ctx.drawImage(coverImage, 0, 0, scratchCanvas.width, scratchCanvas.height);
+    labelLayer.clearMask();
+    labelLayer.paintLabel();
     lastPoint = null;
   }
+
+  function redrawCoverPreservingMask() {
+    if (!coverReady || scratchCanvas.width <= 0 || scratchCanvas.height <= 0) return;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalCompositeOperation = "source-over";
+    ctx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+    ctx.drawImage(coverImage, 0, 0, scratchCanvas.width, scratchCanvas.height);
+    labelLayer.paintLabel();
+    labelLayer.applyMask();
+  }
+
+  labelLayer.setOnChange(redrawCoverPreservingMask);
 
   function loadCoverImage() {
     const nextSource = getCoverSource();
@@ -311,26 +328,23 @@ function setupScratchPanel() {
     if (!point || !coverReady) return;
 
     const { width: bladeWidth, height: bladeHeight } = getBladeSize();
-    ctx.save();
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.fillStyle = "#000";
-
-    if (lastPoint) {
-      // Sweep a vertical blade strip between positions so motion stays a line, not a dot trail.
-      ctx.beginPath();
-      ctx.moveTo(lastPoint.x, lastPoint.y);
-      ctx.lineTo(point.x, point.y);
-      ctx.lineTo(point.x + bladeWidth, point.y);
-      ctx.lineTo(point.x + bladeWidth, point.y + bladeHeight);
-      ctx.lineTo(lastPoint.x + bladeWidth, lastPoint.y + bladeHeight);
-      ctx.lineTo(lastPoint.x, lastPoint.y + bladeHeight);
-      ctx.closePath();
-      ctx.fill();
-    } else {
-      ctx.fillRect(point.x, point.y, bladeWidth, bladeHeight);
-    }
-
-    ctx.restore();
+    const from = lastPoint;
+    labelLayer.punch((target) => {
+      if (from) {
+        // Sweep a vertical blade strip between positions so motion stays a line, not a dot trail.
+        target.beginPath();
+        target.moveTo(from.x, from.y);
+        target.lineTo(point.x, point.y);
+        target.lineTo(point.x + bladeWidth, point.y);
+        target.lineTo(point.x + bladeWidth, point.y + bladeHeight);
+        target.lineTo(from.x + bladeWidth, from.y + bladeHeight);
+        target.lineTo(from.x, from.y + bladeHeight);
+        target.closePath();
+        target.fill();
+      } else {
+        target.fillRect(point.x, point.y, bladeWidth, bladeHeight);
+      }
+    });
     lastPoint = point;
   }
 
@@ -425,6 +439,7 @@ function setupScratchPanel() {
   return () => {
     cancelAnimationFrame(resizeFrame);
     scratchObserver?.disconnect();
+    labelLayer.destroy();
     scratchCursor?.remove();
     coverImage.onload = null;
     coverImage.onerror = null;

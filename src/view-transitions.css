@@ -1,9 +1,6 @@
 /*
- * View transitions for page swaps.
- *
- * Cross-document `@view-transition` still covers a no-JS full load.
- * The router also calls `document.startViewTransition` around an in-document
- * swap. Both animate only the ::view-transition pseudo-elements.
+ * Cross-document view transitions on a normal full page load.
+ * Nothing here intercepts clicks or swaps the document in place.
  *
  * Only the root is ever snapshotted. `.top-nav` and the bag overlay rely on
  * mix-blend-mode: difference against the page artwork; giving them their own

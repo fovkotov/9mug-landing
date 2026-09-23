@@ -44,11 +44,11 @@ export function flushPageType() {
   if (typeof stopPage.start === "function") stopPage.start();
 }
 
-/** Header, radio, and cart label. Once per full load — never on a route swap. */
+/** Header, radio, and cart label. Once per full load. The 9PRA logo stays fully painted so its hit target never collapses mid-type. */
 export function typeShellOnce() {
   if (shellTyped) return;
   shellTyped = true;
   const shell = document.querySelector(".top-nav");
   if (!shell) return;
-  typewrite(shell, { skipSelector: PAGE_SKIP });
+  typewrite(shell, { skipSelector: `${PAGE_SKIP}, .nav-left > .nav-link` });
 }

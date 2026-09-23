@@ -167,8 +167,8 @@ export function bindProductOrientationHandoff() {
   if (document.documentElement.dataset.orientationHandoff === "1") return;
   document.documentElement.dataset.orientationHandoff = "1";
 
-  // Capture runs in the click gesture, before the router preventDefault.
-  // Permission must start here; navigation itself stays with the router.
+  // Capture runs in the click gesture. This does not cancel the link:
+  // the browser still does a full page load to the href.
   document.addEventListener(
     "click",
     (event) => {

@@ -277,7 +277,13 @@ function setupPanelVideo(root, signal) {
 
   const offScroll = onScroll(schedule);
   window.addEventListener("resize", schedule, { signal });
-  window.addEventListener("spa:settled", kick, { signal });
+  window.addEventListener(
+    "pageshow",
+    (event) => {
+      if (event.persisted) kick();
+    },
+    { signal }
+  );
   document.addEventListener(
     "visibilitychange",
     () => {

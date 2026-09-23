@@ -88,10 +88,7 @@
 }
 
 .product-viewer__loader {
-  align-items: center;
-  display: flex;
   inset: 0;
-  justify-content: center;
   opacity: 1;
   pointer-events: none;
   position: absolute;
@@ -103,30 +100,18 @@
   opacity: 0;
 }
 
+/* Faint 9 PRACTICE mark: upper-right third, inset from the top and right.
+   The PNG already carries the watermark alpha, so CSS opacity stays at 1.
+   Same percentages on desktop and mobile. */
 .product-viewer__loader-image {
-  animation: product-viewer-loader-spin 30s linear infinite;
   display: block;
-  flex-shrink: 0;
   height: auto;
-  max-width: min(400px, 90vw);
+  opacity: 1;
   pointer-events: none;
-  transform-origin: center center;
+  position: absolute;
+  right: 11%;
+  top: 19%;
   user-select: none;
-  width: 400px;
-}
-
-@keyframes product-viewer-loader-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .product-viewer__loader-image {
-    animation: none;
-  }
+  width: 19%;
 }
 

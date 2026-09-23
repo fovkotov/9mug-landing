@@ -66,7 +66,7 @@ function currentOffColorMugFrameImages() {
   }
   return isMobileViewport() ? mugFrameImagesBlackMobile : mugFrameImagesBlackDesktop;
 }
-const mugHeroLoaderSrc = resolvePublicAssetPath("/media/hero-loader.png");
+const mugHeroLoaderSrc = resolvePublicAssetPath("/media/mug-loader-mark.png");
 const scratchCursorSource = resolvePublicAssetPath("/media/scratch/cursor.png");
 const scratchCoverSources = {
   desktop: {

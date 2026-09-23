@@ -524,12 +524,6 @@ export function initTextStrokeHover() {
   window.addEventListener("pointerup", onPointerRelease, { passive: true });
   window.addEventListener("pointercancel", onPointerRelease, { passive: true });
   window.addEventListener("blur", onPointerRelease);
-  window.addEventListener("spa:settled", () => {
-    pressedLink = null;
-    pressTo = 1;
-    cacheDirty = true;
-    schedule();
-  });
   if (document.body) {
     const observer = new MutationObserver(() => {
       cacheDirty = true;

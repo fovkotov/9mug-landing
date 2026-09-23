@@ -167,8 +167,8 @@ export function bindProductOrientationHandoff() {
   if (document.documentElement.dataset.orientationHandoff === "1") return;
   document.documentElement.dataset.orientationHandoff = "1";
 
-  // Capture runs in the click gesture, before the router preventDefault.
-  // Permission must start here; navigation itself stays with the router.
+  // Capture runs inside the click gesture and does not cancel navigation.
+  // iOS needs the permission request on this tap; the next page then loads normally.
   document.addEventListener(
     "click",
     (event) => {

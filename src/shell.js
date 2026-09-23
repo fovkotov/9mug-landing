@@ -8,31 +8,58 @@ import "./footer.css";
 import "./view-transitions.css";
 import { setupMobileMenu } from "./mobile-menu.js";
 import { bindProductOrientationHandoff } from "./device-orientation-permission.js";
+import { typePageOnLoad } from "./page-typewriter.js";
 import { initRadio } from "./radio.js";
-import { startScroll } from "./scroll.js";
-import { startRouter } from "./router.js";
+import { resizeScroll, startScroll } from "./scroll.js";
 import { initTextStrokeHover } from "./text-stroke-hover.js";
 
-function ensureAnnouncer() {
-  let announcer = document.querySelector("#routeAnnouncer");
-  if (announcer) return announcer;
-  announcer = document.createElement("div");
-  announcer.id = "routeAnnouncer";
-  announcer.className = "visually-hidden";
-  announcer.setAttribute("aria-live", "polite");
-  document.body.append(announcer);
-  return announcer;
+const PAGE_MODULES = {
+  "index.html": () => import("./main.js"),
+  "shop.html": () => import("./shop.js"),
+  "product.html": () => import("./product.js"),
+  "product-classic.html": () => import("./product-classic.js"),
+  "mat.html": () => import("./mat.js"),
+  "checkout.html": () => import("./checkout.js")
+};
+
+function currentPageFile() {
+  const path = window.location.pathname.replace(/\/+$/, "");
+  const last = path.split("/").filter(Boolean).pop() || "";
+  if (!last || !last.includes(".")) return "index.html";
+  return last;
+}
+
+function bootPage() {
+  const load = PAGE_MODULES[currentPageFile()];
+  const page = document.querySelector("#page");
+  if (!load || !page) {
+    typePageOnLoad(page);
+    return;
+  }
+
+  load()
+    .then((mod) => {
+      if (typeof mod.init === "function") return mod.init(page);
+    })
+    .then(() => {
+      resizeScroll();
+      typePageOnLoad(page);
+    })
+    .catch((error) => {
+      console.error(error);
+      typePageOnLoad(page);
+    });
 }
 
 function boot() {
-  if (document.documentElement.dataset.spaShell === "1") return;
-  document.documentElement.dataset.spaShell = "1";
+  if (document.documentElement.dataset.siteBoot === "1") return;
+  document.documentElement.dataset.siteBoot = "1";
   initRadio();
   startScroll();
   setupMobileMenu();
   bindProductOrientationHandoff();
   initTextStrokeHover();
-  startRouter(ensureAnnouncer());
+  bootPage();
 }
 
 if (document.readyState === "loading") {

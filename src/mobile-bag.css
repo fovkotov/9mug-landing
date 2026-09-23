@@ -96,7 +96,7 @@
 }
 
 .mobile-bag__close-icon span {
-  background: var(--ui-overlay);
+  background: rgba(255, 255, 255, 0.8);
   height: 1px;
   left: 7.5px;
   position: absolute;

@@ -1,7 +1,7 @@
 :root {
-  --ui-color: rgba(0, 0, 0, 0.8);
+  --ui-color: rgba(0, 0, 0, 1);
   --ui-muted: rgba(0, 0, 0, 0.48);
-  --ui-overlay: rgba(255, 255, 255, 0.8);
+  --ui-overlay: rgba(255, 255, 255, 1);
   --ui-overlay-muted: rgba(255, 255, 255, 0.32);
   --bg-base: #efe8e6;
   --font-ui: "Wremena", "Wremena Regular", "Times New Roman", serif;

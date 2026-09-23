@@ -377,7 +377,7 @@
 }
 
 .hero-drag-slider:focus-visible {
-  outline: 1px solid color-mix(in srgb, var(--ui-color) 55%, transparent);
+  outline: 1px solid color-mix(in srgb, rgba(0, 0, 0, 0.8) 55%, transparent);
   outline-offset: 4px;
 }
 
@@ -434,7 +434,7 @@
 }
 
 .hero-cursor.is-fallback {
-  border: 1px solid color-mix(in srgb, var(--ui-color) 65%, transparent);
+  border: 1px solid color-mix(in srgb, rgba(0, 0, 0, 0.8) 65%, transparent);
   border-radius: 50%;
   height: 44px;
   width: 44px;
@@ -455,7 +455,7 @@
 .mug-switcher-btn {
   align-items: center;
   background: transparent;
-  border: 1px solid color-mix(in srgb, var(--ui-color) 45%, transparent);
+  border: 1px solid color-mix(in srgb, rgba(0, 0, 0, 0.8) 45%, transparent);
   border-radius: 50%;
   cursor: pointer;
   display: flex;
@@ -468,7 +468,7 @@
 }
 
 .mug-switcher-btn.is-active {
-  border-color: color-mix(in srgb, var(--ui-color) 90%, transparent);
+  border-color: color-mix(in srgb, rgba(0, 0, 0, 0.8) 90%, transparent);
   transform: scale(1.04);
 }
 
@@ -484,7 +484,7 @@
 }
 
 .mug-switcher-dot {
-  background: color-mix(in srgb, var(--ui-color) 80%, transparent);
+  background: color-mix(in srgb, rgba(0, 0, 0, 0.8) 80%, transparent);
   border-radius: 50%;
   display: block;
   height: 8px;

@@ -25,6 +25,13 @@ function formatMoney(value) {
   return `$${value}`;
 }
 
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+/** Matches `bag-checkout-grow` (0.4s). Typing starts on animationend; this is only a fallback. */
+const BAR_GROW_MS = 400;
+
 const minusIconSrc = resolvePublicAssetPath("/media/bag/minus.svg");
 const plusIconSrc = resolvePublicAssetPath("/media/bag/plus.svg");
 
@@ -36,6 +43,8 @@ function renderItems(bag) {
   const cart = getCart();
   bag.classList.toggle("is-empty", cart.lines.length === 0);
   total.textContent = formatMoney(cart.total);
+  const label = bag.querySelector(".mobile-bag__checkout-label");
+  if (label) label.textContent = "Checkout";
 
   if (!cart.lines.length) {
     items.innerHTML = `<p class="mobile-bag__empty">Cart is empty</p>`;
@@ -121,7 +130,60 @@ export function setupMobileBag({ isMenuOpen, closeMenu, onChange } = {}) {
 
   let open = false;
   let stopTyping = () => {};
+  let stopBarTyping = () => {};
+  let barTimer = 0;
   const closeBtn = bag.querySelector("[data-bag-close]");
+
+  function blankBarText() {
+    const total = bag.querySelector("[data-bag-total]");
+    const label = bag.querySelector(".mobile-bag__checkout-label");
+    if (total) total.textContent = "";
+    if (label) label.textContent = "";
+  }
+
+  function fillBarText() {
+    const total = bag.querySelector("[data-bag-total]");
+    const label = bag.querySelector(".mobile-bag__checkout-label");
+    if (total) total.textContent = formatMoney(getCart().total);
+    if (label) label.textContent = "Checkout";
+  }
+
+  function cancelBarCopy() {
+    window.clearTimeout(barTimer);
+    barTimer = 0;
+    stopBarTyping();
+    stopBarTyping = () => {};
+    bag.classList.remove("is-checkout-copy");
+  }
+
+  function startBarType() {
+    window.clearTimeout(barTimer);
+    barTimer = 0;
+    if (!open || prefersReducedMotion() || bag.classList.contains("is-empty")) return;
+    if (bag.classList.contains("is-checkout-copy")) return;
+    fillBarText();
+    bag.classList.add("is-checkout-copy");
+    const checkout = bag.querySelector("[data-bag-checkout]");
+    stopBarTyping = typewrite(checkout, { skipSelector: "[aria-hidden='true']" });
+  }
+
+  function expectBarGrow() {
+    window.clearTimeout(barTimer);
+    barTimer = 0;
+    stopBarTyping();
+    stopBarTyping = () => {};
+    if (!open || prefersReducedMotion() || bag.classList.contains("is-empty")) return;
+    bag.classList.remove("is-checkout-copy");
+    blankBarText();
+    barTimer = window.setTimeout(startBarType, BAR_GROW_MS + 40);
+  }
+
+  function onBarGrowEnd(event) {
+    if (event.animationName !== "bag-checkout-grow") return;
+    const target = event.target;
+    if (!(target instanceof Element) || !target.classList.contains("mobile-bag__checkout-shape")) return;
+    startBarType();
+  }
 
   function syncBagLink() {
     bagLink.setAttribute("aria-expanded", String(open));
@@ -129,7 +191,7 @@ export function setupMobileBag({ isMenuOpen, closeMenu, onChange } = {}) {
   }
 
   function finishClose() {
-    bag.classList.remove("is-closing", "is-checkout-ready", "is-instant");
+    bag.classList.remove("is-closing", "is-checkout-ready", "is-instant", "is-checkout-copy");
     bag.inert = true;
     bag.setAttribute("aria-hidden", "true");
   }
@@ -139,6 +201,7 @@ export function setupMobileBag({ isMenuOpen, closeMenu, onChange } = {}) {
 
     stopTyping();
     stopTyping = () => {};
+    cancelBarCopy();
     open = next;
     document.body.classList.toggle("is-mobile-bag-open", next);
     syncBagLink();
@@ -149,8 +212,9 @@ export function setupMobileBag({ isMenuOpen, closeMenu, onChange } = {}) {
       renderItems(bag);
       bag.classList.add("is-open");
       stopTyping = typewrite(bag, {
-        skipSelector: ".mobile-bag__close, [aria-hidden='true']"
+        skipSelector: ".mobile-bag__close, .mobile-bag__checkout, [aria-hidden='true']"
       });
+      expectBarGrow();
       closeBtn?.focus({ preventScroll: true });
       onChange?.();
       return;
@@ -208,11 +272,28 @@ export function setupMobileBag({ isMenuOpen, closeMenu, onChange } = {}) {
     goToCheckout();
   });
 
+  bag.addEventListener("animationend", onBarGrowEnd);
+
   subscribeCart(() => {
     if (!open) return;
+    const wasEmpty = bag.classList.contains("is-empty");
+    const waiting = barTimer !== 0 && !bag.classList.contains("is-checkout-copy");
     stopTyping();
     stopTyping = () => {};
+    if (bag.classList.contains("is-checkout-copy")) {
+      stopBarTyping();
+      stopBarTyping = () => {};
+    }
     renderItems(bag);
+    if (bag.classList.contains("is-empty")) {
+      cancelBarCopy();
+      return;
+    }
+    if (wasEmpty) {
+      expectBarGrow();
+      return;
+    }
+    if (waiting && !prefersReducedMotion()) blankBarText();
   });
 
   syncBagLink();

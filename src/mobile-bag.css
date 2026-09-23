@@ -1,3 +1,5 @@
+@import "./svg-bar-appear.css";
+
 .mobile-bag {
   color: var(--ui-overlay);
   height: 100%;
@@ -301,11 +303,22 @@
   object-fit: fill;
   pointer-events: none;
   position: absolute;
+  transform: scaleX(1) scaleY(0);
+  transform-origin: 50% 100%;
   width: 100%;
+}
+
+.mobile-bag.is-open:not(.is-empty) .mobile-bag__checkout-shape {
+  animation: bag-checkout-grow 0.4s ease-out both;
 }
 
 .mobile-bag__checkout-shape--desktop {
   display: none;
+}
+
+.mobile-bag:not(.is-checkout-copy) .mobile-bag__total,
+.mobile-bag:not(.is-checkout-copy) .mobile-bag__checkout-label {
+  visibility: hidden;
 }
 
 .mobile-bag__total,
@@ -508,5 +521,17 @@
 
   .mobile-bag__checkout-label {
     right: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-bag.is-open:not(.is-empty) .mobile-bag__checkout-shape {
+    animation: none;
+    transform: scaleX(1) scaleY(1);
+  }
+
+  .mobile-bag.is-open:not(.is-empty) .mobile-bag__total,
+  .mobile-bag.is-open:not(.is-empty) .mobile-bag__checkout-label {
+    visibility: visible;
   }
 }

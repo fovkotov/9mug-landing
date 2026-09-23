@@ -56,6 +56,8 @@ let heroDragSlider = null;
 let metaSwitcher = null;
 let metaSwitchFirst = null;
 let metaSwitchSecond = null;
+let colorBarLabel = null;
+let barColor = "white";
 let mugSwitchButtons = [];
 let scrollVideoPrimed = false;
 let scratchSection = null;
@@ -432,6 +434,26 @@ function playButtonTick() {
   play("tick");
 }
 
+function syncColorSwitcherUi() {
+  const isBlack = barColor === "black";
+  if (colorBarLabel) {
+    colorBarLabel.textContent = isBlack ? "Black" : "White";
+    colorBarLabel.setAttribute("aria-label", isBlack ? "Toggle color to White" : "Toggle color to Black");
+  }
+  metaSwitchFirst?.classList.toggle("is-active", !isBlack);
+  metaSwitchFirst?.setAttribute("aria-pressed", isBlack ? "false" : "true");
+  metaSwitchSecond?.classList.toggle("is-active", isBlack);
+  metaSwitchSecond?.setAttribute("aria-pressed", isBlack ? "true" : "false");
+}
+
+function setBarColor(next) {
+  if (next !== "white" && next !== "black") return;
+  if (next === barColor) return;
+  barColor = next;
+  syncColorSwitcherUi();
+  playButtonTick();
+}
+
 function toggleBagState() {
   playButtonTick();
   if (isInCart(CART_PRODUCT_ID)) {
@@ -458,6 +480,9 @@ export function init(root) {
   metaSwitcher = root.querySelector("#metaSwitcher");
   metaSwitchFirst = root.querySelector("#metaSwitchFirst");
   metaSwitchSecond = root.querySelector("#metaSwitchSecond");
+  colorBarLabel = root.querySelector("#colorBarLabel") || root.querySelector(".color-bar-label");
+  barColor = "white";
+  syncColorSwitcherUi();
   mugSwitchButtons = [...root.querySelectorAll(".mug-switcher-btn")];
   scratchSection = root.querySelector("#scratchSection");
   scratchCanvas = root.querySelector("#scratchCanvas");
@@ -483,6 +508,12 @@ export function init(root) {
     window.addEventListener("touchstart", primeScrollVideo, { once: true, passive: true });
     window.addEventListener("wheel", primeScrollVideo, { once: true, passive: true });
     window.addEventListener("keydown", primeScrollVideo, { once: true });
+
+    metaSwitchFirst?.addEventListener("click", () => setBarColor("white"));
+    metaSwitchSecond?.addEventListener("click", () => setBarColor("black"));
+    colorBarLabel?.addEventListener("click", () => {
+      setBarColor(barColor === "black" ? "white" : "black");
+    });
 
     const tick = () => {
       syncScrollVideoFrame();

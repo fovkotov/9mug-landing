@@ -48,16 +48,29 @@
 .color-bar-label {
   /* Fixed slot so the swatches do not shift while the name typewrites.
      46px fits the widest color name ("White", ~44.4px at 17px). */
+  appearance: none;
+  background: transparent;
+  border: 0;
+  box-sizing: border-box;
+  color: inherit;
+  cursor: pointer;
+  display: block;
   flex: 0 0 46px;
   font-family: var(--font-ui);
   font-feature-settings: "lnum" 1, "pnum" 1;
   font-size: 17px;
   letter-spacing: 0.34px;
   line-height: normal;
+  margin: 0;
   min-width: 46px;
   overflow: visible;
+  padding: 0;
+  pointer-events: auto;
+  position: relative;
+  text-align: left;
   white-space: nowrap;
   width: 46px;
+  z-index: 1;
 }
 
 .cart-bar {
@@ -130,22 +143,28 @@
 .meta-switcher {
   align-items: center;
   display: flex;
-  gap: 8px;
+  /* 14px circles, 44px hit boxes. 30px keeps those boxes from covering each other. */
+  gap: 30px;
   pointer-events: auto;
   transform: translateY(1.5px);
 }
 
 .meta-switch-btn {
+  /* Border box is the 44px target. Equal negative margins leave a 14px
+     layout slot, so the painted circle stays on that slot. */
   align-items: center;
   background: transparent;
   border: 0;
-  border-radius: 105px;
+  box-sizing: border-box;
   cursor: pointer;
   display: flex;
-  height: 14px;
+  flex: 0 0 44px;
+  height: 44px;
   justify-content: center;
+  margin: -15px;
   padding: 0;
-  width: 14px;
+  position: relative;
+  width: 44px;
 }
 
 /* Source is white: under parent difference it reads as the solid dark swatch. */

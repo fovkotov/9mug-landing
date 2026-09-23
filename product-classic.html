@@ -54,15 +54,17 @@
       </aside>
 
       <div class="color-bar" aria-label="Product color">
-        <span class="color-bar-label">White</span>
-        <div class="meta-switcher" id="metaSwitcher" aria-label="Switch mug design">
-          <button id="metaSwitchFirst" class="meta-switch-btn is-active" type="button" aria-label="Mug design 1" aria-pressed="true">
+        <button class="color-bar-label" id="colorBarLabel" type="button" aria-label="Toggle color to Black">White</button>
+        <div class="meta-switcher" id="metaSwitcher" aria-label="Switch mug color">
+          <button id="metaSwitchFirst" class="meta-switch-btn is-active" type="button" data-color="white" aria-label="White" aria-pressed="true">
             <span class="meta-switch-first-fill" aria-hidden="true">
               <span class="meta-switch-first-dot"></span>
             </span>
           </button>
-          <button id="metaSwitchSecond" class="meta-switch-btn" type="button" aria-label="Mug design 2" aria-pressed="false">
-            <span class="meta-switch-fill"></span>
+          <button id="metaSwitchSecond" class="meta-switch-btn" type="button" data-color="black" aria-label="Black" aria-pressed="false">
+            <span class="meta-switch-fill" aria-hidden="true">
+              <span class="meta-switch-dot"></span>
+            </span>
           </button>
         </div>
       </div>

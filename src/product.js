@@ -498,7 +498,10 @@ function playButtonTick() {
 
 function syncColorSwitcherUi() {
   const isBlack = mugColor === "black";
-  if (colorBarLabel) colorBarLabel.textContent = isBlack ? "Black" : "White";
+  if (colorBarLabel) {
+    colorBarLabel.textContent = isBlack ? "Black" : "White";
+    colorBarLabel.setAttribute("aria-label", isBlack ? "Toggle color to White" : "Toggle color to Black");
+  }
   metaSwitchFirst?.classList.toggle("is-active", !isBlack);
   metaSwitchFirst?.setAttribute("aria-pressed", isBlack ? "false" : "true");
   metaSwitchSecond?.classList.toggle("is-active", isBlack);
@@ -596,6 +599,9 @@ export function init(root) {
     };
     metaSwitchFirst?.addEventListener("click", () => setMugColor("white"));
     metaSwitchSecond?.addEventListener("click", () => setMugColor("black"));
+    colorBarLabel?.addEventListener("click", () => {
+      setMugColor(mugColor === "black" ? "white" : "black");
+    });
 
     const tick = () => {
       syncScrollVideoFrame();

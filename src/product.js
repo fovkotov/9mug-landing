@@ -78,6 +78,17 @@ let scratchReveal = null;
 let scratchVideoApi = { prime() {}, destroy() {} };
 let pageRoot = document;
 
+function prepareScratchUnderlay() {
+  const underlay = pageRoot.querySelector("#scratchUnderlay");
+  if (!underlay) return;
+
+  const rawSrc = underlay.getAttribute("src") ?? "";
+  const resolvedSrc = resolvePublicAssetPath(rawSrc);
+  if (resolvedSrc && underlay.getAttribute("src") !== resolvedSrc) {
+    underlay.setAttribute("src", resolvedSrc);
+  }
+}
+
 function prepareScrollVideo() {
   if (!scrollVideo) return;
 
@@ -492,6 +503,7 @@ export function init(root) {
   scratchSection = root.querySelector("#scratchSection");
   scratchCanvas = root.querySelector("#scratchCanvas");
   scratchReveal = root.querySelector("#scratchReveal");
+  prepareScratchUnderlay();
   scrollVideoPrimed = false;
 
   mugFramesWarmup = preloadMugFrameImages(currentMugFrameImages(), { signal: ac.signal });

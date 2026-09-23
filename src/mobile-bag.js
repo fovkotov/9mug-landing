@@ -186,6 +186,12 @@ export function setupMobileBag({ isMenuOpen, closeMenu, onChange } = {}) {
     closeBag();
   });
 
+  bag.querySelector(".mobile-bag__scrim")?.addEventListener("click", (event) => {
+    if (event.target.closest(".mobile-bag__panel")) return;
+    playTick();
+    closeBag();
+  });
+
   bag.querySelector("[data-bag-items]")?.addEventListener("click", (event) => {
     const minus = event.target.closest("[data-bag-minus]");
     const plus = event.target.closest("[data-bag-plus]");

@@ -17,6 +17,10 @@
   visibility: visible;
 }
 
+.mobile-bag.is-open .mobile-bag__scrim {
+  pointer-events: auto;
+}
+
 .mobile-bag__scrim {
   background: rgba(0, 0, 0, 0.24);
   inset: 0;

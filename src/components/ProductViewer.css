@@ -23,6 +23,7 @@
   inset: 0;
   position: absolute;
   width: 100%;
+  z-index: 1;
 }
 
 .product-viewer__frame {
@@ -86,15 +87,6 @@
   border-color: rgba(255, 255, 255, 0.85);
 }
 
-.product-viewer.has-loader:not(.is-ready) .product-viewer__stage {
-  opacity: 0;
-}
-
-.product-viewer.has-loader.is-ready .product-viewer__stage {
-  opacity: 1;
-  transition: opacity 300ms ease;
-}
-
 .product-viewer__loader {
   align-items: center;
   display: flex;
@@ -104,7 +96,7 @@
   pointer-events: none;
   position: absolute;
   transition: opacity 300ms ease;
-  z-index: 6;
+  z-index: 0;
 }
 
 .product-viewer__loader.is-hidden {

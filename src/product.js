@@ -40,8 +40,16 @@ const mugFrameImagesMobile = createMugFrameImages(
   "/media/mug_frames_mobile",
   MUG_GRID
 );
+const mugFrameImagesBlack = createMugFrameImages(
+  resolvePublicAssetPath,
+  "/media/mug_frames_black_mobile",
+  MUG_GRID
+);
+
+let mugColor = "white";
 
 function currentMugFrameImages() {
+  if (mugColor === "black") return mugFrameImagesBlack;
   return isMobileViewport() ? mugFrameImagesMobile : mugFrameImagesDesktop;
 }
 const mugHeroLoaderSrc = resolvePublicAssetPath("/media/hero-loader.png");
@@ -71,6 +79,7 @@ let heroDragSlider = null;
 let metaSwitcher = null;
 let metaSwitchFirst = null;
 let metaSwitchSecond = null;
+let colorBarLabel = null;
 let mugSwitchButtons = [];
 let scrollVideoPrimed = false;
 let scratchSection = null;
@@ -487,6 +496,15 @@ function playButtonTick() {
   play("tick");
 }
 
+function syncColorSwitcherUi() {
+  const isBlack = mugColor === "black";
+  if (colorBarLabel) colorBarLabel.textContent = isBlack ? "Black" : "White";
+  metaSwitchFirst?.classList.toggle("is-active", !isBlack);
+  metaSwitchFirst?.setAttribute("aria-pressed", isBlack ? "false" : "true");
+  metaSwitchSecond?.classList.toggle("is-active", isBlack);
+  metaSwitchSecond?.setAttribute("aria-pressed", isBlack ? "true" : "false");
+}
+
 function toggleBagState() {
   playButtonTick();
   if (isInCart(CART_PRODUCT_ID)) {
@@ -514,7 +532,10 @@ export function init(root) {
   metaSwitcher = root.querySelector("#metaSwitcher");
   metaSwitchFirst = root.querySelector("#metaSwitchFirst");
   metaSwitchSecond = root.querySelector("#metaSwitchSecond");
+  colorBarLabel = root.querySelector("#colorBarLabel") || root.querySelector(".color-bar-label");
   mugSwitchButtons = [...root.querySelectorAll(".mug-switcher-btn")];
+  mugColor = "white";
+  syncColorSwitcherUi();
   scratchSection = root.querySelector("#scratchSection");
   scratchCanvas = root.querySelector("#scratchCanvas");
   scratchReveal = root.querySelector("#scratchReveal");
@@ -522,6 +543,10 @@ export function init(root) {
   scrollVideoPrimed = false;
 
   mugFramesWarmup = preloadMugFrameImages(currentMugFrameImages(), { signal: ac.signal });
+  void mugFramesWarmup.then(() => {
+    if (ac.signal.aborted) return;
+    void preloadMugFrameImages(mugFrameImagesBlack, { signal: ac.signal });
+  });
   scratchVideoApi = setupScratchRevealVideo(scratchReveal, resolvePublicAssetPath);
 
   let hero = null;
@@ -544,17 +569,33 @@ export function init(root) {
     window.addEventListener("wheel", primeScrollVideo, { once: true, passive: true });
     window.addEventListener("keydown", primeScrollVideo, { once: true });
 
-    const swapHeroFramesIfNeeded = () => {
-      const nextMobile = isMobileViewport();
-      if (nextMobile === heroIsMobile) return;
-      heroIsMobile = nextMobile;
+    const remountHero = () => {
       hero?.destroy?.();
       if (productViewerRoot) productViewerRoot.replaceChildren();
       mugFramesWarmup = preloadMugFrameImages(currentMugFrameImages(), { signal: ac.signal });
       hero = setupProductHero();
     };
+
+    const swapHeroFramesIfNeeded = () => {
+      const nextMobile = isMobileViewport();
+      if (nextMobile === heroIsMobile) return;
+      heroIsMobile = nextMobile;
+      if (mugColor === "black") return;
+      remountHero();
+    };
     window.addEventListener("resize", swapHeroFramesIfNeeded);
     window.addEventListener("orientationchange", swapHeroFramesIfNeeded);
+
+    const setMugColor = (next) => {
+      if (next !== "white" && next !== "black") return;
+      if (next === mugColor) return;
+      mugColor = next;
+      syncColorSwitcherUi();
+      playButtonTick();
+      remountHero();
+    };
+    metaSwitchFirst?.addEventListener("click", () => setMugColor("white"));
+    metaSwitchSecond?.addEventListener("click", () => setMugColor("black"));
 
     const tick = () => {
       syncScrollVideoFrame();

@@ -144,11 +144,13 @@
 
 /* Source is white: under parent difference it reads as the solid dark swatch. */
 .meta-switch-fill {
+  align-items: center;
   background: #fff;
   border: 0.875px solid rgba(255, 255, 255, 0.12);
   border-radius: 105px;
-  display: block;
+  display: flex;
   height: 14px;
+  justify-content: center;
   width: 14px;
 }
 
@@ -164,12 +166,24 @@
 }
 
 /* Source white under parent difference → reads as the dark center dot. */
-.meta-switch-first-dot {
+.meta-switch-first-dot,
+.meta-switch-dot {
   background: #fff;
   border-radius: 50%;
-  display: block;
+  display: none;
   height: 6px;
   width: 6px;
+}
+
+.meta-switch-btn.is-active .meta-switch-first-dot,
+.meta-switch-btn.is-active .meta-switch-dot {
+  display: block;
+}
+
+/* Selected black matches selected white: ring + inner dot, not a solid fill. */
+.meta-switch-btn.is-active .meta-switch-fill {
+  background: transparent;
+  border: 1px solid #fff;
 }
 
 .panel {

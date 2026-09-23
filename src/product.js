@@ -40,7 +40,12 @@ const mugFrameImagesMobile = createMugFrameImages(
   "/media/mug_frames_mobile",
   MUG_GRID
 );
-const mugFrameImagesBlack = createMugFrameImages(
+const mugFrameImagesBlackDesktop = createMugFrameImages(
+  resolvePublicAssetPath,
+  "/media/mug_frames_black",
+  MUG_GRID
+);
+const mugFrameImagesBlackMobile = createMugFrameImages(
   resolvePublicAssetPath,
   "/media/mug_frames_black_mobile",
   MUG_GRID
@@ -49,8 +54,17 @@ const mugFrameImagesBlack = createMugFrameImages(
 let mugColor = "white";
 
 function currentMugFrameImages() {
-  if (mugColor === "black") return mugFrameImagesBlack;
+  if (mugColor === "black") {
+    return isMobileViewport() ? mugFrameImagesBlackMobile : mugFrameImagesBlackDesktop;
+  }
   return isMobileViewport() ? mugFrameImagesMobile : mugFrameImagesDesktop;
+}
+
+function currentOffColorMugFrameImages() {
+  if (mugColor === "black") {
+    return isMobileViewport() ? mugFrameImagesMobile : mugFrameImagesDesktop;
+  }
+  return isMobileViewport() ? mugFrameImagesBlackMobile : mugFrameImagesBlackDesktop;
 }
 const mugHeroLoaderSrc = resolvePublicAssetPath("/media/hero-loader.png");
 const scratchCursorSource = resolvePublicAssetPath("/media/scratch/cursor.png");
@@ -557,7 +571,7 @@ export function init(root) {
   mugFramesWarmup = preloadMugFrameImages(currentMugFrameImages(), { signal: ac.signal });
   void mugFramesWarmup.then(() => {
     if (ac.signal.aborted) return;
-    void preloadMugFrameImages(mugFrameImagesBlack, { signal: ac.signal });
+    void preloadMugFrameImages(currentOffColorMugFrameImages(), { signal: ac.signal });
   });
   scratchVideoApi = setupScratchRevealVideo(scratchReveal, resolvePublicAssetPath);
 
@@ -592,7 +606,6 @@ export function init(root) {
       const nextMobile = isMobileViewport();
       if (nextMobile === heroIsMobile) return;
       heroIsMobile = nextMobile;
-      if (mugColor === "black") return;
       remountHero();
     };
     window.addEventListener("resize", swapHeroFramesIfNeeded);

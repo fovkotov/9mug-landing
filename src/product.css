@@ -143,15 +143,14 @@
 .meta-switcher {
   align-items: center;
   display: flex;
-  /* 14px circles, 44px hit boxes. 30px keeps those boxes from covering each other. */
-  gap: 30px;
+  /* Same 8px gap as the old 14px buttons: painted circles stay 22px center to center. */
+  gap: 8px;
   pointer-events: auto;
   transform: translateY(1.5px);
 }
 
 .meta-switch-btn {
-  /* Border box is the 44px target. Equal negative margins leave a 14px
-     layout slot, so the painted circle stays on that slot. */
+  /* 44px hit box. Vertical -15px margins keep a 14px-tall slot. */
   align-items: center;
   background: transparent;
   border: 0;
@@ -160,11 +159,24 @@
   display: flex;
   flex: 0 0 44px;
   height: 44px;
-  justify-content: center;
-  margin: -15px;
+  margin-bottom: -15px;
+  margin-top: -15px;
   padding: 0;
   position: relative;
   width: 44px;
+}
+
+/* Extra hit area grows outward, so the 14px circles keep the original 8px gap. */
+.meta-switcher .meta-switch-btn:first-child {
+  justify-content: flex-end;
+  margin-left: -30px;
+  margin-right: 0;
+}
+
+.meta-switcher .meta-switch-btn:last-child {
+  justify-content: flex-start;
+  margin-left: 0;
+  margin-right: -30px;
 }
 
 /* Source is white: under parent difference it reads as the solid dark swatch. */

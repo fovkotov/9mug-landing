@@ -46,12 +46,18 @@
 }
 
 .color-bar-label {
+  /* Fixed slot so the swatches do not shift while the name typewrites.
+     46px fits the widest color name ("White", ~44.4px at 17px). */
+  flex: 0 0 46px;
   font-family: var(--font-ui);
   font-feature-settings: "lnum" 1, "pnum" 1;
   font-size: 17px;
   letter-spacing: 0.34px;
   line-height: normal;
+  min-width: 46px;
+  overflow: visible;
   white-space: nowrap;
+  width: 46px;
 }
 
 .cart-bar {

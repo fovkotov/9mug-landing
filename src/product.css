@@ -519,6 +519,28 @@
   z-index: 2;
 }
 
+.scratch-label {
+  align-items: center;
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  margin: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 3;
+}
+
+.scratch-label span {
+  color: #fff;
+  font-family: var(--font-ui);
+  font-feature-settings: "lnum" 1, "pnum" 1;
+  font-size: 17px;
+  font-variant-numeric: lining-nums proportional-nums;
+  letter-spacing: 0.34px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
 .scratch-cursor {
   --cursor-x: 0px;
   --cursor-y: 0px;

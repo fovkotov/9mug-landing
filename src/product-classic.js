@@ -434,6 +434,14 @@ function playButtonTick() {
   play("tick");
 }
 
+function syncColorSwapImages() {
+  pageRoot.querySelectorAll("[data-src-white][data-src-black]").forEach((img) => {
+    const raw = img.getAttribute(barColor === "black" ? "data-src-black" : "data-src-white");
+    const next = resolvePublicAssetPath(raw ?? "");
+    if (next && img.getAttribute("src") !== next) img.setAttribute("src", next);
+  });
+}
+
 function syncColorSwitcherUi() {
   const isBlack = barColor === "black";
   if (colorBarLabel) {
@@ -451,6 +459,7 @@ function setBarColor(next) {
   if (next === barColor) return;
   barColor = next;
   syncColorSwitcherUi();
+  syncColorSwapImages();
   playButtonTick();
 }
 
@@ -483,6 +492,7 @@ export function init(root) {
   colorBarLabel = root.querySelector("#colorBarLabel") || root.querySelector(".color-bar-label");
   barColor = "white";
   syncColorSwitcherUi();
+  syncColorSwapImages();
   mugSwitchButtons = [...root.querySelectorAll(".mug-switcher-btn")];
   scratchSection = root.querySelector("#scratchSection");
   scratchCanvas = root.querySelector("#scratchCanvas");

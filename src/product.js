@@ -88,6 +88,14 @@ let scratchReveal = null;
 let scratchVideoApi = { prime() {}, destroy() {} };
 let pageRoot = document;
 
+function syncColorSwapImages() {
+  pageRoot.querySelectorAll("[data-src-white][data-src-black]").forEach((img) => {
+    const raw = img.getAttribute(mugColor === "black" ? "data-src-black" : "data-src-white");
+    const next = resolvePublicAssetPath(raw ?? "");
+    if (next && img.getAttribute("src") !== next) img.setAttribute("src", next);
+  });
+}
+
 function prepareScratchUnderlay() {
   const underlay = pageRoot.querySelector("#scratchUnderlay");
   if (!underlay) return;
@@ -539,6 +547,7 @@ export function init(root) {
   mugSwitchButtons = [...root.querySelectorAll(".mug-switcher-btn")];
   mugColor = "white";
   syncColorSwitcherUi();
+  syncColorSwapImages();
   scratchSection = root.querySelector("#scratchSection");
   scratchCanvas = root.querySelector("#scratchCanvas");
   scratchReveal = root.querySelector("#scratchReveal");
@@ -594,6 +603,7 @@ export function init(root) {
       if (next === mugColor) return;
       mugColor = next;
       syncColorSwitcherUi();
+      syncColorSwapImages();
       playButtonTick();
       remountHero();
     };

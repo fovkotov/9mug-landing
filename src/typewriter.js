@@ -21,8 +21,10 @@ function isHidden(element, root) {
  * (no opacity, transform, or filter wrappers).
  * Returns cancel(). Cancel restores the full strings and clears the timer.
  * prefers-reduced-motion leaves the text untouched.
+ * `deferred` blanks immediately but waits for `cancel.start()` so a caller
+ * can recapture text after init, or wait out a view transition.
  */
-export function typewrite(root, { charMs = TYPEWRITER_CHAR_MS, skipSelector = "[aria-hidden='true']" } = {}) {
+export function typewrite(root, { charMs = TYPEWRITER_CHAR_MS, skipSelector = "[aria-hidden='true']", deferred = false } = {}) {
   if (!root || prefersReducedMotion()) return () => {};
 
   const entries = [];
@@ -46,6 +48,7 @@ export function typewrite(root, { charMs = TYPEWRITER_CHAR_MS, skipSelector = "[
   let count = 0;
   let timer = 0;
   let stopped = false;
+  let started = false;
 
   const restore = () => {
     for (const entry of entries) {
@@ -57,7 +60,10 @@ export function typewrite(root, { charMs = TYPEWRITER_CHAR_MS, skipSelector = "[
     if (stopped) return;
     const entry = entries[index];
     if (!entry?.node.isConnected) {
-      stopped = true;
+      index += 1;
+      count = 0;
+      if (index < entries.length) timer = window.setTimeout(tick, charMs);
+      else stopped = true;
       return;
     }
     count += 1;
@@ -69,12 +75,21 @@ export function typewrite(root, { charMs = TYPEWRITER_CHAR_MS, skipSelector = "[
     if (index < entries.length) timer = window.setTimeout(tick, charMs);
   };
 
-  timer = window.setTimeout(tick, charMs);
+  const begin = () => {
+    if (stopped || started) return;
+    started = true;
+    timer = window.setTimeout(tick, charMs);
+  };
 
-  return () => {
+  const cancel = () => {
     if (stopped) return;
     stopped = true;
     window.clearTimeout(timer);
     restore();
   };
+
+  if (deferred) cancel.start = begin;
+  else begin();
+
+  return cancel;
 }

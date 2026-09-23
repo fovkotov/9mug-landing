@@ -24,7 +24,7 @@ const PAGE_SKIP = [
 ].join(", ");
 
 let stopPage = () => {};
-let ran = false;
+let shellTyped = false;
 
 export function cancelPageTypewriter() {
   const stop = stopPage;
@@ -32,19 +32,23 @@ export function cancelPageTypewriter() {
   stop();
 }
 
-/**
- * One pass per full document load: header chrome, then `#page` copy.
- * Call after the page module has finished init so dynamic labels are present.
- */
-export function typePageOnLoad(page) {
-  if (ran) return;
-  ran = true;
-
-  const shell = document.querySelector(".top-nav");
-  if (shell) typewrite(shell, { skipSelector: PAGE_SKIP });
-
-  if (!page?.isConnected) return;
+/** Blank the current page immediately. `flushPageType` starts the 22ms timer. */
+export function beginPageType(page) {
   cancelPageTypewriter();
-  const stop = typewrite(page, { skipSelector: PAGE_SKIP });
+  if (!page?.isConnected) return;
+  const stop = typewrite(page, { skipSelector: PAGE_SKIP, deferred: true });
   stopPage = typeof stop === "function" ? stop : () => {};
+}
+
+export function flushPageType() {
+  if (typeof stopPage.start === "function") stopPage.start();
+}
+
+/** Header, radio, and cart label. Once per full load — never on a route swap. */
+export function typeShellOnce() {
+  if (shellTyped) return;
+  shellTyped = true;
+  const shell = document.querySelector(".top-nav");
+  if (!shell) return;
+  typewrite(shell, { skipSelector: PAGE_SKIP });
 }

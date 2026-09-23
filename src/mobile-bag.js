@@ -94,7 +94,7 @@ function ensureOverlay() {
   bag.inert = true;
   bag.innerHTML = `
     <div class="mobile-bag__scrim" aria-hidden="true"></div>
-    <div class="mobile-bag__panel">
+    <div class="mobile-bag__panel" data-lenis-prevent>
       <button type="button" class="mobile-bag__close" data-bag-close aria-label="Close cart">
         <span class="mobile-bag__close-icon" aria-hidden="true">
           <span></span>

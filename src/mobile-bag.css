@@ -394,11 +394,13 @@
     flex: 0 1 auto;
     left: auto;
     margin: auto 0;
-    max-height: calc(100% - 37px);
+    max-height: calc(100dvh - 37px);
     max-width: none;
+    min-height: 0;
     min-width: 0;
     overflow-x: hidden;
     overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 0;
     position: relative;
     right: auto;

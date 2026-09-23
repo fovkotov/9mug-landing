@@ -94,9 +94,75 @@ export function setupMobileMenu() {
   let bagApi = null;
   let stopTyping = () => {};
 
+  let cartTouchY = null;
+
+  const cartScroller = (event) => {
+    const bag = event.target?.closest?.("#mobileBag");
+    const node = bag?.querySelector("[data-bag-items]");
+    return node instanceof HTMLElement ? node : null;
+  };
+
+  const wheelDeltaY = (event, scroller) => {
+    let delta = event.deltaY || 0;
+    if (event.deltaMode === 1) delta *= 16;
+    else if (event.deltaMode === 2) delta *= scroller.clientHeight || window.innerHeight;
+    return delta;
+  };
+
+  const cartCanScroll = (scroller, delta) => {
+    if (!delta) return false;
+    const max = scroller.scrollHeight - scroller.clientHeight;
+    if (max <= 1) return false;
+    if (delta < 0 && scroller.scrollTop <= 0) return false;
+    if (delta > 0 && scroller.scrollTop >= max - 1) return false;
+    return true;
+  };
+
   const blockPageScroll = (event) => {
-    if (event.target.closest?.(".mobile-bag__items")) return;
-    event.preventDefault();
+    const inCart = Boolean(event.target?.closest?.(".mobile-bag__panel"));
+
+    if (open && !(isBagOpen() && inCart)) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
+    if (!isBagOpen() || !inCart) return;
+
+    const scroller = cartScroller(event);
+    if (!scroller) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
+    const onScroller = Boolean(event.target?.closest?.("[data-bag-items]"));
+
+    if (event.type === "wheel") {
+      const delta = wheelDeltaY(event, scroller);
+      if (!onScroller) {
+        if (cartCanScroll(scroller, delta)) scroller.scrollTop += delta;
+        event.preventDefault();
+      } else if (!cartCanScroll(scroller, delta)) {
+        event.preventDefault();
+      }
+      event.stopPropagation();
+      return;
+    }
+
+    if (event.type === "touchmove") {
+      const y = event.touches?.[0]?.clientY;
+      const delta = cartTouchY == null || y == null ? 0 : cartTouchY - y;
+      if (y != null) cartTouchY = y;
+      if (!onScroller || !cartCanScroll(scroller, delta)) event.preventDefault();
+      event.stopPropagation();
+    }
+  };
+
+  const trackCartTouch = (event) => {
+    if (!isBagOpen()) return;
+    if (!event.target?.closest?.(".mobile-bag__panel")) return;
+    cartTouchY = event.touches?.[0]?.clientY ?? null;
   };
 
   function isBagOpen() {
@@ -104,12 +170,14 @@ export function setupMobileMenu() {
   }
 
   function syncScrollLock() {
-    const locked = open || isBagOpen();
-    document.documentElement.style.overflow = locked ? "hidden" : "";
-    document.body.style.overflow = locked ? "hidden" : "";
+    const menuLocked = open;
+    document.documentElement.style.overflow = menuLocked ? "hidden" : "";
+    document.body.style.overflow = menuLocked ? "hidden" : "";
+    document.removeEventListener("touchstart", trackCartTouch);
     document.removeEventListener("touchmove", blockPageScroll);
     document.removeEventListener("wheel", blockPageScroll);
-    if (locked) {
+    if (menuLocked || isBagOpen()) {
+      document.addEventListener("touchstart", trackCartTouch, { passive: true });
       document.addEventListener("touchmove", blockPageScroll, { passive: false });
       document.addEventListener("wheel", blockPageScroll, { passive: false });
     }

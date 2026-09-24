@@ -330,8 +330,9 @@
   background: #8b1e1e;
 }
 
+/* Matches the video's own backdrop: shows wherever the sticky frame lags the mobile viewport. */
 .scroll-video-section {
-  background: #000;
+  background: #e3dfde;
   height: 300vh;
   position: relative;
 }

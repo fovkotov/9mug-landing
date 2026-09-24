@@ -21,6 +21,10 @@ body {
   min-height: 100%;
 }
 
+html {
+  background: var(--bg-base);
+}
+
 body {
   background: var(--bg-base);
   color: var(--ui-color);

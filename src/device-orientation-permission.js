@@ -17,6 +17,56 @@ export function needsOrientationPermission() {
   );
 }
 
+let orientationGranted = false;
+const grantListeners = new Set();
+
+/**
+ * @param {Event} [event] first live orientation event, when that is what proved access
+ */
+function markOrientationGranted(event) {
+  if (orientationGranted) return;
+  orientationGranted = true;
+  for (const listener of [...grantListeners]) listener(event);
+  grantListeners.clear();
+}
+
+function hasOrientationData(event) {
+  return event.beta != null || event.gamma != null || event.alpha != null;
+}
+
+/**
+ * Calls back once motion access is granted — by any requestPermission() on the
+ * page, or when orientation events start flowing after the native prompt
+ * closes. iOS resolves the grant outside the tap that opened the prompt, so
+ * waiting for another tap would leave the viewer idle.
+ * @param {(event?: Event) => void} callback
+ * @returns {() => void} unsubscribe
+ */
+export function onDeviceOrientationGranted(callback) {
+  if (orientationGranted) {
+    callback();
+    return () => {};
+  }
+
+  const onOrient = (event) => {
+    if (hasOrientationData(event)) markOrientationGranted(event);
+  };
+  const cleanup = () => {
+    grantListeners.delete(listener);
+    window.removeEventListener("deviceorientation", onOrient, true);
+    window.removeEventListener("deviceorientationabsolute", onOrient, true);
+  };
+  const listener = (event) => {
+    cleanup();
+    callback(event);
+  };
+
+  grantListeners.add(listener);
+  window.addEventListener("deviceorientation", onOrient, true);
+  window.addEventListener("deviceorientationabsolute", onOrient, true);
+  return cleanup;
+}
+
 function isMobileInteractionContext() {
   const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   return (
@@ -47,9 +97,7 @@ function probeOrientationEvents(timeoutMs = 350) {
     };
 
     const onOrient = (event) => {
-      if (event.beta != null || event.gamma != null || event.alpha != null) {
-        finish(true);
-      }
+      if (hasOrientationData(event)) finish(true);
     };
 
     window.addEventListener("deviceorientation", onOrient, true);
@@ -83,7 +131,10 @@ export async function getDeviceOrientationPermissionState() {
     }
   }
 
-  if (await probeOrientationEvents(350)) return "granted";
+  if (await probeOrientationEvents(350)) {
+    markOrientationGranted();
+    return "granted";
+  }
 
   return "prompt";
 }
@@ -108,7 +159,9 @@ export async function requestDeviceOrientationPermission() {
     }
 
     const results = await Promise.all(requests);
-    return results.every((result) => result === "granted") ? "granted" : "denied";
+    const granted = results.every((result) => result === "granted");
+    if (granted) markOrientationGranted();
+    return granted ? "granted" : "denied";
   } catch (error) {
     console.warn("Device orientation permission failed", error);
     return "denied";

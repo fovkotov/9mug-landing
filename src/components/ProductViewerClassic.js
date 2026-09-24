@@ -10,7 +10,9 @@
 import {
   ensureDeviceOrientationPermission,
   needsOrientationPermission,
-  orientationApiAvailable
+  onDeviceOrientationGranted,
+  orientationApiAvailable,
+  requestDeviceOrientationPermission
 } from "../device-orientation-permission.js";
 
 const DIRECTION_KEYS = [
@@ -199,6 +201,7 @@ export function createProductViewer(root, options = {}) {
   let zoneLabelLayer = null;
   let zoneResizeObserver = null;
   let firstGestureBound = false;
+  let stopGrantWatch = null;
 
   // Shared look target in the same normalized space as desktop mouse.
   let targetX = 0;
@@ -628,6 +631,7 @@ export function createProductViewer(root, options = {}) {
     orientationRequesting = true;
     const status = await ensureDeviceOrientationPermission();
     orientationRequesting = false;
+    if (orientationActive) return true;
     orientationPermission = status === "granted" ? "granted" : status === "denied" ? "denied" : "unknown";
 
     if (status !== "granted") {
@@ -636,6 +640,16 @@ export function createProductViewer(root, options = {}) {
       return false;
     }
 
+    activateOrientation();
+    return true;
+  }
+
+  /** @param {Event} [firstEvent] orientation event that proved access; used as the baseline */
+  function activateOrientation(firstEvent) {
+    if (prefersMouse || orientationActive || destroyed) return;
+    stopGrantWatch?.();
+    stopGrantWatch = null;
+    orientationPermission = "granted";
     orientationActive = true;
     // Keep touch as soft fallback if sensor stays silent.
     touchEnabled = true;
@@ -645,8 +659,13 @@ export function createProductViewer(root, options = {}) {
     latestGamma = null;
     root.setAttribute("data-input", "orientation");
     startOrientationListening();
+    if (firstEvent) handleDeviceOrientation(firstEvent);
     ensureLoop();
-    return true;
+  }
+
+  function watchOrientationGrant() {
+    if (stopGrantWatch || orientationActive || destroyed) return;
+    stopGrantWatch = onDeviceOrientationGranted((event) => activateOrientation(event));
   }
 
   function bindFirstGestureOrientationRequest() {
@@ -656,9 +675,11 @@ export function createProductViewer(root, options = {}) {
     const onFirstGesture = () => {
       window.removeEventListener("pointerdown", onFirstGesture, true);
       window.removeEventListener("touchstart", onFirstGesture, true);
-      if (!orientationActive) {
-        void enableOrientationMode();
-      }
+      if (orientationActive || destroyed) return;
+      // Must reach requestPermission() synchronously: iOS only prompts inside the tap.
+      void requestDeviceOrientationPermission().then((status) => {
+        if (status === "granted") activateOrientation();
+      });
     };
 
     window.addEventListener("pointerdown", onFirstGesture, true);
@@ -679,9 +700,10 @@ export function createProductViewer(root, options = {}) {
     if (started) return;
 
     if (needsOrientationPermission()) {
+      watchOrientationGrant();
       bindFirstGestureOrientationRequest();
     }
-    root.setAttribute("data-input", "touch");
+    if (!orientationActive) root.setAttribute("data-input", "touch");
   }
 
   // —— Touch fallback ——
@@ -804,6 +826,7 @@ export function createProductViewer(root, options = {}) {
       cancelAnimationFrame(rafId);
       loopRunning = false;
       stopOrientationListening();
+      stopGrantWatch?.();
       zoneResizeObserver?.disconnect();
       intersectionObserver?.disconnect();
       document.removeEventListener("visibilitychange", handleVisibilityChange);

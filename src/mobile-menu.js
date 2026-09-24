@@ -35,7 +35,10 @@ function ensureOverlay() {
   let menu = document.querySelector("#mobileMenu");
   if (menu) return menu;
 
-  const online = document.querySelector(".nav-online")?.textContent?.trim() || "9 online";
+  const online = (document.querySelector(".nav-online")?.textContent?.trim() || "9 online").replace(
+    /Online/g,
+    "online"
+  );
   const horse = document.querySelector(".horse-icon")?.getAttribute("src") || "/media/online-icon-figma.png";
   const playSrc =
     document.querySelector("#radioIcon")?.getAttribute("src") || "/media/radio-icon-play.png";
@@ -57,8 +60,8 @@ function ensureOverlay() {
       </button>
       <button type="button" class="mobile-menu__audio-label" data-menu-noise>Noise</button>
       <a class="mobile-menu__online" href="${shopHref}" aria-label="Open shop">
-        <span>${online}</span>
         <img alt="" src="${horse}" width="29" height="32" />
+        <span>${online}</span>
       </a>
       <a class="mobile-menu__about" href="#">About</a>
     </div>

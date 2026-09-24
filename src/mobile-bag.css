@@ -34,7 +34,7 @@
 
 .mobile-bag__panel {
   animation: none;
-  background: #000000;
+  background: var(--bg-base);
   height: 100%;
   position: relative;
   transition: none;
@@ -173,7 +173,6 @@
   min-width: 0;
 }
 
-.mobile-bag__empty,
 .mobile-bag__total,
 .mobile-bag__checkout-label {
   mix-blend-mode: difference;
@@ -256,13 +255,50 @@
 }
 
 .mobile-bag__empty {
-  color: var(--ui-overlay);
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  margin: 0;
+}
+
+.mobile-bag__empty-mark {
+  display: block;
+  height: 140px;
+  width: 162px;
+}
+
+.mobile-bag__empty-copy {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mobile-bag__empty-label,
+.mobile-bag__empty-shape {
   font-family: var(--font-ui);
   font-feature-settings: "lnum" 1, "pnum" 1;
   font-size: 17px;
   letter-spacing: 0.34px;
   line-height: normal;
   margin: 0;
+  mix-blend-mode: difference;
+  white-space: nowrap;
+}
+
+.mobile-bag__empty-label {
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.mobile-bag__empty-shapes {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.mobile-bag__empty-shape {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .mobile-bag__checkout {
@@ -286,7 +322,10 @@
 }
 
 .mobile-bag.is-empty .mobile-bag__items {
+  align-items: center;
   bottom: 0;
+  justify-content: center;
+  padding: 0;
 }
 
 .mobile-bag__checkout-wedge {
@@ -294,6 +333,7 @@
   inset: 0;
   pointer-events: none;
   position: absolute;
+  transform: scaleX(-1);
 }
 
 .mobile-bag__checkout-shape {
@@ -312,8 +352,12 @@
   animation: bag-checkout-grow 0.4s ease-out both;
 }
 
-.mobile-bag__checkout-shape--desktop {
+.mobile-bag__checkout-shape--mobile {
   display: none;
+}
+
+.mobile-bag__checkout-shape--desktop {
+  display: block;
 }
 
 .mobile-bag:not(.is-checkout-copy) .mobile-bag__total,
@@ -502,10 +546,6 @@
   .mobile-bag__qty-btn[data-bag-plus] .mobile-bag__qty-icon {
     height: 8.831px;
     width: 8.831px;
-  }
-
-  .mobile-bag__empty {
-    padding-inline: 16px;
   }
 
   .mobile-bag__checkout {

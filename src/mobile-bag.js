@@ -34,6 +34,7 @@ const BAR_GROW_MS = 400;
 
 const minusIconSrc = resolvePublicAssetPath("/media/bag/minus.svg");
 const plusIconSrc = resolvePublicAssetPath("/media/bag/plus.svg");
+const emptyMarkSrc = resolvePublicAssetPath("/media/empty-cart-mark.svg");
 
 function renderItems(bag) {
   const items = bag.querySelector("[data-bag-items]");
@@ -47,7 +48,18 @@ function renderItems(bag) {
   if (label) label.textContent = "Checkout";
 
   if (!cart.lines.length) {
-    items.innerHTML = `<p class="mobile-bag__empty">Cart is empty</p>`;
+    items.innerHTML = `
+      <div class="mobile-bag__empty">
+        <img class="mobile-bag__empty-mark" src="${emptyMarkSrc}" alt="" width="162" height="140" draggable="false" />
+        <div class="mobile-bag__empty-copy">
+          <p class="mobile-bag__empty-label">Cart is empty</p>
+          <div class="mobile-bag__empty-shapes">
+            <a class="mobile-bag__empty-shape" href="./product.html">SHAPE 01</a>
+            <a class="mobile-bag__empty-shape" href="./mat.html">SHAPE 02</a>
+          </div>
+        </div>
+      </div>
+    `;
     return;
   }
 

@@ -53,18 +53,17 @@ function ensureOverlay() {
   menu.inert = true;
   menu.innerHTML = `
     <div class="mobile-menu__panel">
+      <p class="mobile-menu__aside">Everything is&nbsp;practice</p>
       <button type="button" class="mobile-menu__audio-label" data-menu-radio>Radio</button>
       <button type="button" class="mobile-menu__play" data-menu-play aria-label="Play or pause">
         <img alt="" src="${playSrc}" width="68" height="70" />
       </button>
       <button type="button" class="mobile-menu__audio-label" data-menu-noise>Noise</button>
-      <div class="mobile-menu__bar">
-        <a class="mobile-menu__about" href="#">About</a>
-        <a class="mobile-menu__online" href="${shopHref}" aria-label="Open shop">
-          <img alt="" src="${horse}" width="29" height="32" />
-          <span>${online}</span>
-        </a>
-      </div>
+      <a class="mobile-menu__online" href="${shopHref}" aria-label="Open shop">
+        <img alt="" src="${horse}" width="29" height="32" />
+        <span>${online}</span>
+      </a>
+      <a class="mobile-menu__about" href="#">About</a>
     </div>
   `;
   document.body.append(menu);

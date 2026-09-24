@@ -152,6 +152,14 @@ function toggleNoisePlayback() {
   setRadioUiState();
 }
 
+export function toggleRadioIconPlayback() {
+  if (activeAudioControl === "noise") {
+    toggleNoisePlayback();
+    return;
+  }
+  return toggleRadioPlayback();
+}
+
 export function initRadio() {
   if (started) return;
   const radioPlayer = document.querySelector("#radioPlayer");
@@ -181,11 +189,7 @@ export function initRadio() {
   });
 
   radioIcon?.addEventListener("click", () => {
-    if (activeAudioControl === "noise") {
-      toggleNoisePlayback();
-      return;
-    }
-    toggleRadioPlayback();
+    toggleRadioIconPlayback();
   });
 
   setRadioUiState();

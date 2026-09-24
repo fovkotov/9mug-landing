@@ -4,6 +4,7 @@ import "./mobile-menu.css";
 import "./site-chrome.js";
 import "./page-prefetch.js";
 import { setupMobileBag } from "./mobile-bag.js";
+import { toggleRadioIconPlayback } from "./radio.js";
 
 function playTick() {
   try {
@@ -252,8 +253,7 @@ export function setupMobileMenu() {
     requestAnimationFrame(() => syncAudioUi(menu));
   });
   menu.querySelector("[data-menu-play]")?.addEventListener("click", () => {
-    document.querySelector("#radioIcon")?.click();
-    requestAnimationFrame(() => syncAudioUi(menu));
+    Promise.resolve(toggleRadioIconPlayback()).finally(() => syncAudioUi(menu));
   });
 
   window.addEventListener("keydown", (event) => {

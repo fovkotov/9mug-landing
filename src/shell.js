@@ -12,6 +12,7 @@ import { initRadio } from "./radio.js";
 import { startScroll } from "./scroll.js";
 import { initTextStrokeHover } from "./text-stroke-hover.js";
 import { beginPageType, flushPageType, typeShellOnce } from "./page-typewriter.js";
+import { bindContentLoaders } from "./screen-loader.js";
 
 const PAGE_MODULES = {
   "index.html": () => import("./main.js"),
@@ -42,6 +43,7 @@ async function bootCurrentPage() {
 function boot() {
   if (document.documentElement.dataset.shellBound === "1") return;
   document.documentElement.dataset.shellBound = "1";
+  bindContentLoaders();
   initRadio();
   startScroll();
   setupMobileMenu();

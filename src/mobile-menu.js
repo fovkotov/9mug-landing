@@ -4,7 +4,7 @@ import "./mobile-menu.css";
 import "./site-chrome.js";
 import "./page-prefetch.js";
 import { setupMobileBag } from "./mobile-bag.js";
-import { toggleRadioIconPlayback } from "./radio.js";
+import { replaceImageSource, toggleRadioIconPlayback } from "./radio.js";
 
 function playTick() {
   try {
@@ -42,7 +42,7 @@ function ensureOverlay() {
   );
   const horse = document.querySelector(".horse-icon")?.getAttribute("src") || "/media/online-icon-figma.png";
   const playSrc =
-    document.querySelector("#radioIcon")?.getAttribute("src") || "/media/radio-icon-play.png";
+    document.querySelector("#radioIcon")?.getAttribute("src") || "/media/radio-icon-play.svg";
   const shopHref = document.querySelector(".nav-status")?.getAttribute("href") || "./shop.html";
 
   menu = document.createElement("div");
@@ -81,8 +81,8 @@ function syncAudioUi(menu) {
 
   menuRadio?.classList.toggle("is-muted", radioBtn?.classList.contains("is-muted"));
   menuNoise?.classList.toggle("is-muted", noiseBtn?.classList.contains("is-muted"));
-  if (menuPlayImg && radioIcon?.src) {
-    menuPlayImg.src = radioIcon.src;
+  if (menuPlayImg && radioIcon) {
+    replaceImageSource(menuPlayImg, radioIcon.getAttribute("src") || "");
   }
 }
 
@@ -253,7 +253,9 @@ export function setupMobileMenu() {
     requestAnimationFrame(() => syncAudioUi(menu));
   });
   menu.querySelector("[data-menu-play]")?.addEventListener("click", () => {
-    Promise.resolve(toggleRadioIconPlayback()).finally(() => syncAudioUi(menu));
+    const pending = toggleRadioIconPlayback();
+    syncAudioUi(menu);
+    Promise.resolve(pending).finally(() => syncAudioUi(menu));
   });
 
   window.addEventListener("keydown", (event) => {
@@ -270,9 +272,14 @@ export function setupMobileMenu() {
     if (open) setOpen(false, { instant: true });
   });
 
-  const radioIcon = document.querySelector("#radioIcon");
-  if (radioIcon) {
+  const audioControls = document.querySelector(".audio-controls");
+  if (audioControls) {
     const observer = new MutationObserver(() => syncAudioUi(menu));
-    observer.observe(radioIcon, { attributes: true, attributeFilter: ["src"] });
+    observer.observe(audioControls, {
+      attributeFilter: ["src"],
+      attributes: true,
+      childList: true,
+      subtree: true
+    });
   }
 }

@@ -23,8 +23,12 @@ let brownNoiseLastOut = 0;
 const radioTracks = ["/audio/track-1.mp3", "/audio/track-2.mp3", "/audio/track-3.mp3"].map(
   resolvePublicAssetPath
 );
-const radioPlayIconSource = resolvePublicAssetPath("/media/radio-icon-play.png");
-const radioPauseIconSource = resolvePublicAssetPath("/media/radio-icon-pause.png");
+const radioPlayIconSource = resolvePublicAssetPath("/media/radio-icon-play.svg");
+const radioPauseIconSource = resolvePublicAssetPath("/media/radio-icon-pause.svg");
+for (const iconSource of [radioPlayIconSource, radioPauseIconSource]) {
+  const preload = new Image();
+  preload.src = iconSource;
+}
 
 function playButtonTick() {
   try {
@@ -32,6 +36,16 @@ function playButtonTick() {
   } catch {
     // Sound feedback is optional if the sample is unavailable.
   }
+}
+
+export function replaceImageSource(img, nextSrc) {
+  if (!(img instanceof HTMLImageElement) || !nextSrc) return img;
+  if (img.getAttribute("src") === nextSrc) return img;
+  const next = img.cloneNode(false);
+  next.decoding = "sync";
+  next.src = nextSrc;
+  img.replaceWith(next);
+  return next;
 }
 
 function setRadioUiState() {
@@ -43,7 +57,8 @@ function setRadioUiState() {
 
   if (radioIcon) {
     const isAnyAudioEnabled = radioEnabled || noiseEnabled;
-    radioIcon.src = isAnyAudioEnabled ? radioPauseIconSource : radioPlayIconSource;
+    const nextIcon = isAnyAudioEnabled ? radioPauseIconSource : radioPlayIconSource;
+    replaceImageSource(radioIcon, nextIcon);
   }
 }
 
@@ -118,19 +133,19 @@ async function toggleRadioPlayback() {
   }
 
   radioEnabled = !radioEnabled;
+  setRadioUiState();
+  updateNoiseUiState();
 
   if (radioEnabled) {
     try {
       await playTrack(currentTrackIndex);
     } catch {
       radioEnabled = false;
+      setRadioUiState();
     }
   } else {
     radioPlayer.pause();
   }
-
-  setRadioUiState();
-  updateNoiseUiState();
 }
 
 function toggleNoisePlayback() {
@@ -165,7 +180,6 @@ export function initRadio() {
   const radioPlayer = document.querySelector("#radioPlayer");
   const radioBtn = document.querySelector("#radioBtn");
   const noiseBtn = document.querySelector("#noiseBtn");
-  const radioIcon = document.querySelector("#radioIcon");
   if (!radioPlayer || !radioBtn || !noiseBtn) return;
   started = true;
 
@@ -188,7 +202,8 @@ export function initRadio() {
     toggleNoisePlayback();
   });
 
-  radioIcon?.addEventListener("click", () => {
+  document.querySelector(".audio-controls")?.addEventListener("click", (event) => {
+    if (!(event.target instanceof Element) || !event.target.closest("#radioIcon")) return;
     toggleRadioIconPlayback();
   });
 

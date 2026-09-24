@@ -124,20 +124,20 @@ body.is-mobile-menu-open .nav-menu-icon span:last-child {
   cursor: pointer;
   height: 70px;
   left: calc(50% + 9px);
+  margin-left: -34px;
   outline: none;
   padding: 0;
   position: absolute;
   bottom: 128px;
-  transform: translateX(-50%);
   width: 68px;
 }
 
 .mobile-menu__play img {
+  color: #fff;
   display: block;
-  filter: brightness(0);
   height: 70px;
+  mix-blend-mode: difference;
   object-fit: contain;
-  opacity: 0.8;
   pointer-events: none;
   width: 68px;
 }

@@ -112,7 +112,10 @@
   transform: rotate(-45deg);
 }
 
+/* iOS composites this scroller, so difference only sees pixels painted inside it.
+   The panel's cream is outside that layer; repeat it here or white labels stay white. */
 .mobile-bag__items {
+  background-color: var(--bg-base);
   bottom: 42px;
   display: flex;
   flex-direction: column;
@@ -132,6 +135,7 @@
 .mobile-bag__item {
   align-items: center;
   aspect-ratio: 1;
+  background-color: var(--bg-base);
   display: flex;
   position: relative;
   width: 100%;
@@ -150,7 +154,7 @@
 
 .mobile-bag__row {
   align-items: center;
-  color: var(--ui-overlay);
+  color: #fff;
   display: flex;
   gap: 12px;
   mix-blend-mode: difference;

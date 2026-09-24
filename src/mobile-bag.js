@@ -67,20 +67,22 @@ function renderItems(bag) {
     .map(
       (line) => `
       <article class="mobile-bag__item" data-bag-item="${line.id}">
-        <img class="mobile-bag__image" src="${line.image}" alt="" />
-        <div class="mobile-bag__row">
-          <div class="mobile-bag__meta">
-            <span class="mobile-bag__price">${formatMoney(line.price)}</span>
-            <span class="mobile-bag__name">${line.name}</span>
-          </div>
-          <div class="mobile-bag__qty">
-            <button type="button" class="mobile-bag__qty-btn" data-bag-minus data-id="${line.id}" aria-label="Decrease quantity">
-              <img class="mobile-bag__qty-icon" src="${minusIconSrc}" alt="" width="10" height="1" draggable="false" />
-            </button>
-            <span class="mobile-bag__qty-value">${line.qty}</span>
-            <button type="button" class="mobile-bag__qty-btn" data-bag-plus data-id="${line.id}" aria-label="Increase quantity">
-              <img class="mobile-bag__qty-icon" src="${plusIconSrc}" alt="" width="10" height="10" draggable="false" />
-            </button>
+        <div class="mobile-bag__stage">
+          <img class="mobile-bag__image" src="${line.image}" alt="" />
+          <div class="mobile-bag__row">
+            <div class="mobile-bag__meta">
+              <span class="mobile-bag__price">${formatMoney(line.price)}</span>
+              <span class="mobile-bag__name">${line.name}</span>
+            </div>
+            <div class="mobile-bag__qty">
+              <button type="button" class="mobile-bag__qty-btn" data-bag-minus data-id="${line.id}" aria-label="Decrease quantity">
+                <img class="mobile-bag__qty-icon" src="${minusIconSrc}" alt="" width="10" height="1" draggable="false" />
+              </button>
+              <span class="mobile-bag__qty-value">${line.qty}</span>
+              <button type="button" class="mobile-bag__qty-btn" data-bag-plus data-id="${line.id}" aria-label="Increase quantity">
+                <img class="mobile-bag__qty-icon" src="${plusIconSrc}" alt="" width="10" height="10" draggable="false" />
+              </button>
+            </div>
           </div>
         </div>
       </article>

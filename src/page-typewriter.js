@@ -50,5 +50,5 @@ export function typeShellOnce() {
   shellTyped = true;
   const shell = document.querySelector(".top-nav");
   if (!shell) return;
-  typewrite(shell, { skipSelector: `${PAGE_SKIP}, .nav-left > .nav-link` });
+  typewrite(shell, { skipSelector: `${PAGE_SKIP}, .nav-left > .nav-link, .nav-lang` });
 }

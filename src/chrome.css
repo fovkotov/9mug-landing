@@ -54,6 +54,7 @@ a {
 .nav-link,
 .control-btn,
 .nav-online,
+.nav-lang,
 .meta-item,
 .mobile-panel-title {
   color: inherit;
@@ -164,13 +165,32 @@ a {
   color: var(--ui-overlay);
 }
 
+.nav-end {
+  align-items: flex-start;
+  display: flex;
+  gap: 42px;
+  justify-content: flex-end;
+  justify-self: end;
+}
+
 .nav-status {
   align-items: start;
   color: inherit;
   cursor: pointer;
   display: flex;
   gap: 9px;
-  justify-self: end;
+}
+
+.nav-lang {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .horse-icon {
@@ -226,9 +246,19 @@ a {
     flex: 0 0 auto;
   }
 
+  .nav-end {
+    display: contents;
+  }
+
+  .nav-lang {
+    margin-left: auto;
+    order: 1;
+  }
+
   .bag-group {
     gap: 0;
-    margin-left: auto;
+    margin-left: calc(17px - var(--layout-gutter));
+    order: 2;
   }
 
   .bag-status {
